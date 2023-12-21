@@ -1,0 +1,218 @@
+---
+title: "Detailed entity mapping"
+description: "Learn how Stigg entities are mapped to HubSpot entities when Stigg is integrated with HubSpot"
+---
+
+## Overview
+
+Stigg entities are mapped to HubSpot entities as follows:
+
+| Stigg entity | HubSpot entity   |
+| ------------ | ---------------- |
+| Feature      | N/A              |
+| Product      | N/A              |
+| Plan         | Product          |
+| Add-on       | Product          |
+| Coupon       | N/A              |
+| Customer     | Contact, Company |
+| Subscription | Deal             |
+
+In the following cases, the relevant Stigg entities will **not** be synced to HubSpot:
+
+| Stigg Entity                                       | Not synced to HubSpot when...                                     |
+| -------------------------------------------------- | ----------------------------------------------------------------- |
+| Plan                                               | The HubSpot account is not on the Professional or Enterprise plan |
+| The plan is free                                   |                                                                   |
+| The plan has a custom price                        |                                                                   |
+| Add-on                                             | The HubSpot account is not on the Professional or Enterprise plan |
+| The add-on has a custom price                      |                                                                   |
+| Subscription                                       | The subscription is for a free plan                               |
+| The subscription is for a plan with a custom price |                                                                   |
+
+  
+## Plan → Product mapping
+
+**Stigg plans** are mapped to **HubSpot products**.
+
+#### Property mapping
+
+| Plan property in Stigg | Product property in HubSpot | Notes                                                                                                          |
+| ---------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| ID                     | SKU                         |                                                                                                                |
+| Name                   | Name                        | The synced name is in the following format:\[STIGG\_PRODUCT\] \[PLAN\_NAME\] Plan For example: Acme Basic Plan |
+| Description            | Description                 |                                                                                                                |
+| Price                  | Unit price                  |                                                                                                                |
+| Billing period         | Recurring billing frequency |                                                                                                                |
+
+> ## 📘
+> 
+> Plans that have separate prices for different billing periods (monthly, annually) will appear as separate HubSpot products.
+
+#### Status mapping
+
+Every plan version is mapped to a dedicated HubSpot product. 
+
+When new plan versions are published, the HubSpot product of the old version is archived in HubSpot, meaning that new subscriptions to the old plan version cannot be created.
+
+#### Additional metadata
+
+Additional metadata is also reported by Stigg to HubSpot, and appears under the **Stigg metadata** section of deals in HubSpot:
+
+| Property       | Description                                          |
+| -------------- | ---------------------------------------------------- |
+| Account ID     | The Stigg account ID that the entity belongs to.     |
+| Environment ID | The Stigg environment ID that the entity belongs to. |
+| Stigg ID       | The ID of the entity in Stigg.                       |
+| Stigg entity   | A URL to the entity in the Stigg Console.            |
+
+  
+## Add-on → Product mapping
+
+**Stigg add-ons** are mapped to **HubSpot products**.
+
+#### Property mapping
+
+| Add-on property in Stigg | Product property in HubSpot | Notes                                                                                                                  |
+| ------------------------ | --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| ID                       | SKU                         |                                                                                                                        |
+| Name                     | Name                        | The synced name is in the following format:\[STIGG\_PRODUCT\] \[ADDON\_NAME\] Add-on For example: Acme 10 Seats Add-on |
+| Description              | Description                 |                                                                                                                        |
+| Price                    | Unit price                  |                                                                                                                        |
+| Billing period           | Recurring billing frequency |                                                                                                                        |
+
+#### Status mapping
+
+Every add-on version is mapped to a dedicated HubSpot product. 
+
+When new add-on versions are published, the HubSpot products of the old version is archived in HubSpot, meaning that new subscriptions to the old add-on version cannot be created.
+
+#### Additional metadata
+
+Additional metadata is also reported by Stigg to HubSpot, and appears under the **Stigg metadata** section of deals in HubSpot:
+
+| Property       | Description                                          |
+| -------------- | ---------------------------------------------------- |
+| Account ID     | The Stigg account ID that the entity belongs to.     |
+| Environment ID | The Stigg environment ID that the entity belongs to. |
+| Stigg ID       | The ID of the entity in Stigg.                       |
+| Stigg entity   | A URL to the entity in the Stigg Console.            |
+
+  
+## Customer → Contact mapping
+
+**Stigg customers** are mapped to **HubSpot contacts**.
+
+#### Property mapping
+
+| Customer property in Stigg | Contact property in HubSpot | Notes                                               |
+| -------------------------- | --------------------------- | --------------------------------------------------- |
+| Email                      | Email                       |                                                     |
+| Status                     | Lifecycle stage             | See [status mapping](#status-mapping) section below |
+| Subscriptions              | Deals                       |                                                     |
+
+> ## 📘
+> 
+> Stigg also links between the HubSpot contact that represents the Stigg customer, and the HubSpot company that represents the Stigg customer.
+
+#### Status mapping
+
+| Customer status in Stigg                        | Contact lifecycle stage in HubSpot |
+| ----------------------------------------------- | ---------------------------------- |
+| Customer doesn't have any subscription in Stigg | Lead                               |
+| Customer has a paid subscription in Stigg       | Customer                           |
+
+> ## 📘
+> 
+> HubSpot automatically sets contacts' lifecycle stages when they have at least one closed deal. More details about this process can be found in [HubSpot's documentation](https://knowledge.hubspot.com/contacts/use-lifecycle-stages#lifecycle-stages).
+
+#### Additional metadata
+
+Additional metadata is also reported by Stigg to HubSpot, and appears under the **Stigg metadata** section of deals in HubSpot:
+
+| Property       | Description                                          |
+| -------------- | ---------------------------------------------------- |
+| Account ID     | The Stigg account ID that the entity belongs to.     |
+| Environment ID | The Stigg environment ID that the entity belongs to. |
+| Stigg ID       | The ID of the entity in Stigg.                       |
+| Stigg entity   | A URL to the entity in the Stigg Console.            |
+
+  
+## Customer → Company mapping
+
+**Stigg customers** are also mapped to a **HubSpot company**.
+
+#### Property mapping
+
+| Customer property in Stigg | Company property in HubSpot |
+| -------------------------- | --------------------------- |
+| Name                       | Name                        |
+| Subscriptions              | Deals                       |
+
+> ## 📘
+> 
+> Stigg also links between the HubSpot company that represents the Stigg customer, and the HubSpot contact that represents the Stigg customer.
+
+#### Additional metadata
+
+Additional metadata is also reported by Stigg to HubSpot, and appears under the **Stigg metadata** section of deals in HubSpot:
+
+| Property       | Description                                          |
+| -------------- | ---------------------------------------------------- |
+| Account ID     | The Stigg account ID that the entity belongs to.     |
+| Environment ID | The Stigg environment ID that the entity belongs to. |
+| Stigg ID       | The ID of the entity in Stigg.                       |
+| Stigg entity   | A URL to the entity in the Stigg Console.            |
+
+  
+## Subscription → Deal mapping
+
+**Stigg subscription** are mapped to **HubSpot deals**.
+
+> ## 📘
+> 
+> All deals are currently synced to the **default sales pipeline**.
+
+#### Property mapping
+
+| Subscription property in Stigg | Deal property in HubSpot | Notes                                                    |
+| ------------------------------ | ------------------------ | -------------------------------------------------------- |
+| ID                             | Deal name                | For example: subscription-plan-revvenu-essentials-2b9ac7 |
+| Status                         | Stage                    | See [status mapping](#status-mapping-1) section below    |
+| Start date                     | Close date               | See [status mapping](#status-mapping-1) section below    |
+| Price                          | Amount                   |                                                          |
+| Plan                           | Line item                |                                                          |
+| Add-ons                        | Line item                |                                                          |
+
+> ## 📘
+> 
+> 1. When a plan's or add-on's price is updated in Stigg and the change is set to affect **existing customers**, the deal amount of existing customers in HubSpot is not automatically updated.
+> 2. When customers are subscribed to a usage-based plan, the deal amount in HubSpot is **not** currently updated according to the customer usage and will remain at 0.
+
+#### Status mapping
+
+| Subscription status in Stigg       | Deal status in HubSpot                  | HubSpot deal close date                                                                       | Notes                                                                                         |
+| ---------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Scheduled (non trial) subscription | Closed won                              | Subscription start date                                                                       |                                                                                               |
+| Pending payment                    | Contract sent                           | Subscription start date                                                                       |                                                                                               |
+| Active                             | Closed won                              | Subscription start date                                                                       | Including free subscriptions                                                                  |
+| In trial                           | Qualified to buy                        | Not set                                                                                       |                                                                                               |
+| Cancellation scheduled             | **No change** from the deal last status | If was in trial - not setOtherwise - no change to the close date                              | Reflected using the subscription status and the cancelation date custom properties in HubSpot |
+| Canceled                           | **No change** from the deal last status | Reflected using the subscription status and the cancelation date custom properties in HubSpot |                                                                                               |
+
+> ## 📘
+> 
+> If you've defined custom deal statuses in Stigg, [let us know](/cdn-cgi/l/email-protection#5d2e282d2d322f291d2e29343a3a733432), and we'll be happy to work together on adapting Stigg's integration with HubSpot to your configuration.
+
+#### Additional metadata
+
+Additional metadata is also reported by Stigg to HubSpot, and appears under the **Stigg metadata** section of deals in HubSpot:
+
+| Property            | Description                                                                                                      |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Account ID          | The Stigg account ID that the entity belongs to.                                                                 |
+| Environment ID      | The Stigg environment ID that the entity belongs to.                                                             |
+| Stigg ID            | The ID of the entity in Stigg.                                                                                   |
+| Stigg entity        | A URL to the entity in the Stigg Console.                                                                        |
+| Subscription status | The status of the subscription in Stigg, for example: not started, in trial, pending payment, canceled, expired. |
+| Trial end date      | The trial end date if the deal was for a trial subscription.                                                     |
+| Cancelation date    | The date that the subscription was canceled in Stigg.                                                            |

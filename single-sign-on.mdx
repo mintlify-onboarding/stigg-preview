@@ -1,0 +1,136 @@
+---
+title: "Single-sign on (SSO)"
+---
+
+## Overview
+
+Stigg can be integrated with an identity provider (IdP) to allow secure access to Stigg using the same credentials that are used to access all corporate third-party applications. When enabled, anyone that's granted access to the Stigg application within the identity provider will be able to join the Stigg account and require authentication via SSO to access it.
+
+> ## 📘
+> 
+> Stigg supports the **Security Assertion Markup Language (SAML)** standard for enabling users access using single sign-on.
+
+  
+## Setting up the integration
+
+### Before we begin
+
+To enable single-sign on (SSO), please contact [Stigg Support](/cdn-cgi/l/email-protection#7f0c0a0f0f100d0b3f0c0b161818511610).
+
+![](/images/180ae79-Screenshot_2023-01-09_at_16_31_41_blurred.png)
+
+In your request, provide the following details:
+
+1. The **account name** for which SSO should be enabled for.
+2. The **domains** that should be granted access to the account, for example: example.com, test.example.com, etc. Once SSO is enabled, **only users belonging to these domains will be able to access the Stigg account**.
+
+The Stigg support team will provide you with the details that are required to setup the integration:
+
+1. **Single sign-on URL** which will be in the following format:
+
+`https://auth.stigg.io/login/callback?connection=CONNECTION_NAME
+`
+
+1. **Audience URI**, which will be in the following format:
+
+`urn:auth0:stigg-prod:CONNECTION_NAME
+`
+
+  
+### Identity provider configuration
+
+* [Azure Active Directory](#azure-active-directory)
+* [Okta](#okta)
+  
+#### Azure Active Directory
+
+Open the [Microsoft Azure Portal](https://portal.azure.com).
+
+Go to Azure Active Directory > Enterprise applications > + New Application.
+
+Click on "+ Create your own application".
+
+Under "What's the name of your app?", enter the CONNECTION\_NAME that was provided by the Stigg Support team.
+
+Under "What are you looking to do with your application?", select the "Integrate any other application you don’t find in the gallery (Non-gallery)" and click "Create".
+
+Click "Single sign-on" in the left pane.
+
+Under "Select a single sign-on method", select SAML.
+
+In the "1\. Basic SAML Configuration" box, click "Edit".
+
+Under "Identifier (Entity ID)" enter the **audience URI** that was provided by Stigg.
+
+Set the Reply URL (Assertion Consumer Service URL) to the **single-sign on URL** that was provided by the Stigg Support team.
+
+Click Save.
+
+In the "3\. SAML Signing Certificate" box, next to Certificate (Base64) click on "Download" - you'll need these details to complete the integration on the Stigg side.
+
+In the "4\. Set up <CONNECTION\_NAME>" box, copy the Login URL. It will look like `https://login.microsoftonline.com/xxx/saml2` \- you'll need these details to complete the integration on the Stigg side.
+
+[ ![](/images/98b7bcf-Stigg_LogoSymbol_ForLightBG.png)  Complete the integration in Stigg ](#completing-the-integration-in-stigg) 
+
+  
+#### Okta
+
+Sign in to the [Okta Developer Console](https://login.okta.com/).
+
+Go to "Create app integration".
+
+Enter the application name, for example: "Stigg".
+
+Select "SAML 2.0" from the options.
+
+Enter the **single-sign on URL** that was provided by the Stigg Support team.
+
+Set the **audience URI** attribute to with the value that was provided by the Stigg Support team.
+
+Under the "Attributes" section, add the following attribute:
+
+1. Key - "email"
+2. Value - "user.email"
+
+Follow the instructions to complete the set up.
+
+Copy the X.509 certificate form the "View SAML Setup Instructions" screen - you'll need these details to complete the integration on the Stigg side.
+
+[ ![](/images/98b7bcf-Stigg_LogoSymbol_ForLightBG.png)  Complete the integration in Stigg ](#completing-the-integration-in-stigg) 
+
+  
+### Completing the integration in Stigg
+
+Send the X.509 certificate that was generated in the identity provider to the [Stigg Support](/cdn-cgi/l/email-protection#196a6c6969766b6d596a6d707e7e377076) team.
+
+The Stigg Support team will complete the setup and enable the configuration for your account.
+
+Once configured, the settings will be reflected in the Stigg Console under the Settings > Single sign-on (SSO) section.
+
+![](/images/002b8d9-Screenshot_2023-01-09_at_15_51_40_blurred.png)
+
+  
+## Granting users access to Stigg
+
+When SSO is enabled:
+
+1. Granting users access to Stigg is done **directly in the identity provider** and can be applied to **specific users** or to **entire security groups**.
+2. Team member invitation from the **Stigg Console** will be **disabled**.
+3. Users that successfully authenticate to the Stigg Console will automatically be associated with the relevant account and appear under the Settings > Team members section.
+  
+## Login flow
+
+In order to determine whether SSO is required to access the account, upon login to Stigg customers are first asked to enter their email address. 
+
+If the email address belongs to an account that requires SSO, the users will be authenticated using the integrated identity provider. Otherwise, standard authentication (for example: username and password) will take place.
+
+  
+## Revoking access
+
+Revoking access to Stigg is done **directly in the identity provider**.
+
+To revoke access, either remove the association of the specific user from the list of users that have access to the Stigg application, or remove the user from the security group that has access to Stigg.
+
+> ## 🚧
+> 
+> Once access is revoked in the identity provider, the user will no longer be able to access the Stigg Console; however, they will still appear under the Settings > Team members section. Removing the entry from this section should be done **manually**.

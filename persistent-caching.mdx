@@ -1,0 +1,128 @@
+---
+title: "Persistent cache"
+---
+
+By default, the Server SDK stores entitlements data in a local in-memory cache for fast and instant entitlement checks. If you restart the host process of the SDK or re-initialize the SDK, the local cache data will be lost. Usually, this behavior is acceptable because if the entitlements data is missing, the SDK will fetch it from the Stigg API over the network.
+
+Alternatively, you can provide an external store to persist the customer entitlements data which can survive restarts and be accessed by multiple processes. If your application is a fleet consisting of dozens of servers, or if you have a serverless infrastructure where each process is transient and can be de-provisioned after a limited period of time, a persistent cache can significantly reduce cache misses.
+
+Stigg offers persistent cache setup for backend SDK users (currently Node.js) that has several benefits over in-memory cache when running on high-scale services: 
+
+* Redundancy - data is available on your Redis cluster even in case of an API outage
+* Low latency
+* Fewer requests from your services to the Stigg API
+* Reduce the memory footprint of the SDK in your services
+* Reducing cache coherence issues
+* Increased cache hits/misses ratio
+
+To enable persistent caching in your environment, please [contact the Stigg Support Team](/cdn-cgi/l/email-protection#c1b2b4b1b1aeb3b581b2b5a8a6a6efa8ae).
+
+### Overview
+
+Stigg's persistent cache relies on a running [persistent-cache-service](https://gallery.ecr.aws/p2i1w6c0/persistent-cache-service) as part of your app deployment process. The service connects to a dedicated AWS SQS queue (owned and managed by Stigg), consumes messages that carry the state changes from the originating environment, and keeps your Redis cache instance with up-to-date data. The service can be scaled horizontally to keep up with the rate of arriving messages. In case of a cache miss, the SDK will fetch the data over the network directly from API, and update the cache to serve future requests.
+
+![](/images/837f6c0-image.png)
+
+### Running the service
+
+In order for the persistent cache to be updated properly in near real-time, you'll need to install and run at least one instance of [persistent-cache-service](https://gallery.ecr.aws/p2i1w6c0/persistent-cache-service).
+
+#### Prerequisites
+
+* An SQS provisioned by Stigg, to consume messages originating from your environment
+* AWS IAM role credentials with permissions for the provisioned SQS (will be provided by Stigg)
+* Redis cluster to persist entitlements and usage for a future read operation
+
+#### Usage
+
+Login to AWS ECR:
+
+Shell
+
+`aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/stigg
+`
+
+Run the service:
+
+Shell
+
+`docker run --publish=4000:4000 \
+  --name stigg-persistent-cache \
+  -e AWS_REGION="us-east-2" \
+  -e QUEUE_URL="https://sqs.us-east-2.amazonaws.com/..." \
+  -e REDIS_HOST="host.docker.internal" \
+  -e AWS_ACCESS_KEY_ID="<AWS_ACCESS_KEY_ID>" \
+  -e AWS_SECRET_ACCESS_KEY="<AWS_SECRET_ACCESS_KEY>" \
+  -e SERVER_API_KEY="<SERVER_API_KEY>" \
+  -e ENVIRONMENT_PREFIX="development" \
+  public.ecr.aws/stigg/persistent-cache-service:latest
+`
+
+Available options:
+
+| Environment Variable     | Type         | Default                                                | Description                                                                       |
+| ------------------------ | ------------ | ------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| AWS\_REGION              | **String\*** | The AWS region of the SQS queue                        |                                                                                   |
+| QUEUE\_URL               | **String\*** | The URL of the queue to consume from                   |                                                                                   |
+| SERVER\_API\_KEY         | **String\*** | Environment's Server API key                           |                                                                                   |
+| AWS\_ACCESS\_KEY\_ID     | **String\*** | AWS access key ID provided by Stigg                    |                                                                                   |
+| AWS\_SECRET\_ACCESS\_KEY | **String\*** | AWS secret access key provided by Stigg                |                                                                                   |
+| ENVIRONMENT\_PREFIX      | String       | production                                             | The Identifier of the environment needs to be the same as the one used by the SDK |
+| REDIS\_HOST              | String       | ''                                                     | Redis host address                                                                |
+| REDIS\_PORT              | Number       | 6379                                                   | Redis port                                                                        |
+| REDIS\_DB                | Number       | 0                                                      | Redis DB identifier                                                               |
+| REDIS\_USER              | String       | (Optional) Redis username                              |                                                                                   |
+| REDIS\_PASSWORD          | String       | (Optional) Redis password                              |                                                                                   |
+| BATCH\_SIZE              | Number       | 1                                                      | Number of messages to receive in a single batch                                   |
+| KEYS\_TTL\_IN\_SECS      | Number       | 604,800(7 days)                                        | The duration in milliseconds that data will be kept in the cache before evicted   |
+| EDGE\_API\_URL           | String       | [https://edge.api.stigg.io](https://edge.api.stigg.io) | Edge API address URL                                                              |
+| SENTRY\_DSN              | String       | Loaded from remote                                     | Sentry DSN used for internal error reporting                                      |
+| DISABLE\_SENTRY          | Boolean      | 0                                                      | Disables reporting internal errors to Sentry                                      |
+| PORT                     | Number       | 4000                                                   | HTTP server port                                                                  |
+
+\*Required fields
+
+### Health
+
+The service exposes two endpoints accessible via HTTP:
+
+#### `GET /livez`
+
+Returns `200` if the service is alive.
+
+Healthy response: `{"status":"UP"}`
+
+#### `GET /readyz`
+
+Returns `200` if the service is ready to receive messages.
+
+Healthy response: `{ "status": "UP", "consumers": 10, "redis": "CONNECTED" }`
+
+Unhealthy response: `{ "status": "DOWN", "consumers": 0, "redis": "DISCONNECTED" }`
+
+### Configure the SDK
+
+To configure the SDK to use the Redis cache, provide the `redis` config during initialization:
+
+Node.js
+
+`const stigg = Stigg.initialize({
+    apiKey: '<SERVER_API_KEY>',
+    redis: {
+        host: 'localhost', 
+        port: '6379',
+        db: 0, // optionally, the db number to use
+        environmentPrefix: 'production', // a string, for example 'production', 'staging' & etc
+    }
+});
+`
+
+> ## 📘
+> 
+> Important!
+> 
+> Please make sure that the SDK and the `persistent-cache-service` are configured to use the same Redis instance, DB number, and the same **environment prefix**.
+
+During initialization, the SDK will try to connect to the Redis instance. Once connected, all the entitlement checks will be evaluated against data from the persistent cache instead of fetching it over the network.
+
+The persistent cache is updated the same way the in-memory cache does - if customer data is missing, it will be fetched over the network and persisted in the cache.

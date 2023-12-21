@@ -1,0 +1,124 @@
+---
+title: "Free trials"
+---
+
+## Overview
+
+Free trials allow your customers to try your product and see value during a limited time period before they need to make a purchase decision, which can help increase customer adoption and conversion.
+
+Stigg allows you add a free trial to your product without requiring additional code changes in your application.
+
+![](/images/6502b78-Screen_Shot_2022-10-19_at_22.55.14.png)
+
+![](/images/29fcfe6-Screen_Shot_2022-10-19_at_22.55.29.png)
+
+## Trial types
+
+1. **Credit card trial** \- customers start a free trial after they provide a credit card. At the end of the trial customers are automatically converted to a paid subscription.
+2. **Free trial** \- customers can start a free trial without needing to enter a credit card. If customers don't convert at the end of the trial period, they lose access to the products' features.
+3. **Reverse trial** \- customers start in a free trial of a paid plan. If customers don't convert at the end of the trial period, they're automatically downgraded to a free plan.
+
+> ## 📘
+> 
+> Not sure which trial flow to implement? [Leverage Stigg to experiment between the trial different flows](experiments) and learn which flow has a better conversion rate.
+
+## Adding a free trial to a plan
+
+**Paid and custom plans** can be configured to start with a free trial period when a subscription is created.
+
+To add a free trial to a plan, select the relevant plan in the Stigg Console.
+
+Edit the plan.
+
+Under the "Pricing" section, click on. the "Add free trial" link.
+
+Set the default trial period in days or months.
+
+Click on "Add".
+
+Publish the changes.
+
+![](/images/7e8742e-image.png)
+
+![](/images/7d5b8c6-image.png)
+
+> ## 📘
+> 
+> More details about plans' free trial definition can be found [here](/docs/plans#defining-free-trial-periods).
+
+## Controlling customers' initial access to the product
+
+Stigg allows you to control the type of subscription that will be automatically provisioned to customers once they create an account to your product. Specifically, initial customer access to the product can be defined to start in a free trial.
+
+![](/images/2a0651c-Screenshot_2023-01-17_at_15.51.04.png)
+
+To have customers start in a free trial, select the relevant product in the Product Catalog > Products section.
+
+Under the "Customer Journey" section and the "Initial product access" column, select "New customer access to the product starts **in a free trial of a paid plan**".
+
+Select the plan with the free trial.
+
+Click "Publish changes"
+
+Confirm the action by clicking "Publish".
+
+![](/images/aed4dfd-image.png)
+
+> ## 📘
+> 
+> More details about the Customer Journey configuration can be found [here](/docs/products#defining-the-customer-journey).
+
+## Controlling the end of trial behavior
+
+Stigg allows you to control the behavior at the end of the trial. Specifically, this allows you to configure whether a free trial or reverse trial flow will be implemented.
+
+### Free trial
+
+To implement a free trial flow, select the relevant product in the Product Catalog > Products section.
+
+Under the "Customer Journey" section and the "Trial end / subscription cancelation" column, select "When a customer's subscription ends, **revoke access to all of its entitlements**".
+
+Select the free plan that the customer will be downgraded to.
+
+Click "Publish changes"
+
+Confirm the action by clicking "Publish".
+
+> ## 📘
+> 
+> More details about the Customer Journey configuration can be found [here](/docs/products#defining-the-customer-journey).
+
+### Reverse trial
+
+To implement a free trial flow, select the relevant product in the Product Catalog > Products section.
+
+Under the "Customer Journey" section and the "Trial end / subscription cancelation" column, select "When a customer's subscription ends, **downgrade them to a free plan**".
+
+Select the free plan that the customer will be downgraded to.
+
+Click "Publish changes"
+
+Confirm the action by clicking "Publish".
+
+> ## 📘
+> 
+> More details about the Customer Journey configuration can be found [here](/docs/products#defining-the-customer-journey).
+
+## Customer communication and experience
+
+Stigg offers embeddable widgets that can be used to communicate to customers that they can start a free trial to plan, as well as its current status.
+
+[ ![](/images/6b08ea4-Group_17013.png)  Pricing table Allow customers to select the plan that that they'd like to subscribe to from your public pricing page ](pricing-table#in-public-pricing-pages) 
+
+  
+[ ![](/images/1bf91dd-Group_17013_1.png)  In-app paywall Allow customers to upgrade their subscriptions in a self-served manner using an in-app paywall ](pricing-table#in-app-paywalls) 
+
+  
+[ ![](/images/5531b6c-Group_16979.png)  Customer portal Introduce self-service and drive in-app expansions using only a few lines of codes ](customer-portal) 
+
+  
+[ ![](/images/39d3f09-Frame_16984_1.png)  Trial banner (coming soon) Increase trial conversions by providing customers with visibility to how many days remain in their free trial ](#) 
+
+## Additional resources
+
+[ ![](/images/5e1190b-amplitude-logo-67DFD43C34-seeklogo.com.png)  Trial or Freemium? Get the Best of Both with a Reverse Trial Amplitude blog ](https://amplitude.com/blog/reverse-trial) 

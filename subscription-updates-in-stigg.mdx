@@ -1,0 +1,201 @@
+---
+title: "Subscription updates in Stigg"
+---
+
+## Overview
+
+With ever-growing competition in SaaS, you’ll need to provide seamless experiences to your buyers and full flexibility in updating their subscription. 
+
+The behavior of your product's subscription update logic has implications both on your customer experience and business.
+
+Luckily, Stigg got you covered! ![:sunglasses:](/images/sunglasses.png ":sunglasses:") This article describes exactly how.
+
+![](/images/9d35a9b-63e4d67d350612301eb46722_Customer_updates_timeline.png)
+
+## Subscription upgrades
+
+An **upgrade** describes the process of a customer switching to a higher-priced option, including:
+
+1. Switching to a higher tier.
+2. Switching to a longer commitment.
+3. Increasing the unit quantity (e.g. increasing the seat count).
+4. Adding an add-on.
+5. Increasing the quantity of a specific add-on.
+
+When a customer upgrades their subscription in the middle of their billing cycle, they're **immediately charged** the prorated amount of the upgraded subscription until the end of the current billing cycle. 
+
+This means that the customer gets access to their higher-priced option and will be charged the difference for the rest of the billing period immediately.
+
+  
+## Subscription downgrades
+
+A **downgrade**, is the switch to a lower-priced option, including:
+
+1. Switching to a lower tier.
+2. Switching to a shorter commitment.
+3. Reducing the unit quantity (e.g. reducing seats).
+4. Removing an add-on.
+5. Reducing the quantity of a specific add-on.
+
+In SaaS there are 2 common best-practices:
+
+1. **Downgrade immediately and grant credits** for the remaining time of the billing period, like [Slack](https://slack.com/help/articles/218915077-Slacks-Fair-Billing-Policy#how-inactive-deactivated-members-affect-billing), or [Notion](https://www.notion.so/help/invoices-and-proration).
+2. **Schedule a downgrade** to take place at the end of the current billing period, like [Zoom](https://support.zoom.us/hc/en-us/articles/207597883-Upgrading-your-account-and-add-ons), [Trello](https://support.atlassian.com/trello/docs/how-billing-works-with-trello-premium-and-standard/#How-adding-and-removing-Workspace-members-affects-billing), or [GitHub](https://docs.github.com/en/billing/managing-billing-for-your-github-account/how-does-upgrading-or-downgrading-affect-the-billing-process#example-of-removing-paid-seats-from-your-organization).
+
+Allowing customers to downgrade immediately and granting them credits they can redeem in the upcoming invoice may be perceived better by your customers. Slack calls it '[fair billing](https://slack.com/help/articles/218915077-Slacks-Fair-Billing-Policy)’. However, this option is much less favorable to your business as this is a loss in revenue.
+
+Every [product](products) in Stigg can be configured to follow either of these behaviors. 
+
+By default, products in Stigg are configured to downgrade immediately.
+
+To change this behavior, contact the [Stigg Support Team](/cdn-cgi/l/email-protection#a6d5d3d6d6c9d4d2e6d5d2cfc1c188cfc9). An ability to control this configuration in a self-served manner is planned as part of our roadmap.
+
+![](/images/63185b9-subscription_downgrade.png)
+
+  
+## Immediate downgrades
+
+### Downgrades between paid plans
+
+When customers downgrade from paid plan B to paid plan A, they receive credits for unused time until the end of the current billing period on paid plan B.
+
+The credits are then **immediately** applied to the amount due for subscription to paid plan A for the remainder of the billing period.
+
+If the credit amount is larger than the amount due for subscription to paid plan A for the remainder of the billing period, the customer will not be charged for the downgrade.
+
+Any remaining credits are stored by the billing provider that's integrated with Stigg, and will be automatically applied to future bills.
+
+### Downgrades to free plans
+
+When customers downgrade from a paid plan to a free plan, they receive credits for unused time until the end of the current billing period on the paid plan.
+
+The credits are stored by the billing provider that's integrated with Stigg, and will be automatically applied to future bills (for example: when the customer will upgrade to a paid plan in the future or for payment for a paid subscription on a different product).
+
+Most billing providers allow you to grant available credits to customers as refunds; however, this can currently be de done **manually**.
+
+## Scheduled downgrades
+
+### Canceling scheduled downgrades
+
+Stigg allows customers to cancel their scheduled downgrades in a self-served manner. This provides customers with an opportunity to regret their decision and stay on the higher-pricing option.
+
+Users with access to the [Stigg Console](https://app.stigg.io) can also cancel scheduled updates on behalf of the customer.
+
+![](/images/a59cb55-image.png)
+
+### Purchasing additional seats when a downgrade is scheduled
+
+When a customer that requested to downgrade to a lower tier purchases more seats on their current plan (= before the scheduled downgrade takes place), the customer is immediately charged the prorated amount for the additional seats using the price of the current plan, and the scheduled downgrade is automatically be updated to reflect the increased seat count.
+
+![](/images/fc58754-image.png)
+
+### Updating the unity quantity when another quantity update is already scheduled
+
+![](/images/c247dde-image.png)
+
+When scheduled downgrades are enabled and a customer with quantity Q0 requests to **reduce** the quantity of the unit that's used for pricing to quantity Q1, the reduction is scheduled to take place at the end of their current billing cycle. Until the reduction takes place, the customer is still entitled to the original unit quantity Q0.
+
+When **another** update to the unit quantity is requested to quantity Q2, the new quantity is compared against the original unit quantity Q0:
+
+1. If the new quantity Q2 is still smaller than the original quantity Q0, the scheduled update is updated from the previous quantity update Q1 to the new quantity Q2.
+2. If the new quantity Q2 is the same as the original quantity Q0, the scheduled quantity update is canceled.
+3. If the new quantity Q2 is larger than the original quantity Q0, this is handled as an **upgrade**:  
+   1. The scheduled quantity update is canceled.  
+   2. The quantity is **immediately** updated to the new value.  
+   3. The customer is **immediately** charged the prorated amount of the quantity difference.
+
+![](/images/80e8ee9-image.png)
+
+#### Example code snippet
+
+JavaScript
+
+`// users.length == 5
+
+// update seat count to 4
+users.remove(userA);
+stiggClient.reportUsage(customerId, 'feature-seats', -1);
+stiggClient.updateSubscription(subscriptionId, users.length);
+
+// update seat count to 3
+users.remove(userB);
+stiggClient.reportUsage(customerId, 'feature-seats', -1);
+stiggClient.updateSubscription(subscriptionId, users.length);
+
+// usageLimit == 5, currentUsage == 3
+const entitlement = await stiggClient.getMeteredEntitlement({  
+  customerId: customerId,  
+  featureId: 'feature-seats'  
+});
+
+// update seat count to 4
+users.Add(userC);
+stiggClient.updateSubscription(subscriptionId, users.length);
+stiggClient.reportUsage(customerId, 'feature-seats', 1);
+
+// end result:
+// 1. the customer will be subscribed to 4 seats at the end of the current billing cycle
+// 2. since they still didn't go over the original limit of the current billing cycle (= 5 seats), they will *not* pay for any new seat
+`
+
+### Scheduled downgrades and rollout of plan and add-on changes
+
+In order to allow companies ensure that changes to plan and add-on packaging and pricing is applied, scheduled updates in Stigg are handled in a similar manner to how subscriptions are scheduled to start in a future start date. That is, when the scheduled update takes place, customers will be downgrade to **the latest plan and add-on version** that exists at the time.
+
+![](/images/fd090be-image.png)
+
+  
+### Visibility of scheduled updates in the Stigg Customer Portal
+
+Stigg provides a [fully customizable snap-in Customer Portal widget](react-sdk#rendering-a-customer-portal), that customers can use to update their subscription in a self-served manner.
+
+When a subscription has scheduled updates, this is auto-magically reflected in the Stigg Customer Portal - no additional code changes are required to communicate this to customers ![:muscle:](/images/muscle.png ":muscle:").
+
+![](/images/9998785-Screenshot_2023-09-10_at_23.11.36.png) 
+
+### Visibility of scheduled updates in the Stigg Console
+
+Subscriptions that have a scheduled update will have a proper indication under the Customer details > Subscriptions section and Subscription details screens:
+
+![](/images/a5ffedd-image.png)
+
+Details about the scheduled updates is available under the Subscription details screen:
+
+![](/images/3947625-image.png)
+
+  
+## Updates to subscriptions with usage-based pricing
+
+Usage-based pricing allows your customers to pay only for what they consume of your product or service. This pricing model has been gaining popularity for the past few years and is still [expected to grow in 2023](https://openviewpartners.com/blog/state-of-usage-based-pricing). 
+
+A famous example is [Stripe](https://stripe.com/pricing) that charges per successful card charge, allowing smaller companies to start at a comparatively lower cost and pay in accordance to the value they extract from Stripe’s product.
+
+If you support usage-based pricing, upgrade and downgrade behaviors are predefined by nature - changes will always be immediate, usage reported after the change took place will be billed using the new price.
+
+  
+## Unit increases in subscriptions with true-up pricing
+
+When "true-up" pricing is enabled, updates to to unit quantities are aggregated and billed at the end of the billing cycle.
+
+This pricing model is common in use-cases where the unit quantities change frequently, for example: when users are added an removed from a workspace, similarly to what happens in [Loom](https://support.loom.com/hc/en-us/articles/7310782877469-Loom-s-Billing-Policy).
+
+In this case, the behavior is similar to the rest of the subscription [upgrade](#subscription-upgrades) and [downgrade](#subscription-downgrades) behaviors, with the exception of increase to the unit (i.e. seat) quantity:
+
+| Behavior in subscriptions with a monthly billing cycle                                                                | Behavior in subscriptions with an annual billing cycle                                   |
+| --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| The customer will be charged the prorated amount for the additional unit **at the end of the current billing cycle**. | The customer will be **immediately charged** the prorated amount for the additional unit |
+
+  
+## Conversion of free trials to paid subscriptions
+
+When a customer converts their trial subscription to a paid subscription, they'll be **immediately charged** the full amount for the paid subscription and their billing cycle will start according to when the conversion took place.
+
+Charging those customers immediately creates commitment right away (= less time to regret) and gets money into your bank earlier.
+
+  
+## Additional resources
+
+[ ![](/images/5e310cf-Stigg_LogoSymbol_ForLightBG.png)  We’ve tested the top 40 SaaS companies: This is how they handle upgrades & downgrades \[Part 1\] Stigg blog ](https://www.stigg.io/blog-posts/weve-tested-the-top-40-saas-companies-this-is-how-they-handle-upgrades-downgrades-part-1) 
+
+  
+[ ![](/images/5e310cf-Stigg_LogoSymbol_ForLightBG.png)  The only guide you’ll ever need to implement upgrade & downgrade flows \[Part 2\] Stigg blog ](https://www.stigg.io/blog-posts/the-only-guide-youll-ever-need-to-implement-upgrade-downgrade-flows-part-2) 

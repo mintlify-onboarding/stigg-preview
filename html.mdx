@@ -1,0 +1,50 @@
+---
+title: "Webflow, Wordpress and plain HTML"
+---
+
+## Overview
+
+The Embed SDK is a Javascript library for presenting Stigg components in websites that are created using Webflow, Wordpress, or plain HTML.
+
+Under the hood, the Embed SDK wraps the [React SDK](react-sdk) and allows you to inject the same components into your website without needing to include any additional frameworks.
+
+## Installing the SDK
+
+To include the Embed SDK in the page, you need to add the following `<script>` tag to the `<body> `element:
+
+HTML
+
+`<script src="https://cdn.jsdelivr.net/npm/@stigg/embed-sdk@latest/dist/embed-sdk.js"></script>
+`
+
+You also need to include the styles in the `<head>` tag:
+
+HTML
+
+`<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stigg/embed-sdk@latest/dist/embed-sdk.css" />
+`
+
+## Retrieving the client API key
+
+In the Stigg Cloud Console, go to [Settings > Account > Environments](https://app.stigg.io/account/settings).
+
+Copy the   **Client API key** of the relevant environment.
+
+## Getting started
+
+You'll need to initialize the Embed SDK with your API key. For the list of additional parameters that can be passed please refer to the React SDK's `<StiggProvider/>` component.
+
+HTML
+
+`<script>
+  const stigg = Stigg({ apiKey: "YOUR-CLIENT-API-KEY" });
+</script>
+`
+
+## Rendering widgets
+
+[ ![](/images/9ee9b64-Group_17013.png)  Pricing table Allow customers to select the plan that that they'd like to subscribe to from your public pricing page or in-app paywall ](pricing-tables) 
+
+## Customization options
+
+You can customize the paywall look and feel using the options that are supported by the React SDK. You can find more information about the options [here](react-sdk#customization-options).

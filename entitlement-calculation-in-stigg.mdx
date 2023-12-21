@@ -1,0 +1,21 @@
+---
+title: "How are customer entitlements calculated?"
+---
+
+In software, an entitlement refers to the right to use services, products, or in our case: _application features_. Entitlements can provide fine-grained controls over how an individual or organization can use software.
+
+In Stigg, entitlements represent a combination of a [feature](domain-model#feature) and its configuration. The result is functionality that each customer is entitled to.
+
+In Stigg, customers can be granted entitlements from multiple source:
+
+1. Active subscription  
+   1. Active plan - an entitlement that's defined for the current plan that the customer is subscribed to.  
+   2. Base plan - an entitlement that's inherited from a parent plan of the plan that the customer is subscribed to.  
+   3. Add-ons - due to the fact that add-ons extend plans, when a subscription includes both plans and add-ons that are defined using the same configuration or metered features, the entitlement value for those features would be the **sum** of the entitlements of that specific feature. For example: if a customer has a subscription for a plan, and as part of that plan they’re entitled to X units of a specific feature. If they’ll also purchase an add-on with Y units of the same feature, the customer will be entitled to X + Y units as part of their subscription. Moreover, if the customers pays for a quantity of Q add-ons as part of their subscription, they’ll be entitled to X + Y \* Q units of that feature.
+2. Trial subscription - an entitlement that's defined in a subscription that the customer is currently trialing. This is possible since Stigg allows customers to trial a higher tier, while still paying for an active subscription.
+3. Promotional entitlements that have been granted to the customer - granting promotional entitlements to a customer affects all of their subscriptions.
+4. Additional product - relevant when a customer is subscribed both to a product that allows only a single active subscription **and** a product that allows multiple active subscriptions.
+
+> ## 👍
+> 
+> Stigg follows a generous approach, and will therefore grant the customer the maximum value between (1)-(4).

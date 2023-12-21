@@ -1,0 +1,164 @@
+---
+title: "Running pricing experiments"
+---
+
+## Overview
+
+Stigg's experimentation capability allows you to run A/B tests to test different pricing strategies, and determine which strategy results in an increased conversion rate, revenue and overall customer lifetime value (LTV).
+
+## Creating your first experiment
+
+Navigate to the **Experiments** section using the left navigation pane.
+
+### Selecting the experiment use-case
+
+Select the use-case that you'd like to test.
+
+![](/images/38bba3d-Screen_Shot_2022-10-03_at_22.06.52.png)
+
+> ## 🚧
+> 
+> In order to run experiments on the customer journey, customers must be created using the [provisionCustomer](/docs/nodejs-sdk#provisioning-customers) API
+
+  
+### Entering the experiment details
+
+Enter the experiment name and optional description.
+
+To allow easy analysis of the experiment results, the experiment name must be unique.
+
+Example names can be "Freemium vs. reverse trial".
+
+> ## 📘
+> 
+> When running multiple experiments using the same configuration, it's recommended to add the traffic distribution as the suffix of the experiment name, for example: "Freemium vs. reverse trial - 50/50"
+
+  
+### Creating a variation
+
+Every pricing experiment is composed of 2 variations:
+
+1. A **control group** which is based on the existing product settings - only the control group name can be changed, the rest of the settings are read-only.
+2. A **variation group** which describes a variation from the current product settings
+
+According to the use-case that will be tested as part of the experiment, you'll be asked to define the configuration of the variation group.
+
+![](/images/30f7587-Screen_Shot_2022-10-03_at_22.23.05.png)
+
+> ## 📘
+> 
+> The variation configuration must be different than the configuration of the control group.
+
+  
+### Setting the traffic distribution
+
+Define how the traffic of **new customers** will be distributed between the experiment variations.
+
+The definition can be done by dragging the scrollbar, or by manually entering the distribution percentage.
+
+![](/images/893d6e0-Screen_Shot_2022-10-03_at_22.23.13.png)
+
+  
+### Confirming the creation of the experiment
+
+After the experiment configuration has been defined, confirm the creation of the experiment by clicking on the "**Create experiment**" button.
+
+Experiments are first created in a "Draft" (= not running) status, which allow you to review and apply changes to the experiment definition before the experiment is started.
+
+## Updating experiments
+
+### Updating a draft experiment
+
+When an experiment has not run yet, simply open it from the list of experiments, apply the relevant changes and click on "Save changes" to confirm them.
+
+### Updating a running experiment
+
+In order to prevent skew of the experiment results, it's not possible to apply changes to a running experiment or an experiment that has ended.
+
+As an alternative, you can **duplicate** such experiments by clicking on the "Duplicate" action.
+
+## Running the experiment
+
+Experiments **affect only new customers** that are created while the experiment is running.
+
+Existing customers are not affected.
+
+> ## 🚧
+> 
+> 1. Only **one** experiment can run at certain point of time.
+> 2. When an experiment is running, additional changes to your product's pricing can be made; however, **publishing them can only take place when no experiments are running**.
+
+### Starting the experiment
+
+To run an experiment, navigate to a created draft experiment and click on the "Start experiment" button.
+
+Confirm the action.
+
+### Indication for a running experiment
+
+#### System-wide indication
+
+A notification bar with details about the running experiment will appear throughout the duration of the experiment, indicating that a pricing experiment is in progress.
+
+![](/images/c662e7d-Screen_Shot_2022-10-03_at_22.27.31.png)
+
+#### Customer-level indication
+
+An indication for a customer participation in an experiment is provided under the "Experiment participation" section of the customer details screen.
+
+The indication includes details about what experiments the customer participated in, and what variation was assigned to the customer.
+
+#### Subscription-level indication
+
+When a subscription is created as part of an experiment, it has an indication whether the subscription was created as part of an experiment that's currently running or as part of an experiment that has since ended.
+
+The indication appears under the "Subscriptions" section of the customer details screen, and also under the subscription details screen.
+
+### Stopping the experiment
+
+To stop a running experiment, click on the "End experiment" button.
+
+Confirm the action.
+
+  
+## Analyzing the results
+
+The experiment results can be analyzed using the Stigg platform or using third-party solutions.
+
+### Analysis using the Stigg platform
+
+Stigg provides visibility for the experiment results of each variation while the experiment is running and when it has ended, specifically:
+
+1. The total number of subscriptions that were created in each variation group while the experiment was running
+2. The number of **paid** subscriptions that were created in each variation while the experiment was running - when customers have more than one paid subscription, it's counted as once in order to represent the first conversion event.
+3. The conversion rate (%) - the number of paid subscriptions divided but the total number of subscriptions.
+
+![](/images/ada4448-Screen_Shot_2022-10-03_at_21.58.34.png)
+
+  
+### Analysis using third-party applications
+
+In order to analyze the experiment results using third-party applications (such as [Mixpanel](https://mixpanel.com/) and [Amplitude](https://amplitude.com/)), Stigg will need to be integrated with these solutions. Such integration is possible using the Stigg [API](graphql-api), [SDKs](codebase-integration-overview), and [webhooks](webhooks).
+
+To allow analysis of the results, every `customer` and `subscription` object that are returned by the Stigg platform includes details about the experiment that these entities relate to, specifically:
+
+1. Experiment name
+2. Experiment ID
+3. Variation group name
+
+When an experiment is running, these properties will be populated with the relevant information.
+
+As part of the integration with Stigg, make sure to propagate these properties to these applications. For example: when reporting user events to Mixpanel, report the experiment information on each event.
+
+  
+## Applying the results to the rest of your customer base
+
+After the analysis of the experiment results is concluded and the winning variation is determined, navigate to the product details page of the relevant product and apply the same settings as the winning variation.
+
+> ## 📘
+> 
+> [Learn more](/docs/products#defining-the-customer-journey) about applying changes to the customer journey settings
+
+## Related resources
+
+[ ![](/images/75f0420-89170de8a18409d8735dcdf413d86dba.png)  Trial or Freemium? Get the Best of Both with a Reverse Trial Amplitude blog ](https://amplitude.com/blog/reverse-trial) 

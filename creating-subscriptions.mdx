@@ -1,0 +1,86 @@
+---
+title: "Provisioning subscriptions"
+---
+
+## Overview
+
+In this quick start guide, we'll demonstrate how to provision subscriptions in Stigg.
+
+**Subscriptions** should be provisioned in Stigg when your customers upgrade or downgrade to a new plan (free, paid, trial, etc.). 
+
+When provisioning of a paid subscription is attempted, Stigg is integrated with a billing solution and payment details have not been previously provided by the customer, Stigg will auto-magically redirect customers to a the billing solution's checkout page. After the customer enters the required payment details in the presented checkout page, the relevant subscription will be created in both Stigg and the billing solution.
+
+When no payment is required or when Stigg is not integrated with a billing solution, the subscription will be immediately created in Stigg.
+
+  
+## Before we begin
+
+In order to complete this guide in your application code, please make sure that you have:
+
+* [Modeled your pricing in Stigg](modeling-your-pricing)
+* [Installed the Stigg Node.js server SDK](nodejs-sdk#initializing-the-sdk)
+* [A Stigg **server** API key](nodejs-sdk#retrieving-the-server-api-key)
+* [Provisioned a customer](provisioning-customers)
+  
+## Initializing the server SDK
+
+The first step is to initialize Stigg's server SDK with the server API key of the environment that's integrated with Stigg:
+
+TypeScript
+
+`import Stigg from '@stigg/node-server-sdk';
+
+const stiggClient = await Stigg.initialize({ apiKey: 'YOUR_SERVER_API_KEY' });
+
+export default stiggClient;
+`
+
+> ## 🚧
+> 
+> The Stigg SDK instance has an internal cache and supports retries for certain API calls on network errors. In general, you should initialize it once per process (for example: using a singleton design-pattern) and use the same instance throughout the codebase.
+
+  
+## Provisioning a subscription
+
+When a customer subscribes to a new plan (free, paid, trial, etc.), provision a subscription in Stigg. The provision result can be a successfully created subscription, or a redirect link to checkout page of the integrated billing solution in case payment details are required in order to provision the subscription.
+
+TypeScript
+
+`const subscription = await stiggClient.provisionSubscription({  
+    customerId: 'customer-demo-01',  
+    planId: 'plan-basic',  
+    addons: [{  // optional
+        addonId: 'addon-extra-stuff',  
+        quantity: 1,  
+    }],  
+    startDate: new Date(), // optional
+    id: 'subscription-plan-basic',  // optional
+    billingPeriod: 'MONTHLY', // optional, relevant only for paid subscriptions  
+    unitQuantity: 2, // optional, relevant for subscriptions with per-unit pricing  
+    billingInformation: {  // optional
+    	taxRateIds: [  
+        "txr_1LcTSRE1gVT2zwZV07MIRKdf",  
+        "txr_1LcTSRE1gVT2zwZV07MIRKdf"  
+      ],
+    	taxPercentage: 17,// optional. taxRate will be created if not exists
+    },
+    checkoutOptions: { // optional
+        successUrl: "https://your-success-url.com",
+        cancelUrl: "https://your-cancel-url.com",
+        allowPromoCodes: true, // optional, pass this parameter to allow customer to use promo codes on checkout
+        collectBillingAddress: true // optional, pass this parameter to collect billing address for invoice on checkout
+    },
+    metadata: { // optional
+      key: 'value',  
+    },
+});
+`
+
+  
+## Additional resources
+
+[ ![](/images/f5ade1e-iconfinder-valueserver-4417114_116617.png)  Stigg's backend integration ](backend-integration) 
+
+## Decision flow
+
+![](/images/6998840-image.png)

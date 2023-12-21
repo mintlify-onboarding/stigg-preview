@@ -1,0 +1,71 @@
+---
+title: "Environments"
+---
+
+## Overview
+
+Stigg supports the creation of multiple environments in each account in order to support your existing product development process, for example: Development, Staging, Production, etc.
+
+Every environment is **isolated** from one another.
+
+  
+## Creating a new environment
+
+To create a new environment, navigate to the Settings > Environment section.
+
+Click on "+ Add".
+
+Enter the following information:
+
+1. Environment name
+2. Description (optional)
+3. Color which will be used to distinguish different environments from one another
+
+> ## 📘
+> 
+> When a new environment is created, a default product for that environment will be automatically created. The product name will be the same name as the account name, for example: if your account name is "Acme", an "Acme" product will automatically be created in every newly created environment.
+> 
+> You can edit the name of the default product, or even remove it altogether and create a new one.
+
+  
+## Enforcing client-side security
+
+When your client-side (frontend) application is integrated with Stigg it uses the Client API key, which is publicly accessible to anyone.
+
+While the Stigg platform limits access for that API key to a minimum, some sensitive data may still be accessible by a malicious actor (e.g. by guessing customer ID).
+
+To ease the integration process, Stigg doesn't enforce client-side security in newly created environments. 
+
+It's highly recommended to prevent any un-authenticated access to data using Client API key, by configuring Stigg to verify the identity of requests that originate from your client-side application.
+
+For more details see:
+
+[ ![](/images/cec39a3-image.png)  Hardening client access ](enable-client-side-security) 
+
+## Editing environment details
+
+To edit the details of an environment, click on the dotted menu of the relevant environment and select the "Edit" action.
+
+Save the changes.
+
+## Duplicating an existing environment
+
+You can duplicate the **product catalog** from an existing environment. This action is useful in the following cases:
+
+1. When publishing your integration for the first time, for example: when publishing the integration that was implemented in the Development environment to the Staging environment, and when publishing the changes from the Staging environment to the Production environment
+2. When implementing a pricing change - a new environment can be created for each code branch with the starting point of the production configuration.
+
+Duplicating an existing environment can be achieved in the following flows:
+
+1. During the creation of the new environment - select the environment that you'd like to duplicate the data from.
+2. Under the Settings > Environment section by clicking on the dotted menu that appears in the row an existing environment and selecting the "Duplicate environment" action.
+
+## Delete an environment
+
+To delete the details of an environment, click on the dotted menu of the relevant environment and select the "Delete" action.
+
+Enter the environment name in the confirmation dialog and click on "Delete".
+
+> ## ❗️
+> 
+> Deleting an environment is an irreversible action that will cause the permanent removal of all of its data from Stigg.

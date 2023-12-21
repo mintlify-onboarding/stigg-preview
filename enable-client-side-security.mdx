@@ -1,0 +1,99 @@
+---
+title: "Hardening client-side access"
+---
+
+When your client-side (frontend) application is integrated with Stigg it uses the **Client API key**, which is publicly accessible to anyone. 
+
+While the Stigg platform limits access for that API key to a minimum, some sensitive data may still be accessible by a malicious actor (e.g. by guessing customer ID).
+
+It's highly recommended to prevent any un-authenticated access to data using **Client API key**, by configuring Stigg to verify the identity of requests that originate from your client-side application. 
+
+Verification is achieved using the **HMAC SHA256** algorithm.
+
+## How does hardening work?
+
+![](/images/89224c4-image.png) 
+
+As a prerequisite, inject a signing secret obtained from Stigg into your backend application.
+
+When a user logs in to your application (step 1), your backend application should create a customer token (step 2) and return it as part of the response (step 3).
+
+When initializing the Stigg SDK on the frontend, in addition to the customer ID include the customer token. Both properties will be automatically sent to the Stigg backend upon every request (step 4).
+
+Stigg would then leverage the provided information to verify the customer identity.
+
+  
+## How can I enable hardening?
+
+### Copy the singing secret from the Stigg app
+
+In the Stigg app, navigate to the [Account Settings](https://app.stigg.io/account/settings) screen.
+
+Under the Environments section, click on the button that appears under the Client-side Security column of the relevant environment - if hardening is not enabled it will appear as "Not enforced".
+
+Copy the signing secret.
+
+> ## 📘
+> 
+> The signing secret is specific per environment.
+
+### Generate a customer token in your backend application
+
+In your backend application, identify the handler that returns the user identity to the client side.
+
+Generate a customer token using the provided singing secret, for example:
+
+TypeScript
+
+`` import { createHmac } from 'crypto';
+
+export function createCustomerToken(customerId: string, signingSecret: string): string {
+  const signature = createHmac('sha256', signingSecret).update(customerId).digest('hex');
+  return `HMAC-SHA256 ${customerId}:${signature}`;
+}
+ ``
+
+Include the generated customer token in the user identity response.
+
+### Provide the customer token in your frontend application
+
+In your frontend application pass the `customerToken` to the Stigg provider.
+
+TypeScript
+
+`import { useStiggContext } from '@stigg/react-sdk';
+
+function App() {
+  const { stigg } = useStiggContext();
+
+  useEffect(() => {
+    var customerId = ...
+    var customerToken = ...
+    
+    // call stigg.setCustomerId after the users signs in
+    stigg.setCustomerId(customerId, customerToken);
+  })
+}
+`
+
+### Enable client-side security enforcement in the Stigg app
+
+In the Stigg app, navigate to the [Account Settings](https://app.stigg.io/account/settings) screen.
+
+Under the Environments section, click on the button that appears under the "Client-side security" column of the relevant environment - if hardening is not enabled it will appear as "Not enforced".
+
+Set the "Client-side security status" to "Enforced".
+
+Save the changes.
+
+Confirm the change.
+
+> ## 💡
+> 
+> Pro tip
+> 
+> It's recommended to enable client-side security in each environment in a similar manner to deployment of new functionality in your application, for example: start with development, then enable in staging, and only lastly enable in production.
+
+> ## 🚧
+> 
+> If client-side security is enforced and the above mentioned code changes have not been made, access to Stigg from the frontend application will not work.

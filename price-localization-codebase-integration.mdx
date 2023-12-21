@@ -1,0 +1,113 @@
+---
+title: "Implementing price localization on your public website and application"
+---
+
+## Overview
+
+In order to future-proof your public website and application for price localization, it's recommended to implement these changes as part of your initial integration with Stigg.
+
+Doing so will allow you to introduce and rollout changes to the price localization configuration, without requiring any additional code changes.
+
+> ## 🚧
+> 
+> 1. When no localized pricing is defined for a specified country, the default pricing will be used.
+> 2. If the customer has already subscribed to a plan with a localized price, its billing country code would **override** the one that's provided programatically.
+
+## Visibility for localized prices in your public pricing page
+
+React
+
+`// fetch the billingCountryCode according to the visitor's IP
+
+<Paywall
+  highlightedPlanId="plan-id"
+	billingCountryCode="DK" // must be in the ISO-3166-1 format
+  onPlanSelected={({ plan, customer }) => {
+    // Handle customer intention to subscribe to plan
+  }}
+/>
+`
+
+![](/images/9d5fd67-Screenshot_2023-03-30_at_0.11.07.png)
+
+## Visibility for localized prices in your in your application
+
+### In-app paywall
+
+React
+
+`// fetch the billingCountryCode according to the customer's IP if they have never subscribed to a paid plan
+// otherwise, the in-app paywall will be rendered according to the localized pricing that the customer has been subscribed to in the past
+
+<Paywall
+  highlightedPlanId="plan-id"
+	billingCountryCode="DK" // must be in the ISO-3166-1 format
+  onPlanSelected={({ plan, customer }) => {
+    // Handle customer intention to subscribe to plan
+  }}
+/>
+`
+
+![](/images/5b03c36-Screenshot_2023-09-12_at_3.28.43.png) 
+
+### Customer portal
+
+React
+
+`// fetch the billingCountryCode according to the customer's IP if they have never subscribed to a paid plan
+
+<CustomerPortal
+	paywallComponent={
+    <Paywall
+    billingCountryCode="DK" // must be in the ISO-3166-1 format
+    onPlanSelected={({ plan, customer }) => {
+      // Handle customer intention to subscribe to plan
+    }}
+    />
+  }
+/>
+`
+
+![](/images/6b28e82-Screenshot_2023-09-12_at_3.39.46.png) ![](/images/6a9ba07-Screenshot_2023-09-12_at_3.39.19.png) 
+
+### Checkout
+
+React
+
+`// fetch the billingCountryCode according to the customer's IP if they have never subscribed to a paid plan
+
+<Checkout
+        planId={"revvenu-essentials"}
+        onCheckoutCompleted={({ success, error }) => {
+          // TODO: handle checkout completion
+        }}
+        billingCountryCode={"DK"} // must be in the ISO-3166-1 format
+      />
+`
+
+![](/images/3c9017c-Screenshot_2023-09-12_at_3.36.49.png) 
+
+## Provisioning subscriptions with localized pricing
+
+Node.js
+
+`// fetch billingCountryCode according to the customer's IP, billing address, etc.
+
+const subscription = await stiggClient.provisionSubscription({  
+    customerId: "customer-demo-01",  
+    planId: "plan-basic",
+    unitQuantity: 2,								// optional, required for subscriptions with per-unit pricing  
+    billingPeriod: "MONTHLY", 				// optional, relevant only for paid subscriptions  
+    addons: [{  										// optional
+        addonId: "addon-10-campaigns",  
+        quantity: 1,  
+    }],  
+    billingCountryCode: "DK",     		// must be in the ISO-3166-1 format
+    awaitPaymentConfirmation: true,
+    ...
+});
+`
+
+## Additional resources
+
+[ ![](/images/ad4e0e2-computer.png)  Integrate Stigg into your codebase ](codebase-integration-overview) 

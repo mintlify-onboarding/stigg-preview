@@ -1,0 +1,1562 @@
+---
+title: "Node.js SDK"
+description: "How to install and use the Stigg Node.js SDK on the server-side"
+---
+
+## Installing the SDK
+
+The first step is to install the Stigg SDK as a dependency in your application using your application's dependency manager:
+
+Shell
+
+`npm install @stigg/node-server-sdk
+`
+
+  
+## Retrieving the server API Key
+
+In the Stigg Cloud Console, go to [Settings > Account > Environments](https://app.stigg.io/account/settings).
+
+Copy the   **Server API key** of the relevant environment.
+
+  
+## Initializing the SDK
+
+Import the Stigg client and initialize it with the API key:
+
+Node.js
+
+`import Stigg from '@stigg/node-server-sdk';
+
+const stiggClient = Stigg.initialize({ apiKey: 'YOUR_SERVER_API_KEY' });
+
+export default stiggClient;
+`
+
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#initialize)
+
+> ## 🚧
+> 
+> The Stigg SDK instance has an internal cache and supports retries for certain API calls on network errors. In general, you should initialize it once per process (for example: using a singleton design-pattern) and use the same instance throughout the codebase.
+
+  
+To find out when the client is ready, you can use `waitForInitialization` which return a promise that resolves when the client is ready to use, or rejects when the initialization failed.
+
+Javascript
+
+`try {
+  await stiggClient.waitForInitialization();
+  // initialization succeeded, entitlements values are now available
+} catch (err) {
+  // initialization failed
+}
+`
+
+  
+## Provisioning customers
+
+When a new customer is provisioned within your application (for example: as part of your registration or onboarding process), you should also provision them in Stigg. 
+
+You can optionally pass `subscriptionParams` to create a subscription for that customer using a single operation. The actual subscription that is created for the customer can be overriden by Stigg admin from the [Stigg Console](https://app.stigg.io), according to the [product's Customer Journey settings](products#defining-the-customer-journey).
+
+Node.js
+
+`const customer = await stiggClient.provisionCustomer({  
+    customerId: 'customer-test-id',  
+    name: 'My very first customer', // optional
+    email: '[[email protected]](/cdn-cgi/l/email-protection)',      // optional - billing email address
+    couponId: 'coupon-test-id',     // optional
+    subscriptionParams: {           // optional - pass null to skip initial subscription
+      planId: 'plan-basic',
+      resourceId: 'resource-01',      // optional, required for multiple subscription for same product
+      billableFeatures: [{ 						// optional, required for subscriptions with per unit pricing
+        featureId:'feature-01-templates',
+        quantity: 2
+      }],
+      billingPeriod: 'MONTHLY', 			// optional, relevant only for paid subscriptions  
+      addons: [{  										// optional
+        addonId: 'addon-extra-stuff',  
+        quantity: 1,  
+      }],  
+      promotionCode: 'STIGG30', 			// optional
+      billingCountryCode:'DK',     		// optional, required for price localization, must be in the ISO-3166-1 format
+      metadata: { 									  // optional
+        key: 'value',  
+      },
+      billingInformation: {
+        taxPercentage: 17,// optional. taxRate will be created if not exists
+      }
+    },
+    billingInfo: {                  // optional
+        language: 'en',  
+        timezone: 'America/New_York',
+        customerName: "The name of the customer for the billing provider",
+        billingAddress: {  
+          country: 'US',  				// must be in the ISO-3166-1 format
+          city: 'New York',  
+          state: 'NY',  
+          addressLine1: '123 Main Street',  
+          addressLine2: 'Apt. 1',  
+          phoneNumber: '+1 212-499-5321',  
+          postalCode: '10164',  
+        },  
+        shippingAddress: {  
+          country: 'US', 					// must be in the ISO-3166-1 format
+          city: 'New York',  
+          state: 'NY',  
+          addressLine1: '123 Main Street',  
+          addressLine2: 'Apt. 1',  
+          phoneNumber: '+1 212-499-5321',  
+          postalCode: '10164',  
+        },  
+        taxIds: [  
+          { type: "au_abn", value: "12345678912" },  
+          { type: "us_ein", value: "12-3456789" }  
+        ],  
+        invoiceCustomFields: {  
+          lorem: "ipsum",  
+          acme: "co"  
+        },  
+        paymentMethodId: "pm_1LcBMDAnAO1PFouUusJSmaPu",  
+        currency: "usd",
+      	metadata: { 		// optional - metadata that will be stored in the billing solution
+          hello: "world"
+        }
+    },  
+    metadata: { 				// optional - metadata that will be stored in Stigg
+        key: "value",  
+    }
+});
+`
+
+Result 
+
+JSON
+
+`{
+  "customer": {
+    "id": "customer-test-id",
+    "experimentInfo": {
+      "name": "should we use freemium?",
+      "id": "should-we-use-freemium",
+      "groupName": "Variant group",
+      "groupType": "VARIANT",
+    }
+  },
+  "subscriptionDecisionStrategy": "REQUESTED_PLAN",
+  "subscription": {
+    "id": "subscription-plan-basic-ed5dac",
+    "planId": "plan-basic",
+    "status": "ACTIVE",
+    "addons": [],
+    "addonIds": [],
+    "customerId": "customer-test-id",
+    "metadata": null,
+    "price": null,
+    "pricingType": "FREE",
+    "resource": {
+      "id": "resource-01",
+    },
+  }
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#provisionCustomer)
+
+> ## 📘
+> 
+> In order to control customers' initial access to the product according to [product's Customer Journey setting](products#defining-the-customer-journey), the `subscriptionParams` must **not** be `null`.
+> 
+> In order to provision a customer without any default subscription, simply pass `subscriptionParams: null` in the argument object.
+
+> ## 📘
+> 
+> The customer's billing information can also be passed to the Stigg SDK when a customer is created or updated.
+> 
+> When Stigg is integrated with additional service, this information will be propagated to the active integrations.
+> 
+> Passing the billing information will cause the customer to be synced to the integrated billing solution even if it doesn't have any subscriptions that are synced to the billing solution (i.e. free, trial, or custom).
+> 
+> Customers' billing information does not persist on Stigg's servers.
+
+  
+## Updating customers
+
+Customer information can also be updated whenever you like assuming they already exists, for example: in order to update the customer's email, you only need to send the new email value without the rest of the customer.
+
+> ## 🚧
+> 
+> Due to the fact that the customer's billing information is not persisted on Stigg's servers, in order to update it the entire `billingInfo` objected must be passed each time.
+
+Node.js
+
+`const customer = await stiggClient.updateCustomer({  
+    customerId: 'customer-test-id',  
+    email: '[[email protected]](/cdn-cgi/l/email-protection)', // optional, use to update the customer's email address
+    couponId: 'coupon-test-id',   // optional, use to apply a coupon to a customer
+    billingInfo: {  							// optional, use to update the customer's billing information
+        ...  
+    },  
+    metadata: {  									// optional, use to update the customer's metadata
+      key: 'value',  
+    }  
+});
+`
+
+Result 
+
+JSON
+
+`{
+  "id": "customer-test-id"
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#updateCustomer)
+
+  
+## Getting customer data
+
+Node.js
+
+`const customer = await stiggClient.getCustomer('customer-demo-01');
+`
+
+Result 
+
+JSON
+
+`{
+  "id": "customer-demo-01",
+  "name": "Test Name",
+  "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+  "createdAt": "2022-09-20T09:59:22.324Z",
+  "updatedAt": "2022-09-20T10:00:32.750Z",
+  "hasPaymentMethod": false,
+  "promotionalEntitlements": [],
+  "metadata": {
+    "lorem": "ipsum"
+  }
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#getCustomer)
+
+  
+## Provisioning subscriptions
+
+When a customer subscribes to a new plan (for example: during an upgrade from a free plan to a paid plan, or downgrade from a higher tier to a lower tier), a subscription needs to be provisioned in Stigg. 
+
+When provisioning of a paid subscription is attempted, Stigg is integrated with a billing solution and payment details have not been previously provided by the customer, Stigg will auto-magically redirect customers to a the billing solution's checkout page. After the customer enters the required payment details in the presented checkout page, the relevant subscription will be created in both Stigg and the billing solution.
+
+When no payment is required or when Stigg is not integrated with a billing solution, the subscription will be immediately created in Stigg.
+
+When a customer subscribes to a new plan (free, paid, trial, etc.), provision a subscription in Stigg. The provision result can be a successfully created subscription, or a redirect link to checkout page of the integrated billing solution in case payment details are required in order to complete the provisioning of the subscription.
+
+Node.js
+
+`const subscription = await stiggClient.provisionSubscription({  
+    // Mandatory, subscription customer ID
+    customerId: 'customer-demo-01',  
+  
+    // Mandatory, subscription plan ID
+    planId: 'plan-basic',
+  
+    // Optional, required only for paid subscriptions  
+    billingPeriod: 'MONTHLY',
+    
+    // Optional, required for multiple subscription for same product
+    resourceId: 'resource-01',      
+
+    // Optional, required for subscriptions with per unit pricing
+    billableFeatures: [{ 						
+      featureId:'feature-01-templates',
+      quantity: 2
+    }],
+   	
+    // Optional, list of subscription addons and quantities
+    addons: [{  										
+        addonId: 'addon-extra-stuff',  
+        quantity: 1,  
+    }],
+    
+    // Optional, used for discounts
+    promotionCode: 'STIGG30', 		
+  
+    // Optional, required for price localization, must be in the ISO-3166-1 format
+    billingCountryCode:'DK',     		
+  
+    // Optional
+    billingInformation: {
+      // Optional, list of tax rate IDs to apply in Stripe
+      taxRateIds: [  
+        "txr_1LcTSRE1gVT2zwZV07MIRKdf",  
+        "txr_1LcTSRE1gVT2zwZV07MIRKdf"  
+      ],
+      
+      // Optional, metadata that is being passed-through to the billing integration
+      metadata: {
+      	lorem: "ipsum"
+      },
+      
+      // Optional, used to create a taxRate with the provided percent if not exists
+      taxPercentage: 17,						
+    },
+  
+    // Optional, parameters used for the hosted checkout
+    checkoutOptions: {
+      // Mandatory, redirect URL after the checkout is complete
+      successUrl: "https://your-success-url.com",
+      
+      // Mandatory, redirect URL after the checkout is cancelled
+    	cancelUrl: "https://your-cancel-url.com",
+      
+      // Optional, allow customer to use promo codes on checkout
+      allowPromoCodes: true, 				
+      
+      // Optional, collect billing address for invoice on checkout
+      collectBillingAddress: true, 	
+      
+      // Optional, pass an ID that can be used to reconcile the subscription with internal systems, such as referral programs
+      referenceId: 'your-id-for-the-checkout-session', 
+      
+      // Optional, allow customer to insert taxId to be shown on the invoice
+      allowTaxIdCollection: true, 	
+      
+      // Optional, collect phone number during checkout
+      collectPhoneNumber: true
+    },
+    
+    // Optional, can be used to store extra data
+    metadata: {											
+      key: 'value',  
+    }
+});
+`
+
+Success result 
+
+JSON
+
+`{
+  status: "Success",
+  checkoutUrl: "https://your-success-url.com",
+  subscription: {
+    "id": "subscription-plan-basic",
+    "planId": "plan-basic",
+    "status": "ACTIVE",
+    "addons": [
+      
+    ],
+    "addonIds": [
+      
+    ],
+    "customerId": "customer-demo-01",
+    "resource": {
+      "id": "resource-01",
+    },
+    "metadata": {
+      "lorem": "ipsum"
+    },
+    "price": null,
+    "pricingType": "FREE",
+    "paymentCollection": "NOT_REQUIRED",
+    "latestInvoice": {
+      "billingId": "invoice-01",
+      "status": "PAID",
+    },
+    "experimentInfo": {
+      "name": "should we use freemium?",
+      "id": "should-we-use-freemium",
+      "groupName": "Variant group",
+      "groupType": "VARIANT",    
+    }
+  }
+}
+`
+
+Payment required action 
+
+JSON
+
+`{
+  status: "Success",
+  subscription: {
+    paymentCollection: "ACTION_REQUIRED",
+    latestInvoice: {
+      paymentUrl: "https...",
+      paymentSecret: "secret"
+    }
+  }
+}
+`
+
+Payment required failed 
+
+JSON
+
+`{
+  status: "Success",
+  subscription: {
+    paymentCollection: "FAILED",
+    latestInvoice: {
+      paymentUrl: "https...",
+      errorMessage: "no sufficient funds"
+    }
+  }
+}
+`
+
+Payment required checkout 
+
+JSON
+
+`{
+  status: "PaymentRequired",
+  checkoutUrl: "https://stripe-checkout-page.com",
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#provisionSubscription)
+
+> ## 🚧
+> 
+> Subscription lifecycle
+> 
+> 1. A customer can have both a non-trial (free or paid) subscription and trial subscription to different plans of the same product in parallel - this logic allows customers to trial a higher tier plan, while still paying for an existing plan.
+> 2. When the customer has a trial subscription for plan X of product A and a new subscription is created for the same plan, the new subscription will be created as as non-trial (paid) subscription - this logic follows an upgrade flow of a trial subscription to a paid subscription of a specific plan.
+> 3. Except in the above mentioned cases, when a customer has an active subscription for product X, and another subscription for the same product is created with start date S, the existing subscription will automatically be cancelled and the new subscription will start on start date S.
+> 4. It's also possible to explicitly skip the trial period of the selected plan by providing the `skipTrial: true` parameter to the `provisionSubscription()` method.
+
+> ## 🚧
+> 
+> Promo code support
+> 
+> 1. Passing of promo codes requires an integration with a billing solution, such as: [Stripe](stripe).
+> 2. Promo codes should be generated in the integrated billing solution.
+> 3. When providing the optional `promotionCode` parameter, the promo code and associated coupon will validated against the defined restrictions to ensure that they're applicable for the subscription. If validation fails, a [relevant error code](https://node-sdk-docs.stigg.io/enums/errorcode) would be returned; otherwise, the subscription will include the discounted price.
+> 4. When providing the optional `promotionCode` parameter and payment method is required, the promotion will be applied to the checkout session automatically.
+
+> ## 📘
+> 
+> This method replaces the `createSubscription() `method, which has been deprecated.
+
+  
+## Updating subscriptions
+
+It's possible to update an existing subscription without creating a new one, keeping the original start date and billing cycle. Using this function you can: 
+
+1. Update subscription metadata
+2. Update unit quantity, if the subscription has per-unit pricing (i.e. when customers add or removes a seat)
+3. Add or remove add-ons, only if they are compatible with the subscription's plan.
+4. Update subscription promotion code.
+5. Update subscription billing period
+
+When integrated with a billing solution (for example: [Stripe](stripe)), whenever the unit quantity or add-ons are modified, a new invoice with prorated amount will be immediately generated in the integrated billing solution.
+
+Node.js
+
+`const subscription = await stiggClient.updateSubscription({  
+  subscriptionId: 'subscription-plan-basic',
+  billableFeatures: [{
+    featureId:'feature-01-templates',
+    quantity: 3
+  }],
+  promotionCode: "STIGG30", // optional
+  addons: [
+    { addonId: 'extra-api-calls', quantity: 5 }
+  ],
+  metadata: {  
+      key: 'newValue'
+  },
+  billingInformation: {
+    // Optional, metadata that is being passed-through to the billing integration
+    metadata: {
+      lorem: "ipsum"
+    },
+  },
+  billingPeriod: BillingPeriod.Monthly
+});
+`
+
+Result 
+
+JSON
+
+`{
+  "id": "subscription-plan-basic",
+  "planId": "plan-basic",
+  "status": "ACTIVE",
+  "addons": [],
+  "addonIds": [],
+  "customerId": "customer-demo-01",
+  "resource": {
+    "id": "resource-01",
+  },
+  "metadata": {
+    "key": "newValue"
+  },
+  "price": null,
+  "pricingType": "FREE",
+  "experimentInfo": {
+      "name": "should we use freemium?",
+      "id": "should-we-use-freemium",
+      "groupName": "Variant group",
+      "groupType": "VARIANT",
+  }
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#updateSubscription)
+
+> ## 🚧
+> 
+> Promo code support
+> 
+> 1. Passing of promo codes requires an integration with a billing solution, such as: [Stripe](stripe).
+> 2. Promo codes should be generated in the integrated billing solution.
+> 3. When providing the optional `promotionCode` parameter, the promo code and associated coupon will validated against the defined restrictions to ensure that they're applicable for the subscription. If validation fails, a [relevant error code](https://node-sdk-docs.stigg.io/enums/errorcode) would be returned; otherwise, the subscription will include the discounted price.
+
+  
+## Canceling subscriptions
+
+Node.js
+
+`await stiggClient.cancelSubscription({  
+    subscriptionId: 'subscription-plan-basic'  
+});
+`
+
+Result 
+
+JSON
+
+`{
+  "id": "subscription-plan-basic",
+  "planId": "plan-basic",
+  "status": "CANCELED",
+  "addons": [],
+  "addonIds": [],
+  "customerId": "customer-demo-01",
+  "metadata": {
+    "key": "newValue"
+  },
+  "price": null,
+  "pricingType": "FREE",
+  "effectiveEndDate": "2022-09-20T10:18:06.842Z"
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#cancelSubscription)
+
+> ## 🚧
+> 
+> Subscription cancellation will take place according to the defined product behavior.
+
+  
+## Canceling subscriptions scheduled updates
+
+Will cancel all the scheduled updates of the given subscription
+
+Node.js
+
+`await stiggClient.cancelSubscriptionScheduledUpdates({  
+  subscriptionId: 'subscription-plan-essentials',
+  status: SubscriptionScheduleStatus.Scheduled,
+});
+`
+
+Result 
+
+JSON
+
+`{
+    subscriptionId: 'subscription-plan-essentials'
+}
+`
+
+## Canceling subscriptions pending payment updates
+
+Will cancel all the pending payment updates of the given subscription
+
+Node.js
+
+`await stiggClient.cancelSubscriptionScheduledUpdates({  
+  subscriptionId: 'subscription-plan-essentials',
+  status: SubscriptionScheduleStatus.PendingPayment,
+});
+`
+
+Result 
+
+JSON
+
+`{
+    subscriptionId: 'subscription-plan-essentials'
+}
+`
+
+## Getting customer's active subscriptions
+
+#### Products with a single active subscription
+
+To retrieve subscriptions for products that only allow customers to have a single active subscription:
+
+Node.js
+
+`const subscriptions = await stiggClient.getActiveSubscriptions({
+  customerId: 'customer-demo-01',
+});
+`
+
+#### Products with multiple active subscriptions
+
+To retrieve subscriptions for products that allow customers to have multiple active subscriptions, include the [resource ID](multiple-subscriptions#resource-id) of the relevant resource:
+
+Node.js
+
+`const subscriptions = await stiggClient.getActiveSubscriptions({
+  customerId: 'customer-demo-01',
+  resourceIds: ['resource-01']
+});
+`
+
+Passing more than one (and up to 100) [resource ID](multiple-subscriptions#resource-id) will return the active subscriptions for all of the provided resources IDs. 
+
+Node.js
+
+`const subscriptions = await stiggClient.getActiveSubscriptions({
+  customerId: 'customer-demo-01',
+  resourceIds: ['resource-01', 'resource-02', 'resource-03' ]
+});
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#getActiveSubscriptions)
+
+  
+## Getting the entitlement of a customer to a specific feature
+
+#### Checking the entitlement of a boolean feature
+
+Node.js
+
+`const entitlement = await stiggClient.getBooleanEntitlement({  
+  customerId: 'customer-demo-01'  
+  featureId: 'feature-demo-01',
+  resourceId: 'resource-01',      // optional, pass it to get entitlement of specific resource
+});
+
+if (entitlement.hasAccess) {  
+  // customer has access to the feature  
+} else {  
+  // access denied  
+}
+`
+
+Result - has access 
+
+JSON
+
+`{
+  "isFallback": false,
+  "hasAccess": true,
+  "feature": {
+    "id": "feature-demo-01",
+    "featureType": "Boolean",
+    "meterType": "None",
+    "units": "",
+    "unitsPlural": "",
+    "isMetered": false
+  }
+}
+`
+
+Result - no access 
+
+JSON
+
+`{
+  "hasAccess": false,
+  "accessDeniedReason": "CustomerNotEntitledForFeature",
+  "isFallback": false
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#getBooleanEntitlement)
+
+  
+#### Checking the entitlement of a numeric configuration feature
+
+Node.js
+
+`const entitlement = await stiggClient.getNumericEntitlement({  
+  customerId: 'customer-demo-01'  
+  featureId: 'feature-demo-02',  
+  resourceId: 'resource-01',      // optional, pass it to get entitlement of specific resource
+});
+
+if (entitlement.hasAccess) {  
+  // get the entitlement numeric value that is defined for the feature  
+  console.log(entitlement.value);  
+}
+`
+
+Result - has access 
+
+JSON
+
+`{
+  "isFallback": false,
+  "hasAccess": true,
+  "isUnlimited": false,
+  "value": 100,
+  "feature": {
+    "id": "feature-demo-02",
+    "featureType": "Numeric",
+    "meterType": "None",
+    "units": "request",
+    "unitsPlural": "requests",
+    "isMetered": false
+  }
+}
+`
+
+Result - no access 
+
+JSON
+
+`{
+  "hasAccess": false,
+  "accessDeniedReason": "CustomerNotEntitledForFeature",
+  "isFallback": false,
+  "isUnlimited": false
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#getNumericEntitlement)
+
+  
+#### Checking if a customer has access to a metered feature
+
+Node.js
+
+`const entitlement = await stiggClient.getMeteredEntitlement({  
+  customerId: 'customer-demo-01',  
+  featureId: 'feature-demo-03',
+  resourceId: 'resource-01',      // optional, pass it to get entitlement of specific resource
+});
+
+if (entitlement.hasAccess) {  
+  // has access and the requested usage is within the allowed quota  
+} else {  
+  // the customer has exceeded his quota for this feature  
+}
+`
+
+Result - has access 
+
+JSON
+
+`{
+  "isFallback": false,
+  "hasAccess": true,
+  "isUnlimited": false,
+  "usageLimit": 2,
+  "currentUsage": 0,
+  "requestedUsage": 0,
+  "feature": {
+    "id": "feature-demo-03",
+    "featureType": "Numeric",
+    "meterType": "Incremental",
+    "units": "request",
+    "unitsPlural": "requests",
+    "isMetered": true
+  }
+}
+`
+
+Result - no access 
+
+JSON
+
+`{
+  "isFallback": false,
+  "hasAccess": false,
+  "accessDeniedReason": "RequestedUsageExceedsLimit",
+  "isUnlimited": false,
+  "usageLimit": 2,
+  "currentUsage": 0,
+  "requestedUsage": 0,
+  "feature": {
+    "id": "feature-demo-03",
+    "featureType": "Numeric",
+    "meterType": "Incremental",
+    "units": "request",
+    "unitsPlural": "requests",
+    "isMetered": true
+  }
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#getMeteredEntitlement)
+
+  
+#### Proactively checking if a customer will have access to X units of a metered feature
+
+Node.js
+
+`const requestedUsage = 10;
+
+const entitlement = await stiggClient.getMeteredEntitlement({  
+  customerId: 'customer-demo-01',  
+  featureId: 'feature-demo-03',  
+  options: {  
+    requestedUsage
+  },
+  resourceId: 'resource-01',      // optional, pass it to get entitlement of specific resource
+});
+
+if (entitlement.hasAccess) {  
+  // has access and the requested usage is within the allowed quota  
+} else {  
+  // the customer has exceeded his quota for this feature  
+}
+`
+
+Result - has access 
+
+JSON
+
+`{
+  "isFallback": false,
+  "hasAccess": true,
+  "isUnlimited": false,
+  "usageLimit": 2,
+  "currentUsage": 0,
+  "requestedUsage": 0,
+  "feature": {
+    "id": "feature-demo-03",
+    "featureType": "Numeric",
+    "meterType": "Incremental",
+    "units": "request",
+    "unitsPlural": "requests",
+    "isMetered": true
+  }
+}
+`
+
+Result - no access 
+
+JSON
+
+`{
+  "isFallback": false,
+  "hasAccess": false,
+  "accessDeniedReason": "RequestedUsageExceedsLimit",
+  "isUnlimited": false,
+  "usageLimit": 2,
+  "currentUsage": 0,
+  "requestedUsage": 10,
+  "feature": {
+    "id": "feature-demo-03",
+    "featureType": "Numeric",
+    "meterType": "Incremental",
+    "units": "request",
+    "unitsPlural": "requests",
+    "isMetered": true
+  }
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#getMeteredEntitlement)
+
+  
+## Getting all of the entitlements for a specific customer
+
+Node.js
+
+`const entitlements = await stiggClient.getEntitlements(
+  'customer-demo-01',
+  'resource-01',       // optional, required for multiple subscription for same product
+);
+
+// all the entitlements the customer is entitled to  
+entitlements.forEach((entitlement) => {  
+  console.log(JSON.stringify(entitlement));  
+});
+`
+
+Result 
+
+JSON
+
+`[
+  {
+    "isFallback": false,
+    "hasAccess": true,
+    "isUnlimited": false,
+    "value": 100,
+    "feature": {
+      "id": "feature-demo-01",
+      "featureType": "Numeric",
+      "meterType": "None",
+      "units": "request",
+      "unitsPlural": "requests",
+      "isMetered": false
+    }
+  },
+  {
+    "isFallback": false,
+    "hasAccess": true,
+    "feature": {
+      "id": "feature-demo-02",
+      "featureType": "Boolean",
+      "meterType": "None",
+      "units": "",
+      "unitsPlural": "",
+      "isMetered": false
+    }
+  },
+  {
+    "isFallback": false,
+    "hasAccess": true,
+    "isUnlimited": false,
+    "usageLimit": 2,
+    "currentUsage": 0,
+    "requestedUsage": 0,
+    "feature": {
+      "id": "feature-demo-03",
+      "featureType": "Numeric",
+      "meterType": "Incremental",
+      "units": "request",
+      "unitsPlural": "requests",
+      "isMetered": true
+    }
+  }
+]
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#getEntitlements)
+
+  
+## Getting paywall data
+
+Useful for rendering the public pricing page or customer paywall.
+
+JavaScript
+
+`const paywallData = await stiggClient.getPaywall();
+`
+
+Result 
+
+JSON
+
+`{
+  "plans": [
+    {
+      "id": "plan-stigg-starter",
+      "order": 0,
+      "displayName": "Starter",
+      "description": "For getting started",
+      "entitlements": [
+        {
+          "usageLimit": 100,
+          "feature": {
+            "id": "feature-demo-01",
+            "featureType": "Numeric",
+            "description": "",
+            "meterType": "None",
+            "units": "request",
+            "unitsPlural": "requests",
+            "displayName": "Feature #1",
+            "isMetered": false,
+            "metadata": {
+              "key": "value"
+            }
+          },
+          "hasUnlimitedUsage": false,
+          "displayNameOverride": "Awesome feature #1",
+          "hiddenFromWidgets": []
+        },
+        {
+          "usageLimit": 0,
+          "feature": {
+            "id": "feature-demo-02",
+            "featureType": "Boolean",
+            "description": "",
+            "meterType": "None",
+            "displayName": "Feature #2",
+            "isMetered": false
+          },
+          "hasUnlimitedUsage": false,
+          "displayNameOverride": null,
+          "hiddenFromWidgets": ["PAYWALL"]
+        }
+      ],
+      "inheritedEntitlements": [],
+      "pricePoints": [],
+      "pricingType": "FREE",
+      "defaultTrialConfig": null,
+      "compatibleAddons": [],
+      "product": {
+        "id": "product-stigg",
+        "displayName": "Stigg",
+        "description": null,
+        "metadata": null
+      },
+      "metadata": null
+    }
+  ]
+}
+
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#getPaywall)
+
+  
+## Subscribing to entitlement and usage updates
+
+The server SDK use a streaming connection to receive updates with low latency, and can notify you when changes to customer entitlements and usage take place.
+
+An additional parameter is sent to the subscribed event listeners with data that is relevant for the specific event, for example: for `entitlementsUpdated` event the extra parameter has information about the customer and the updated entitlements.
+
+Node.js
+
+`// listen to customer entitlement updates
+stiggClient.addListener('entitlementsUpdated', (data) => {  
+  console.log('entitlements updated: ', data.customerId, data.entitlements);  
+});  
+
+// listen to customer usage updates
+stiggClient.addListener('usageUpdated', (data) => {  
+  console.log('entitlement usage updated', data.entitlement, data.usage);  
+});
+`
+
+> ## 📚
+> 
+> [Example project ↗️](https://github.com/stiggio/express-api-example/blob/608f8b83d869bf686a7f65a2f7ede9e93260da24/app.ts#L16)
+
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#addListener)
+
+  
+## Reporting usage measurements to Stigg
+
+The Stigg SDK allows you to report usage measurements for [metered features](features#overview). The reported usage will be used to track, limit and bill the customer's usage of metered features.
+
+Stigg supports metering of usage from the following data sources:
+
+1. [Calculated usage](#calculated-usage) \- usage that has been aggregated and calculated by **your application**. This type is useful for features, such as: seats.
+2. [Raw events](#raw-events) \- raw events from your application, which **Stigg** filters and aggregates aggregate to calculate customer usage. This type is useful for features, such as: monthly active users (MAUs).
+
+More details about Stigg's metering and aggregation capabilities can be found here:
+
+[ ![](/images/865027c-1085657.png)  Stigg's metering and aggregation capabilities Getting usage data into Stigg ](metering-overview) 
+
+> ## 🚧
+> 
+> 1. Reporting of measurements to Stigg should be done only after the relevant resources have been provisioned in your application.
+> 2. To ensure that the provisioned resources are aligned with the measurements that are reported to Stigg, ensure that customers are not allowed to allocate new resources until an acknowledgement about the processed measurement is received from the Stigg backend.
+
+> ## 📘
+> 
+> Validating that a measurement was successfully reported to Stigg is also possible in the [customer details section](customers#viewing-customers-entitlement-usage) of the relevant customer in the Stigg Cloud Console.
+
+### Calculated usage
+
+JavaScript
+
+`// increment usage of a metered feature by 10
+await stiggClient.reportUsage({  
+  customerId: 'customer-test-id',  
+  featureId: 'feature-seats',  
+  value: 10,
+  resourceId: 'resource-01',      // optional, pass it to report usage for specific resource
+});
+`
+
+By default, the value reported should represent the **change** in usage of the feature, for example user added 2 more seats then the report usage call should have the value of 2.
+
+In some cases, it's more useful to set the usage to some value instead of reporting the change value, it's possible by passing the `updateBehavior` parameter:
+
+Javascript
+
+`import { UsageUpdateBehavior } from '@stigg/node-server-sdk';
+
+// set usage of a metered feature to 10
+await stiggClient.reportUsage({  
+  customerId: 'customer-test-id',  
+  featureId: 'feature-seats',  
+  value: 10,
+  updateBehavior: UsageUpdateBehavior.Set,
+  resourceId: 'resource-01',      // optional, pass it to report usage for specific resource
+});
+`
+
+Result 
+
+JSON
+
+`{
+  "measurementId": "e7293df0-2d69-4713-9913-10ed06b9b777"
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#reportUsage)
+
+  
+### Raw events
+
+JavaScript
+
+`// report event of a user login
+await stiggClient.reportEvent({
+  customerId: 'customer-test-id',
+  resourceId: 'resource-01',      // optional, pass it to report event for specific resource
+  eventName: 'user_login',
+  idempotencyKey: '227c1b73-883a-457b-b715-6ba5a2c69ce4',
+  dimensions: {
+    user_id: 'user-01',
+    user_email: '[[email protected]](/cdn-cgi/l/email-protection)'
+    },
+  timestamp: '2022-10-26T15:01:55.768Z' // optional, pass it to report event with specific timestamp
+});
+`
+
+It's also possible to send a batch of events in one invocation. To do so, simply pass an array of events to the `reportEvent` method.
+
+  
+> ## 📚
+> 
+> SDK reference ↗️
+
+> ## 🚧
+> 
+> The `dimensions` field support key value pairs, while keys are strictly of type `string` values can be `string | number | boolean`
+
+  
+## Granting promotional entitlements
+
+You can grant [promotional entitlements](customers#managing-customers-promotional-entitlements) for customers using the [grantPromotionalEntitlements](https://node-sdk-docs.stigg.io/classes/stigg#grantPromotionalEntitlements) method.
+
+  
+## Revoking promotional entitlements
+
+You can revoke [promotional entitlements](customers#managing-customers-promotional-entitlements) from customer using the [revokePromotionalEntitlements](https://node-sdk-docs.stigg.io/classes/stigg#revokePromotionalEntitlements) method.
+
+  
+## Getting available coupons
+
+Node.js
+
+`const coupons = await stiggClient.getCoupons();
+`
+
+Result 
+
+JSON
+
+`[
+  {
+    "id": "coupon-16e5c7",
+    "name": "Test coupon",
+    "description": null,
+    "metadata": null,
+    "discountValue": 5
+  }
+]
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#getCoupons)  
+>  
+
+  
+## Getting all products
+
+Node.js
+
+`const products = await stiggClient.getProducts();
+`
+
+Result 
+
+JSON
+
+`[
+	{
+    id: 'product-revvenu',
+    displayName: 'Revvenu',
+    description: "Example description",
+    metadata: { recommendedPlan: 'plan-revvenu-essentials' },
+    downgradePlan: { id: 'plan-revvenu-basic', displayName: 'Basic' }
+  }
+]
+`
+
+## Estimate subscription cost
+
+You can estimate the subscription cost using the `estimateSubscription` method.  
+This can help the customer to understand the costs before paying.
+
+Node.js
+
+`// increment usage of a metered feature  
+await stiggClient.estimateSubscription({  
+	customerId: "customer-demo-01",
+  billingPeriod: "MONTHLY",
+  planId: "plan-revvenu-growth",
+  billableFeatures: [{ 						// optional, required for plans with per unit pricing
+    featureId:'feature-01-templates',
+    quantity: 2
+  }],
+  addons: [{  								// optional
+  	addonId: 'addon-10-campaigns',  
+    quantity: 1  
+  }],
+  billingInformation: {  					// optional
+      taxRateIds: [  
+        "txr_1LcTSRE1gVT2zwZV07MIRKdf",  
+        "txr_1LcTSRE1gVT2zwZV07MIRKdf"  
+      ],  
+      taxPerentage: 17,// optional. taxRate will be created if not exists
+  },
+  promotionCode: "STIGG50",		// optional
+  startDate: new Date(), 			// optional
+  billingCountryCode: 'US' 		// optional, required for price localization, must be in the ISO-3166-1 format
+  resourceId: 'resource-01',  // optional, required for multiple subscription for same product
+});
+`
+
+Return fields 
+
+Node.js
+
+`` {
+  total: 'Total after discounts and taxes.',
+  totalExcludingTax: 'Total including discounts but excluding tax.',
+  subTotal: 'Total before any discount or exclusive tax is applied.',
+  tax: 'Tax amount',
+  taxDetails: {
+    displayName: 'Tax display name.',
+    inclusive: 'Specifies if the tax rate is inclusive or exclusive.',
+    percentage: 'Tax rate percentage out of 100.',
+  },
+  discount: {
+    type: 'Discount type - `PERCENTAGE` / `FIXED`.',
+    value: 'Discount value out of 100.',
+    durationType:
+      'The duration of the discount - `FOREVER` / `REPEATING` / `ONCE`',
+    durationInMonths: 'The duration of the discount in months',
+  },
+  billingPeriodRange: {
+    start: 'Billing period start date',
+    end: 'Billing period end date',
+  },
+  proration: {
+    prorationDate: 'The date when the proration occurred',
+    credit:
+      'The prorated amount of credits to refund the customer in the upcoming invoice',
+    debit:
+      'The prorated amount of debit to charge the customer in the upcoming invoice',
+    netAmount: 'The sum of `debit` and `credit`',
+  },
+  // Not prorated subscription prices
+  subscription: {
+    total: 'Total after discounts and taxes.',
+    totalExcludingTax: 'Total including discounts but excluding tax.',
+    subTotal: 'Total before any discount or exclusive tax is applied.',
+    tax: 'Tax amount',
+  },
+};
+ ``
+
+Result 
+
+JSON
+
+`
+{
+  "total": {
+    "amount": 10,
+    "currency": "USD"
+  },
+  "subTotal": {
+    "amount": 10,
+    "currency": "USD"
+  },
+  "billingPeriodRange": {
+    "start": "2022-10-26T00:00:00.000Z",
+    "end": "2022-11-26T00:00:00.000Z"
+  },
+  "discount": {
+    "type": "PERCENTAGE",
+    "value": 50,
+    "durationType": "REPEATING",
+    "durationInMonths": 3
+  },
+  "proration": {
+    "credit": {
+      "amount": 0,
+      "currency": "USD"
+    },
+    "debit": {
+      "amount": 10,
+      "currency": "USD"
+    },
+    "netAmount": {
+      "amount": 10,
+      "currency": "USD"
+    },
+    "prorationDate": "2022-10-26T00:00:00.000Z"
+  },
+  "subscription": {
+    "total": {
+      "amount": 10,
+      "currency": "USD"
+    },
+    "subTotal": {
+      "amount": 20,
+      "currency": "USD"
+    }
+  }
+}
+
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#estimateSubscription)
+
+  
+You can also estimate the cost of updating an existing subscription using the `updateSubscription` method, which also returns a breakdown of the proration amounts:
+
+Node.js
+
+`await stiggClient.estimateSubscriptionUpdate({  
+  subscriptionId: "subscription-plan-revvenu-growth-da6324",
+  billableFeatures: [{ 						// optional, required for subscriptions with per unit pricing
+    featureId:'feature-01-templates',
+    quantity: 3
+  }],
+  addons: [{  								// optional
+    addonId: 'addon-10-campaigns',  
+    quantity: 1  
+  }],
+  promotionCode: "STIGG50"		// optional
+});
+`
+
+Return fields 
+
+JavaScript
+
+`` {
+  total: 'Total after discounts and taxes.',
+  totalExcludingTax: 'Total including discounts but excluding tax.',
+  subTotal: 'Total before any discount or exclusive tax is applied.',
+  tax: 'Tax amount',
+  taxDetails: {
+    displayName: 'Tax display name.',
+    inclusive: 'Specifies if the tax rate is inclusive or exclusive.',
+    percentage: 'Tax rate percentage out of 100.',
+  },
+  discount: {
+    type: 'Discount type - `PERCENTAGE` / `FIXED`.',
+    value: 'Discount value out of 100.',
+    durationType:
+      'The duration of the discount - `FOREVER` / `REPEATING` / `ONCE`',
+    durationInMonths: 'The duration of the discount in months',
+  },
+  billingPeriodRange: {
+    start: 'Billing period start date',
+    end: 'Billing period end date',
+  },
+  proration: {
+    prorationDate: 'The date when the proration occurred',
+    credit:
+      'The prorated amount of credits to refund the customer in the upcoming invoice',
+    debit:
+      'The prorated amount of debit to charge the customer in the upcoming invoice',
+    netAmount: 'The sum of `debit` and `credit`',
+  },
+  // Not prorated subscription prices
+  subscription: {
+    total: 'Total after discounts and taxes.',
+    totalExcludingTax: 'Total including discounts but excluding tax.',
+    subTotal: 'Total before any discount or exclusive tax is applied.',
+    tax: 'Tax amount',
+  },
+};
+ ``
+
+Result 
+
+JSON
+
+`{
+  "total": {
+    "amount": 2.5,
+    "currency": "USD"
+  },
+  "subTotal": {
+    "amount": 5,
+    "currency": "USD"
+  },
+  "billingPeriodRange": {
+    "start": "2022-10-26T00:00:00.000Z",
+    "end": "2022-11-26T00:00:00.000Z"
+  },
+  "discount": {
+    "type": "PERCENTAGE",
+    "value": 50,
+    "durationType": "REPEATING",
+    "durationInMonths": 3
+  },
+  "proration": {
+    "credit": {
+      "amount": -9.99,
+      "currency": "USD"
+    },
+    "debit": {
+      "amount": 14.99,
+      "currency": "USD"
+    },
+    "netAmount": {
+      "amount": 5,
+      "currency": "USD"
+    },
+    "prorationDate": "2022-10-26T00:00:00.000Z"
+  },
+  "subscription": {
+    "total": {
+      "amount": 2.5,
+      "currency": "USD"
+    },
+    "subTotal": {
+      "amount": 5,
+      "currency": "USD"
+    }
+  }
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#estimateSubscriptionUpdate)
+
+> ## 🚧
+> 
+> Promo code support
+> 
+> 1. Passing of promo codes requires an integration with a billing solution, such as: [Stripe](stripe).
+> 2. Promo codes should be generated in the integrated billing solution.
+> 3. When providing the optional `promotionCode` parameter, the promo code and associated coupon will validated against the defined restrictions to ensure that they're applicable for the subscription. If validation fails, a [relevant error code](https://node-sdk-docs.stigg.io/enums/errorcode) would be returned; otherwise, the subscription will include the discounted price.
+
+  
+## Migrating subscriptions to the latest plan and add-on version
+
+When changes to plans and add-ons are rolled out only to new subscriptions, grandfathering takes place. In order to prevent a SKU sprawl, Stigg allows you to manually migrate subscriptions to the latest plan and add-on version on a subscription-by-subscription basis.
+
+> ## 🚧
+> 
+> When the current price of the subscription is different than the latest published package version, during the migration the customer will be charged or credited the prorated amount until the end of the current billing period depending on whether the latest price is more expensive or cheaper than the current subscription price.
+
+To migrate a customer to the latest plan and add-on version:
+
+Node.js
+
+`await stiggClient.MigrateSubscriptionToLatest("subscriptionId", 
+                                              SubscriptionMigrationTime.EndOfBillingPeriod);
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/index.html#MigrateSubscriptionToLatest)
+
+## Archiving customers
+
+When a customer is archived:
+
+1. Its PII (name and email address) will be nullified.
+2. It will no longer appear in the Stigg app UI.
+3. It will no longer be returned by the Stigg API and SDKs.
+
+When Stigg is integrated with a billing solution, customers that are archived in Stigg will still exist in the billing solution to allow upcoming invoices to be finalized. Archiving customers in the billing solution can be done manually in the billing solution.
+
+> ## 🚧
+> 
+> New customers cannot use the customer ID of archived customers.
+
+To archive a customer:
+
+Node.js
+
+`await stiggClient.archiveCustomer("customer-a18f01");
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#archiveCustomer)
+
+## Persistent cache
+
+To configure a persistent cache store, you can read about it [in the persistent cache section](/docs/persistent-cache).
+
+  
+## Full SDK reference
+
+[ ![](/images/6485b4f-codingbrowser_102152.png)  Node.js SDK reference ](nodejs-sdk-reference) 

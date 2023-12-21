@@ -1,0 +1,133 @@
+---
+title: "AWS API Gateway"
+---
+
+## Overview
+
+One of the possible implementation methods for gating access to features in backend applications can be achieved by deploying an Amazon API Gateway that controls all the incoming traffic to your application. In this tutorial, we'll implement a slim authorizer lambda that leverages Stigg's SDK for feature gating.
+
+![](/images/3f504ea-638714571b976359c9993d28_HKN5Pm9QdFvbHGkVUvL7vaHwIg2f6Uko4bYMzNr2dXHbfthXDERbO0forT1tfXVXi3xrPojs6hyv4ZfI4jZCmTQdMljmuZjJVjnMRIWd9Jg6dlwfNqkPUsjOkvlanzEUceed6PyuGmeawVkdnhHurqSeiIHvOGXAsfEs_UR-UvJS8BJRsw1ki2JzSctH5w.png)
+
+### Example
+
+Lets take the [Example project](/docs/example-project) and consider that its backend servers are behind [HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html). As part of this example we will implement a [Lambda authorizer for HTTP APIs](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html) for feature gating.
+
+#### Mapping REST endpoints to Stigg features
+
+The first step is to define which Stigg feature protects the REST endpoints. In our example, there are 3 features that protects the following REST endpoints:
+
+| Stigg feature         | Stigg feature type | Protected REST endpoints                                                                  |
+| --------------------- | ------------------ | ----------------------------------------------------------------------------------------- |
+| feature-collaborators | Fluctuating        | POST /api/collaborators/DELETE /api/collaborators/:emailPOST /api/collaborators/add-seats |
+| feature-todos         | Fluctuating        | GET /api/todos/POST /api/todos/PUT /api/todos/:idDELETE /api/todos/:id                    |
+| feature-update-todo   | Boolean            | PUT /api/todos/:id                                                                        |
+
+Note that `PUT /api/todos/:id` is protected by 2 different features.
+
+Let's translate this table into code, for simplicity we will focus on `PUT /api/todos/:id` route only, since it's protected by 2 entitlements.
+
+> The rest of the routes will be included in the full source code attached at the end of the article
+
+We will add the features definitions along with their [fallback](/docs/high-availability-architecture#local-caching-and-fallback-strategy):
+
+JavaScript
+
+`const STIGG_FEATURE_TODOS = {
+    id: 'feature-todos',
+    fallback: {
+        hasAccess: true,
+        usageLimit: 5,
+    },
+};
+
+const STIGG_FEATURE_UPDATE_TODO = {
+    id: 'feature-update-todo',
+    fallback: {
+        hasAccess: true,
+    },
+};
+`
+
+Then add the route definition:
+
+JavaScript
+
+`const routes = [
+  // ...
+  {
+    method: 'PUT',
+    path: '/api/todos/:id',
+    entitlements: [{ feature: STIGG_FEATURE_TODOS }, { feature: STIGG_FEATURE_UPDATE_TODO }],
+  },
+  // ...
+];
+`
+
+#### Implementing the authorizer lambda
+
+Next, lets compose a simple lambda handler:
+
+JavaScript
+
+`exports.handler = async (event, context) => {
+    // fetch requested resource from API Gateway authorizer event
+    const { method, path } = event?.requestContext?.http;
+    const { authorization } = event?.headers;
+
+    // check gating in Stigg for resource
+    const isAuthorized = await checkRouteEntitlements(method, path, authorization);
+
+    context.succeed({ isAuthorized });
+};
+`
+
+Next, lets implement the `checkRouteEntitlements` function:
+
+JavaScript
+
+`` async function checkRouteEntitlements(method, path, authorization) {
+    if (!method || !path || !authorization) {
+        console.warn('Missing request parameters');
+        return false;
+    }
+
+    const customerId = findStiggCustomerId(authorization);
+    const route = routes.find((route) => route.method === method && isPathMatch(path, route.path));
+
+    if (!route) {
+        console.warn(`Missing configuration for route '${method} ${path}'`);
+        return false;
+    }
+
+    let isAuthorized = true;
+
+    // checking that customer has access to all required entitlements.
+    // note that subsequent checks are evaluated in-memory for the same customer
+    for (const entitlementToCheck of route.entitlements) {
+        const entitlement = await checkEntitlement(customerId, entitlementToCheck);
+        console.debug(`Entitlement response for '${entitlementToCheck.feature.id}'`, entitlement);
+
+        isAuthorized = isAuthorized && entitlement.hasAccess;
+    }
+
+    console.info(`Route '${method} ${path}' response for '${customerId}' - ${isAuthorized}`);
+    return isAuthorized;
+}
+ ``
+
+> The implementation of the inner functions was omitted for simplicity, and will be included in the full source code attached at the end of the article
+
+The high-level steps of the authorizer logic:
+
+* Validate input arguments.
+* Find stigg customer ID (extract it from the authorization header / DB).
+* Find the route definition of the requested route.
+* Iterate over all requested route entitlements and check them agains Stigg.
+
+### Source code
+
+For your convenience, we prepared a sample project demonstrate Stigg integration with API Gateway. It's provisioned by Terraform, so it can be easily spin up to check it out.
+
+You can find the source code of an example for API gateway integration in GitHub👇
+
+[ ![](/images/GitHub-Mark.png)  stiggio/stigg-aws-api-gateway-example github.com ](https://github.com/stiggio/stigg-aws-api-gateway-example) 

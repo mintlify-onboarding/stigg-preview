@@ -1,0 +1,227 @@
+---
+title: "React SDK"
+description: "How to install and integrate the Stigg React SDK on the client-side"
+---
+
+## Overview
+
+The Stigg React SDK is a Javascript library for implementing pricing and packaging in React apps with Stigg. it provides plug and play components and custom React hooks.
+
+> ## 📚
+> 
+> [Full SDK reference ↗️](https://react-sdk-docs.stigg.io/)
+
+## Installing the SDK
+
+You have a few options for using the `@stigg/react-sdk` package in your project:
+
+#### From npm:
+
+Shell
+
+`npm install @stigg/react-sdk
+`
+
+#### From yarn:
+
+Shell
+
+`yarn add @stigg/react-sdk
+`
+
+## Retrieving the client API key
+
+In the Stigg Cloud Console, go to [Settings > Account > Environments](https://app.stigg.io/account/settings).
+
+Copy the   **Client API key** of the relevant environment.
+
+## Getting started
+
+First, you'll need to wrap your application in a single `StiggProvider` component. that will provide the React Context to components that are placed inside your application:
+
+React
+
+`import React from 'react';  
+import ReactDOM from 'react-dom';  
+import { StiggProvider } from '@stigg/react-sdk';  
+import App from './App';
+
+ReactDOM.render(  
+  <StiggProvider apiKey="YOUR_CLIENT_API_KEY">  
+    <App />  
+  </StiggProvider>,  
+  document.getElementById('app'),  
+);
+`
+
+#### Importing the styles
+
+If you plan to use the widget components, add an import statement to include the bundled styles:
+
+TypeScript
+
+`import '@stigg/react-sdk/dist/styles.css';
+`
+
+## Rendering widgets
+
+[ ![](/images/9ee9b64-Group_17013.png)  Pricing table Allow customers to select the plan that that they'd like to subscribe to from your public pricing page or in-app paywall ](pricing-tables) 
+
+  
+[ ![](/images/9a0f073-Group_16979_1.png)  Customer portal Introduce self-service and drive in-app expansions using only a few lines of codes ](customer-portal) 
+
+  
+[ ![](/images/43ba9d9-Group_17044.png)  Checkout Easily accept payments without ever worrying about changes to your pricing model or migration to another billing provider ](checkout) 
+
+## Customization options
+
+The widgets that are included in this package include a default theme, which can be customized to match the appearance of your application.
+
+### Global theming
+
+You can pass customization options such as theming and locale to `StiggProvider` component. Doing so will affect **all Stigg widgets** that are descendent to the provider.
+
+React
+
+`import React from 'react';  
+import ReactDOM from 'react-dom';  
+import { StiggProvider } from '@stigg/react-sdk';  
+import App from './App';
+
+// Example of the options that are available for the theme  
+const theme = {  
+  palette: {  
+    primary: '#FFA500',  
+    backgroundPaper: '#fcfbf8',  
+    backgroundHighlight: '#FFF3E0',  
+    outlinedHoverBackground: '#FFE0B2',
+    text: {
+      primary: '#333bf8',
+      secondary: '#fcf222',
+      disabled: '#fcf111',
+    },
+  },  
+  layout: {  
+    planMinWidth: '250px',  
+    planMaxWidth: '250px',  
+    ctaAlignment: 'center',  
+    headerAlignment: 'center',  
+    descriptionAlignment: 'center',  
+  },  
+  typography: {
+    fontFamily: 'custom-font, DM Sans, sans-serif',
+    h1: {
+      fontSize: '32px',
+      fontWeight: 'bold',
+    },
+    h2: {
+      fontSize: '24px',
+      fontWeight: 'normal',
+    },
+    h3: {
+      fontSize: '16px',
+      fontWeight: 'normal',
+    },
+    body: {
+      fontSize: '14px',
+      fontWeight: 'normal',
+    },
+  }
+};
+
+ReactDOM.render(  
+  <StiggProvider apiKey="YOUR_CLIENT_API_KEY" theme={theme} locale="de-DE">  
+    <App />  
+  </StiggProvider>,  
+  document.getElementById('app'),  
+);
+`
+
+> ## 📘
+> 
+> You can find more theming options [here](https://react-sdk-docs.stigg.io/types/theme)
+
+### Widget-specific customization
+
+Each widget can be customized separately via the no-code widget designer in the Stigg app or using code.
+
+Widget-specific customization capabilities can be found under the [dedicated page](#rendering-widgets) of each widget. 
+
+  
+## Refreshing the cache
+
+Stigg's SDK refreshes its cache of customer entitlements and usage data upon initialization (for example: when a page is refreshed), as well as periodically every 30 seconds.
+
+After performing an operation on the backend that can modify the customer entitlements or the usage of a feature (for example: updating subscriptions or reporting usage), it's useful to immediately refresh the cache.
+
+To do so, call the below method:
+
+React
+
+`import { useStiggContext } from '@stigg/react-sdk';
+
+function App() {
+	const { stigg, refreshData } = useStiggContext();
+  
+  const addSeats = async () => {
+    // Api call which modify customer entitlements (e.g. add seats or report usage)
+    await api.addSeats();
+    await refreshData();
+  }
+}
+
+`
+
+## Hooks
+
+Use the `useStigg` React hook to access [Stigg's JavaScript client](javascript-sdk) easily from every component:
+
+React
+
+`import React from 'react';  
+import { useStiggContext } from '@stigg/react-sdk';
+
+function App() {  
+  const { stigg } = useStiggContext();
+
+  useEffect(() => {  
+    // Use stigg Javascript client function  
+    stigg.getBooleanEntitlement(...)  
+  })  
+}
+`
+
+## Full SDK reference
+
+[ ![](/images/6485b4f-codingbrowser_102152.png)  React SDK reference ](react-sdk-reference) 
+
+## Migration from older SDK versions to v3.x
+
+* Removed CSS class names (For an updated list of CSS class names [check here](/docs/react-sdk#using-css-class-names))  
+   * `stigg-overview-subscriptions-list-layout`  
+   * `stigg-overview-subscriptions-list`  
+   * `stigg-billing-information-layout`  
+   * `stigg-billing-information-title`  
+   * `stigg-update-billing-button`
+* Paywall `textOverrides.price.paid` paid text customization callback signature was changed:  
+from:  
+TypeScript  
+`{  
+  price: {  
+    paid?: (planPrice: Price, plan: Plan, selectedBillingPeriod: BillingPeriod) => PlanPriceText;  
+  }  
+}  
+`  
+to:  
+TypeScript  
+`{  
+  price: {  
+    paid?: (priceData: {  
+      planPrices: Price[];  
+      paywallCalculatedPrice?: PaywallCalculatedPricePoint;  
+      plan: Plan;  
+      selectedBillingPeriod: BillingPeriod;  
+    }) => PlanPriceText;  
+  }  
+}  
+`

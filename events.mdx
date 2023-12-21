@@ -1,0 +1,1501 @@
+---
+title: "Events"
+---
+
+## Features
+
+#### feature.created
+
+Occurs whenever a new feature is created.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "feature.created",
+  "id": "feature-test-id",
+  "name": "feature-test-name",
+  "unit": "seat",
+  "units": "seats",
+  "description": "feature test description",
+  "featureType": "NUMBER",
+  "meterType": "INCREMENTAL",
+  "status": "ACTIVE"
+}
+`
+
+  
+#### feature.updated
+
+Occurs whenever any property of a feature changes.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "feature.updated",
+  "id": "feature-test-id",
+  "name": "feature-test-name",
+  "unit": "seat",
+  "units": "seats",
+  "description": "feature test description",
+  "featureType": "NUMBER",
+  "meterType": "INCREMENTAL",
+  "status": "ACTIVE"
+}
+`
+
+  
+#### feature.deleted
+
+Occurs whenever a feature is deleted.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "feature.deleted",
+  "id": "feature-test-id",
+  "name": "feature-test-name",
+  "unit": "seat",
+  "units": "seats",
+  "description": "feature test description",
+  "featureType": "NUMBER",
+  "meterType": "INCREMENTAL",
+  "status": "ACTIVE"
+}
+`
+
+  
+## Plans
+
+#### plan.created
+
+Occurs whenever a new plan is created.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "plan.created",
+  "id": "plan-test-id",
+  "name": "plan-test-name",
+  "description": "plan test description",
+  "productId": "product-test-id",
+  "status": "PUBLISHED",
+  "isLatest": true,
+  "version": 7,
+  "packageEntitlements": [
+    {
+      "feature": {
+        "id": "feature-analytics",
+        "name": "feature-test",
+        "description": "feature description here",
+        "featureType": "BOOLEAN",
+        "meterType": "INCREMENTAL",
+        "unit": "seat",
+        "units": "seats",
+        "status": "ACTIVE"
+      },
+      "hasUnlimitedUsage": false,
+      "usageLimit": 100
+    }
+  ],
+  "prices": [
+    {
+      "billingModel": "FLAT_FEE",
+      "billingPeriod": "MONTHLY",
+      "amount": 50,
+      "currency": "ils",
+      "billingCountryCode": "il"
+    }
+  ],
+  "metadata": {
+    "testKey": "example value"
+  }
+}
+`
+
+  
+#### plan.updated
+
+Occurs whenever a new version of an plan is published.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "plan.updated",
+  "id": "plan-test-id",
+  "name": "plan-test-name",
+  "description": "plan test description",
+  "productId": "product-test-id",
+  "status": "PUBLISHED",
+  "isLatest": true,
+  "version": 7,
+  "packageEntitlements": [
+    {
+      "feature": {
+        "id": "feature-analytics",
+        "name": "feature-test",
+        "description": "feature description here",
+        "featureType": "BOOLEAN",
+        "meterType": "INCREMENTAL",
+        "unit": "seat",
+        "units": "seats",
+        "status": "ACTIVE"
+      },
+      "hasUnlimitedUsage": false,
+      "usageLimit": 100
+    }
+  ],
+  "prices": [
+    {
+      "billingModel": "FLAT_FEE",
+      "billingPeriod": "MONTHLY",
+      "amount": 50,
+      "currency": "ils",
+      "billingCountryCode": "il"
+    }
+  ],
+  "metadata": {
+    "testKey": "example value"
+  }
+}
+`
+
+  
+#### plan.deleted
+
+Occurs whenever a plan is deleted.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "plan.deleted",
+  "id": "plan-test-id",
+  "name": "plan-test-name",
+  "description": "plan test description",
+  "productId": "product-test-id",
+  "status": "PUBLISHED",
+  "isLatest": true,
+  "version": 7,
+  "packageEntitlements": [
+    {
+      "feature": {
+        "id": "feature-analytics",
+        "name": "feature-test",
+        "description": "feature description here",
+        "featureType": "BOOLEAN",
+        "meterType": "INCREMENTAL",
+        "unit": "seat",
+        "units": "seats",
+        "status": "ACTIVE"
+      },
+      "hasUnlimitedUsage": false,
+      "usageLimit": 100
+    }
+  ],
+  "prices": [
+    {
+      "billingModel": "FLAT_FEE",
+      "billingPeriod": "MONTHLY",
+      "amount": 50,
+      "currency": "ils",
+      "billingCountryCode": "il"
+    }
+  ],
+  "metadata": {
+    "testKey": "example value"
+  }
+}
+`
+
+  
+## Add-ons
+
+#### addon.created
+
+Occurs whenever a new add-on is created.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "addon.created",
+  "id": "Test addon",
+  "name": "Test",
+  "description": "Adding more",
+  "status": "PUBLISHED",
+  "packageEntitlements": [
+    {
+      "feature": {
+        "id": "feature-analytics",
+        "name": "feature-test",
+        "description": "feature description here",
+        "unit": "seat",
+        "units": "seats",
+        "featureType": "BOOLEAN",
+        "status": "ACTIVE"
+      },
+      "hasUnlimitedUsage": false,
+      "usageLimit": 100
+    }
+  ],
+  "prices": [
+    {
+      "billingModel": "FLAT_FEE",
+      "billingPeriod": "MONTHLY",
+      "amount": 40,
+      "currency": "ils",
+      "billingCountryCode": "il"
+    }
+  ],
+  "metadata": {
+    "testKey": "example value"
+  }
+}
+`
+
+  
+#### addon.updated
+
+Occurs whenever a new version of an add-on is published.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "addon.deleted",
+  "id": "Test addon",
+  "name": "Test",
+  "description": "Adding more",
+  "status": "PUBLISHED",
+  "packageEntitlements": [
+    {
+      "feature": {
+        "id": "feature-analytics",
+        "name": "feature-test",
+        "description": "feature description here",
+        "unit": "seat",
+        "units": "seats",
+        "featureType": "BOOLEAN",
+        "status": "ACTIVE"
+      },
+      "hasUnlimitedUsage": false,
+      "usageLimit": 100
+    }
+  ],
+  "prices": [
+    {
+      "billingModel": "FLAT_FEE",
+      "billingPeriod": "MONTHLY",
+      "amount": 40,
+      "currency": "ils",
+      "billingCountryCode": "il"
+    }
+  ],
+  "metadata": {
+    "testKey": "example value"
+  }
+}
+`
+
+  
+#### addon.deleted
+
+Occurs whenever an add-on is deleted.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "addon.deleted",
+  "id": "Test addon",
+  "name": "Test",
+  "description": "Adding more",
+  "status": "PUBLISHED",
+  "packageEntitlements": [
+    {
+      "feature": {
+        "id": "feature-analytics",
+        "name": "feature-test",
+        "description": "feature description here",
+        "unit": "seat",
+        "units": "seats",
+        "featureType": "BOOLEAN",
+        "status": "ACTIVE"
+      },
+      "hasUnlimitedUsage": false,
+      "usageLimit": 100
+    }
+  ],
+  "prices": [
+    {
+      "billingModel": "FLAT_FEE",
+      "billingPeriod": "MONTHLY",
+      "amount": 40,
+      "currency": "ils",
+      "billingCountryCode": "il"
+    }
+  ],
+  "metadata": {
+    "testKey": "example value"
+  }
+}
+`
+
+  
+## Customers
+
+#### customer.created
+
+Occurs whenever a new customer is created.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "customer.created",
+  "entityId": "customer-uuid",
+  "id": "customer-test-id",
+  "name": "customer-test",
+  "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+  "billingId": "1111-1234-4223",
+  "metadata": {
+    "testKey": "example value"
+  },
+  "excludeFromExperiment": false,
+  "experimentInfo": {
+    "id": "free-vs-paid-trial",
+    "name": "Free vs Paid trial",
+    "groupName": "Control group",
+    "groupType": "CONTROL"
+  },
+  "billingCurrency": "ils"
+}
+`
+
+  
+#### customer.updated
+
+Occurs whenever any property of a customer changes.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "customer.updated",
+  "entityId": "customer-uuid",
+  "id": "customer-test-id",
+  "name": "customer-test",
+  "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+  "billingId": "1111-1234-4223",
+  "metadata": {
+    "testKey": "example value"
+  },
+  "excludeFromExperiment": false,
+  "experimentInfo": {
+    "id": "free-vs-paid-trial",
+    "name": "Free vs Paid trial",
+    "groupName": "Control group",
+    "groupType": "CONTROL"
+  },
+  "billingCurrency": "ils"
+}
+`
+
+  
+#### customer.payment\_failed
+
+Occurs when an attempt to charge a customer fails.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "customer.payment_failed",
+  "timestamp": "2022-08-24T14:11:54.525Z",
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test",
+    "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+    "billingId": "1111-1234-4223",
+    "metadata": {
+      "testKey": "example value"
+    },
+    "excludeFromExperiment": false,
+    "experimentInfo": {
+      "id": "free-vs-paid-trial",
+      "name": "Free vs Paid trial",
+      "groupName": "Control group",
+      "groupType": "CONTROL"
+    },
+    "billingCurrency": "ils"
+  },
+  "originatingEventId": "evt_3LaJOIE1gVT2zwZV1wzHom21",
+  "subscription": {
+    "entityId": "59f78766-8eae-463e-8315-9f5da46e1535",
+    "id": "subscription-plan-revvenu-essentials-0ecc92",
+    "billingId": "sub_1LaJOIE1gVT2zwZVwTszmcKG",
+    "status": "PAYMENT_PENDING",
+    "startDate": "2022-08-24T13:13:06.000Z",
+    "currentBillingPeriodStart": "2022-08-24T13:13:06.000Z",
+    "currentBillingPeriodEnd": "2023-08-24T13:13:06.000Z",
+    "isTrialSubscription": false,
+    "metadata": null,
+    "plan": {
+      "id": "plan-revvenu-essentials",
+      "name": "Essentials",
+      "description": null,
+      "metadata": null
+    },
+    "addons": []
+  },
+  "error": {
+    "message": "Your card has insufficient funds.",
+    "code": "card_declined",
+    "details": "insufficient_funds"
+  }
+}
+`
+
+  
+#### customer.deleted
+
+Occurs whenever a customer is deleted.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "customer.deleted",
+  "entityId": "customer-uuid",
+  "id": "customer-test-id",
+  "name": "customer-test",
+  "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+  "billingId": "1111-1234-4223",
+  "metadata": {
+    "testKey": "example value"
+  },
+  "excludeFromExperiment": false,
+  "experimentInfo": {
+    "id": "free-vs-paid-trial",
+    "name": "Free vs Paid trial",
+    "groupName": "Control group",
+    "groupType": "CONTROL"
+  },
+  "billingCurrency": "ils"
+}
+`
+
+  
+## Subscriptions
+
+#### subscription.created
+
+Occurs whenever a new subscription is created.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "subscription.created",
+  "entityId": "customer-uuid",
+  "id": "subscription-id",
+  "status": "ACTIVE",
+  "startDate": "2022-04-10T00:00:00.001Z",
+  "endDate": "2022-07-10T00:00:00.001Z",
+  "cancellationDate": "2022-05-10T00:00:00.001Z",
+  "trialEndDate": "2022-05-10T00:00:00.001Z",
+  "billingCurrency": "ils",
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test-name",
+    "email": "customer-test-email",
+    "billingId": "customer-test-billing-id",
+    "crmId": "customer-test-crm-id",
+    "metadata": {
+      "testKey": "example value"
+    },
+    "experimentInfo": {
+      "id": "free-vs-paid-trial",
+      "name": "Free vs Paid trial",
+      "groupName": "Control group",
+      "groupType": "CONTROL"
+    }
+  },
+  "resource": null,
+  "plan": {
+    "id": "plan-test-id",
+    "name": "plan-test-name",
+    "description": "plan test description"
+  },
+  "packageEntitlements": [
+    {
+      "feature": {
+        "id": "feature-analytics",
+        "name": "feature-test",
+        "description": "feature description here",
+        "featureType": "BOOLEAN",
+        "unit": "seat",
+        "units": "seats",
+        "status": "ACTIVE"
+      },
+      "hasUnlimitedUsage": false,
+      "usageLimit": 100
+    }
+  ],
+  "addons": [
+    {
+      "id": "addon-test-id",
+      "name": "addon-test-name",
+      "description": "addon test description",
+      "quantity": 10
+    }
+  ],
+  "metadata": {
+    "testKey": "example value"
+  },
+  "experimentInfo": {
+    "id": "free-vs-paid-trial",
+    "name": "Free vs Paid trial",
+    "groupName": "Control group",
+    "groupType": "CONTROL"
+  },
+  "isDowngrade": true,
+  "isUpgrade": false
+}
+`
+
+  
+#### subscription.updated
+
+Occurs whenever any property of a subscription is updated.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "subscription.updated",
+  "entityId": "customer-uuid",
+  "id": "subscription-id",
+  "status": "ACTIVE",
+  "startDate": "2022-04-10T00:00:00.001Z",
+  "endDate": "2022-07-10T00:00:00.001Z",
+  "cancellationDate": "2022-05-10T00:00:00.001Z",
+  "trialEndDate": "2022-05-10T00:00:00.001Z",
+  "billingCurrency": "ils",
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test-name",
+    "email": "customer-test-email",
+    "billingId": "customer-test-billing-id",
+    "crmId": "customer-test-crm-id",
+    "metadata": {
+      "testKey": "example value"
+    },
+    "experimentInfo": {
+      "id": "free-vs-paid-trial",
+      "name": "Free vs Paid trial",
+      "groupName": "Control group",
+      "groupType": "CONTROL"
+    }
+  },
+  "resource": null,
+  "plan": {
+    "id": "plan-test-id",
+    "name": "plan-test-name",
+    "description": "plan test description"
+  },
+  "packageEntitlements": [
+    {
+      "feature": {
+        "id": "feature-analytics",
+        "name": "feature-test",
+        "description": "feature description here",
+        "featureType": "BOOLEAN",
+        "unit": "seat",
+        "units": "seats",
+        "status": "ACTIVE"
+      },
+      "hasUnlimitedUsage": false,
+      "usageLimit": 100
+    }
+  ],
+  "addons": [
+    {
+      "id": "addon-test-id",
+      "name": "addon-test-name",
+      "description": "addon test description",
+      "quantity": 10
+    }
+  ],
+  "metadata": {
+    "testKey": "example value"
+  },
+  "experimentInfo": {
+    "id": "free-vs-paid-trial",
+    "name": "Free vs Paid trial",
+    "groupName": "Control group",
+    "groupType": "CONTROL"
+  }
+}
+`
+
+  
+#### subscription.canceled
+
+Occurs whenever a new subscription is canceled.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "subscription.canceled",
+  "entityId": "subscription-uuid",
+  "id": "subscription-id",
+  "startDate": "2022-04-10T00:00:00.001Z",
+  "endDate": "2022-07-10T00:00:00.001Z",
+  "billingCurrency": "ils",
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test-name",
+    "email": "customer-test-email",
+    "billingId": "customer-test-billing-id",
+    "crmId": "customer-test-crm-id",
+    "metadata": {
+      "testKey": "example value"
+    },
+    "experimentInfo": {
+      "id": "free-vs-paid-trial",
+      "name": "Free vs Paid trial",
+      "groupName": "Control group",
+      "groupType": "CONTROL"
+    }
+  },
+  "resource": null,
+  "plan": {
+    "id": "plan-test-id",
+    "name": "plan-test-name",
+    "description": "plan test description"
+  },
+  "addons": [
+    {
+      "id": "addon-test-id",
+      "name": "addon-test-name",
+      "description": "addon test description",
+      "quantity": 10
+    }
+  ],
+  "metadata": {
+    "testKey": "example value"
+  },
+  "experimentInfo": {
+    "id": "free-vs-paid-trial",
+    "name": "Free vs Paid trial",
+    "groupName": "Control group",
+    "groupType": "CONTROL"
+  },
+  "status": "CANCELED",
+  "cancelReason": "CANCELLED_BY_BILLING",
+  "cancellationDate": "2022-05-10T00:00:00.001Z"
+}
+`
+
+  
+cancelReason can get the following values:
+
+Example payload 
+
+JSON
+
+`{
+  "UpgradeOrDowngrade": "UPGRADE_OR_DOWNGRADE",
+  "CancelledByBilling": "CANCELLED_BY_BILLING",
+  "Expired": "EXPIRED",
+  "DetachBilling": "DETACH_BILLING",
+  "TrialEnded": "TRIAL_ENDED",
+  "Immediate": "Immediate",
+  "TrialConverted": "TRIAL_CONVERTED",
+  "PendingPaymentExpired": "PENDING_PAYMENT_EXPIRED",
+  "ScheduledCancellation": "ScheduledCancellation",
+  "CustomerArchived": "CustomerArchived"
+}
+`
+
+  
+#### subscription.expired
+
+Occurs whenever a non-recurring subscription expire.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "subscription.expired",
+  "entityId": "customer-uuid",
+  "id": "subscription-id",
+  "status": "ACTIVE",
+  "startDate": "2022-04-10T00:00:00.001Z",
+  "endDate": "2022-07-10T00:00:00.001Z",
+  "cancellationDate": "2022-05-10T00:00:00.001Z",
+  "trialEndDate": "2022-05-10T00:00:00.001Z",
+  "billingCurrency": "ils",
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test-name",
+    "email": "customer-test-email",
+    "billingId": "customer-test-billing-id",
+    "crmId": "customer-test-crm-id",
+    "metadata": {
+      "testKey": "example value"
+    },
+    "experimentInfo": {
+      "id": "free-vs-paid-trial",
+      "name": "Free vs Paid trial",
+      "groupName": "Control group",
+      "groupType": "CONTROL"
+    }
+  },
+  "resource": null,
+  "plan": {
+    "id": "plan-test-id",
+    "name": "plan-test-name",
+    "description": "plan test description"
+  },
+  "packageEntitlements": [
+    {
+      "feature": {
+        "id": "feature-analytics",
+        "name": "feature-test",
+        "description": "feature description here",
+        "featureType": "BOOLEAN",
+        "unit": "seat",
+        "units": "seats",
+        "status": "ACTIVE"
+      },
+      "hasUnlimitedUsage": false,
+      "usageLimit": 100
+    }
+  ],
+  "addons": [
+    {
+      "id": "addon-test-id",
+      "name": "addon-test-name",
+      "description": "addon test description",
+      "quantity": 10
+    }
+  ],
+  "metadata": {
+    "testKey": "example value"
+  },
+  "experimentInfo": {
+    "id": "free-vs-paid-trial",
+    "name": "Free vs Paid trial",
+    "groupName": "Control group",
+    "groupType": "CONTROL"
+  }
+}
+`
+
+  
+#### subscription.create\_failed
+
+Occurs whenever an attempt to create a subscription fails.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "subscription.create_failed",
+  "input": {
+    "customerId": "customer-id",
+    "planId": "plan-id",
+    "billingPeriod": "MONTHLY",
+    "startDate": "2022-08-21T21:45:29.617Z",
+    "environmentId": "bf154237-4b89-4221-821e-dab51fe8c231",
+    "cancelUrl": "https://your-cancel-url.com",
+    "successUrl": "https://your-success-url.com"
+  },
+  "error": "Customer not found",
+  "accountId": "ae3500ba-85da-4499-990c-1b9d24c13ccc",
+  "environmentId": "bf154237-4b89-4221-821e-dab51fe8c231"
+}
+`
+
+  
+## Trials
+
+#### subscription.trial\_started
+
+Occurs whenever a trial of a subscription starts.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "subscription.trial_started",
+  "id": "subscription-id",
+  "status": "IN_TRIAL",
+  "startDate": "2022-04-10T00:00:00.001Z",
+  "endDate": "2022-05-10T00:00:00.001Z",
+  "trialEndDate": "2022-05-10T00:00:00.001Z",
+  "plan": {
+    "id": "plan-test-id",
+    "name": "plan-test-name",
+    "description": "plan test description"
+  },
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test-name",
+    "email": "customer-test-email",
+    "billingId": "customer-test-billing-id",
+    "crmId": "customer-test-crm-id"
+  },
+  "resource": null,
+  "packageEntitlements": [
+    {
+      "feature": {
+        "id": "feature-analytics",
+        "name": "feature-test",
+        "description": "feature description here",
+        "featureType": "BOOLEAN",
+        "unit": "seat",
+        "units": "seats",
+        "status": "ACTIVE"
+      },
+      "hasUnlimitedUsage": false,
+      "usageLimit": 100
+    }
+  ],
+  "addons": [
+    {
+      "id": "addon-test-id",
+      "name": "addon-test-name",
+      "description": "addon test description",
+      "quantity": 10
+    }
+  ],
+  "metadata": {
+    "testKey": "example value"
+  },
+  "isDowngrade": true,
+  "isUpgrade": false
+}
+`
+
+  
+#### subscription.trial.ends\_soon
+
+Occurs 7 days before a trial subscription expires.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "subscription.trial.ends_soon",
+  "id": "subscription-id",
+  "status": "IN_TRIAL",
+  "startDate": "2022-04-10T00:00:00.001Z",
+  "endDate": "2022-05-10T00:00:00.001Z",
+  "isTrialSubscription": true,
+  "plan": {
+    "id": "plan-test-id",
+    "name": "plan-test-name",
+    "description": "plan test description"
+  },
+  "packageEntitlements": [
+    {
+      "feature": {
+        "id": "feature-analytics",
+        "name": "feature-test",
+        "description": "feature description here",
+        "featureType": "BOOLEAN",
+        "unit": "seat",
+        "units": "seats",
+        "status": "ACTIVE"
+      },
+      "hasUnlimitedUsage": false,
+      "usageLimit": 100
+    }
+  ],
+  "addons": [
+    {
+      "id": "addon-test-id",
+      "name": "addon-test-name",
+      "description": "addon test description",
+      "quantity": 10
+    }
+  ],
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test-name",
+    "email": "customer-test-email",
+    "billingId": "customer-test-billing-id",
+    "crmId": "customer-test-crm-id",
+    "metadata": {
+      "testKey": "example value"
+    },
+    "experimentInfo": {
+      "id": "free-vs-paid-trial",
+      "name": "Free vs Paid trial",
+      "groupName": "Control group",
+      "groupType": "CONTROL"
+    }
+  },
+  "resource": null,
+  "metadata": {
+    "testKey": "example value"
+  }
+}
+`
+
+  
+#### subscription.trial\_converted
+
+Occurs whenever a trial subscription converts to an active paid subscription.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "subscription.trial_converted",
+  "id": "subscription-id",
+  "status": "IN_TRIAL",
+  "startDate": "2022-04-10T00:00:00.001Z",
+  "endDate": "2022-05-10T00:00:00.001Z",
+  "plan": {
+    "id": "plan-test-id",
+    "name": "plan-test-name",
+    "description": "plan test description"
+  },
+  "packageEntitlements": [
+    {
+      "feature": {
+        "id": "feature-analytics",
+        "name": "feature-test",
+        "description": "feature description here",
+        "featureType": "BOOLEAN",
+        "unit": "seat",
+        "units": "seats",
+        "status": "ACTIVE"
+      },
+      "hasUnlimitedUsage": false,
+      "usageLimit": 100
+    }
+  ],
+  "addons": [
+    {
+      "id": "addon-test-id",
+      "name": "addon-test-name",
+      "description": "addon test description",
+      "quantity": 10
+    }
+  ],
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test-name",
+    "email": "customer-test-email",
+    "billingId": "customer-test-billing-id",
+    "crmId": "customer-test-crm-id",
+    "metadata": {
+      "testKey": "example value"
+    },
+    "experimentInfo": {
+      "id": "free-vs-paid-trial",
+      "name": "Free vs Paid trial",
+      "groupName": "Control group",
+      "groupType": "CONTROL"
+    }
+  },
+  "resource": null,
+  "metadata": {
+    "testKey": "example value"
+  }
+}
+`
+
+  
+#### subscription.trial\_expired
+
+Occurs whenever a trial subscription expires.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "subscription.trial_expired",
+  "entityId": "customer-uuid",
+  "id": "subscription-id",
+  "status": "ACTIVE",
+  "startDate": "2022-04-10T00:00:00.001Z",
+  "endDate": "2022-07-10T00:00:00.001Z",
+  "cancellationDate": "2022-05-10T00:00:00.001Z",
+  "trialEndDate": "2022-05-10T00:00:00.001Z",
+  "billingCurrency": "ils",
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test-name",
+    "email": "customer-test-email",
+    "billingId": "customer-test-billing-id",
+    "crmId": "customer-test-crm-id",
+    "metadata": {
+      "testKey": "example value"
+    },
+    "experimentInfo": {
+      "id": "free-vs-paid-trial",
+      "name": "Free vs Paid trial",
+      "groupName": "Control group",
+      "groupType": "CONTROL"
+    }
+  },
+  "resource": null,
+  "plan": {
+    "id": "plan-test-id",
+    "name": "plan-test-name",
+    "description": "plan test description"
+  },
+  "packageEntitlements": [
+    {
+      "feature": {
+        "id": "feature-analytics",
+        "name": "feature-test",
+        "description": "feature description here",
+        "featureType": "BOOLEAN",
+        "unit": "seat",
+        "units": "seats",
+        "status": "ACTIVE"
+      },
+      "hasUnlimitedUsage": false,
+      "usageLimit": 100
+    }
+  ],
+  "addons": [
+    {
+      "id": "addon-test-id",
+      "name": "addon-test-name",
+      "description": "addon test description",
+      "quantity": 10
+    }
+  ],
+  "metadata": {
+    "testKey": "example value"
+  },
+  "experimentInfo": {
+    "id": "free-vs-paid-trial",
+    "name": "Free vs Paid trial",
+    "groupName": "Control group",
+    "groupType": "CONTROL"
+  }
+}
+`
+
+  
+## Measurements
+
+#### measurement.reported
+
+Occurs whenever a measurement of a metered entitlement is reported for a specific customer.
+
+This event can be helpful in:
+
+1. Qualifying customers for upsells.
+2. Triggering internal and customer-facing notifications and emails - for example: quota is about to exceeded, quota exceeded, customer will be billed for overage.
+Example payload 
+
+JSON
+
+`{
+  "type": "measurement.reported",
+  "currentChange": 1,
+  "usageUsedPercentage": 75,
+  "currentUsage": 75,
+  "hasUnlimitedUsage": false,
+  "usageLimit": 100,
+  "nextResetDate": "2022-04-10T00:00:00.001Z",
+  "resetPeriod": "MONTH",
+  "resetPeriodConfiguration": {
+    "accordingTo": "SubscriptionStart"
+  },
+  "feature": {
+    "id": "feature-test-id",
+    "name": "feature-test-name",
+    "unit": "seat",
+    "units": "seats",
+    "description": "feature test description",
+    "featureType": "NUMBER",
+    "meterType": "INCREMENTAL",
+    "status": "ACTIVE"
+  },
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test-name",
+    "email": "[[email protected]](/cdn-cgi/l/email-protection)"
+  },
+  "resource": null,
+  "activeSubscriptions": [
+    {
+      "id": "subscription-test-id",
+      "startDate": "2022-03-10T00:00:00.001Z",
+      "plan": {
+        "id": "plan-test-id",
+        "name": "plan-test-name",
+        "description": "plan description test",
+        "status": "PUBLISHED"
+      },
+      "addons": [
+        {
+          "id": "addon-test-id",
+          "name": "addon-test-name",
+          "description": "addon test description",
+          "status": "PUBLISHED",
+          "quantity": 5
+        }
+      ],
+      "metadata": {
+        "testKey": "example value"
+      }
+    }
+  ]
+}
+`
+
+  
+## Entitlements
+
+#### entitlements.updated
+
+Occurs whenever the list of entitlements that a customer is eligible for are updated.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "entitlements.updated",
+  "customer": {
+    "id": "customer-demo-01",
+    "name": "John Doe",
+    "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+    "billingId": "cus_Lh48hfXd3j3PmN"
+  },
+  "entitlements": [
+    {
+      "feature": {
+        "id": "feature-01-stores",
+        "name": "Stores",
+        "description": "",
+        "featureType": "NUMBER",
+        "meterType": "FLUCTUATING",
+        "unit": "Store",
+        "units": "Stores",
+        "status": "NEW"
+      },
+      "usageLimit": 5,
+      "currentUsage": 3,
+      "hasUnlimitedUsage": false,
+      "nextResetDate": null,
+      "resetPeriod": null,
+      "resetPeriodConfiguration": null
+    }
+  ]
+}
+`
+
+  
+## Promotional entitlements
+
+#### promotionalEntitlement.granted
+
+Occurs whenever a promotional entitlement is granted to a customer.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "promotionalEntitlement.granted",
+  "id": "plan-test-id",
+  "status": "Active",
+  "feature": {
+    "id": "feature-test-id",
+    "name": "feature-test-name",
+    "unit": "seat",
+    "units": "seats",
+    "description": "feature test description",
+    "featureType": "NUMBER",
+    "meterType": "INCREMENTAL",
+    "status": "ACTIVE"
+  },
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test",
+    "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+    "billingId": "customer-test-billing-id",
+    "crmId": "customer-test-crm-id"
+  },
+  "hasUnlimitedUsage": false,
+  "usageLimit": 100,
+  "resetPeriod": "MONTH",
+  "resetPeriodConfiguration": {
+    "accordingTo": "SubscriptionStart"
+  },
+  "isVisible": true,
+  "period": "1 month",
+  "endDate": "2022-04-10T00:00:00.001Z"
+}
+`
+
+  
+#### promotionalEntitlement.updated
+
+Occurs whenever a customer's promotional entitlement is updated.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "promotionalEntitlement.updated",
+  "id": "plan-test-id",
+  "status": "Active",
+  "feature": {
+    "id": "feature-test-id",
+    "name": "feature-test-name",
+    "unit": "seat",
+    "units": "seats",
+    "description": "feature test description",
+    "featureType": "NUMBER",
+    "meterType": "INCREMENTAL",
+    "status": "ACTIVE"
+  },
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test",
+    "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+    "billingId": "customer-test-billing-id",
+    "crmId": "customer-test-crm-id"
+  },
+  "hasUnlimitedUsage": false,
+  "usageLimit": 100,
+  "resetPeriod": "MONTH",
+  "resetPeriodConfiguration": {
+    "accordingTo": "SubscriptionStart"
+  },
+  "isVisible": true,
+  "period": "1 month",
+  "endDate": "2022-04-10T00:00:00.001Z"
+}
+`
+
+  
+#### promotionalEntitlement.revoked
+
+Occurs whenever a promotional entitlement is revoked from a customer.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "promotionalEntitlement.revoked",
+  "id": "plan-test-id",
+  "status": "Active",
+  "feature": {
+    "id": "feature-test-id",
+    "name": "feature-test-name",
+    "unit": "seat",
+    "units": "seats",
+    "description": "feature test description",
+    "featureType": "NUMBER",
+    "meterType": "INCREMENTAL",
+    "status": "ACTIVE"
+  },
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test",
+    "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+    "billingId": "customer-test-billing-id",
+    "crmId": "customer-test-crm-id"
+  },
+  "hasUnlimitedUsage": false,
+  "usageLimit": 100,
+  "resetPeriod": "MONTH",
+  "resetPeriodConfiguration": {
+    "accordingTo": "SubscriptionStart"
+  },
+  "isVisible": true,
+  "period": "1 month",
+  "endDate": "2022-04-10T00:00:00.001Z"
+}
+`
+
+  
+#### promotionalEntitlement.expired
+
+Occurs whenever a customer's promotional entitlement has expired.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "promotionalEntitlement.expired",
+  "id": "plan-test-id",
+  "status": "Active",
+  "feature": {
+    "id": "feature-test-id",
+    "name": "feature-test-name",
+    "unit": "seat",
+    "units": "seats",
+    "description": "feature test description",
+    "featureType": "NUMBER",
+    "meterType": "INCREMENTAL",
+    "status": "ACTIVE"
+  },
+  "customer": {
+    "entityId": "customer-uuid",
+    "id": "customer-test-id",
+    "name": "customer-test",
+    "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+    "billingId": "customer-test-billing-id",
+    "crmId": "customer-test-crm-id"
+  },
+  "hasUnlimitedUsage": false,
+  "usageLimit": 100,
+  "resetPeriod": "MONTH",
+  "resetPeriodConfiguration": {
+    "accordingTo": "SubscriptionStart"
+  },
+  "isVisible": true,
+  "period": "1 month",
+  "endDate": "2022-04-10T00:00:00.001Z"
+}
+`
+
+  
+## Coupons
+
+#### coupon.created
+
+Occurs whenever a new coupon is created.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "coupon.created",
+  "entityId": "coupon-id",
+  "name": "best-coupon",
+  "description": "best coupon ever",
+  "couponType": "PERCENTAGE",
+  "status": "ACTIVE",
+  "discountValue": 20,
+  "createdAt": "2022-04-10T00:00:00.001Z",
+  "updatedAt": "2022-04-10T00:00:00.001Z"
+}
+`
+
+  
+#### coupon.updated
+
+Occurs whenever a coupon is updated.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "coupon.updated",
+  "entityId": "coupon-id",
+  "name": "best-coupon",
+  "description": "best coupon ever",
+  "couponType": "PERCENTAGE",
+  "status": "ACTIVE",
+  "discountValue": 20,
+  "createdAt": "2022-04-10T00:00:00.001Z",
+  "updatedAt": "2022-04-10T00:00:00.001Z"
+}
+`
+
+  
+#### coupon.archived
+
+Occurs whenever a coupon is archived.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "coupon.archived",
+  "entityId": "coupon-id",
+  "name": "best-coupon",
+  "description": "best coupon ever",
+  "couponType": "PERCENTAGE",
+  "status": "ACTIVE",
+  "discountValue": 20,
+  "createdAt": "2022-04-10T00:00:00.001Z",
+  "updatedAt": "2022-04-10T00:00:00.001Z"
+}
+`
+
+  
+## Third-party integration sync
+
+#### sync.failed
+
+Occurs whenever syncing of an entity to an integrated app fails.
+
+Example payload 
+
+JSON
+
+`{
+  "type": "sync.failed",
+  "error": "Customer already exists",
+  "id": "customer-id",
+  "entityType": "CUSTOMER",
+  "vendorIdentifier": "stripe"
+
+`
+
+  

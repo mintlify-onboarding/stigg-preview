@@ -1,0 +1,88 @@
+---
+title: "Handling reported usage"
+---
+
+## Overview
+
+The Stigg platform allows you to leverage reported usage and perform the following actions:
+
+1. Provide visibility to customer's current usage
+2. Enforce access according to the defining pricing model
+3. Bill customers according to reported usage
+4. Notify customers about changes to their usage, for example: limit is about to be exceeded
+5. Notify internal stakeholders (i.e. sales and CS reps) about changes to customer usage
+6. Trigger additional actions in applications that are integrated with Stigg
+  
+## Prerequisites
+
+In order to take action upon reported usage events, metered features must be defined in order to track usage updates.
+
+[ ![](/images/79ff1a0-Group_14154.png)  Creating metered features Modeling your pricing ](features#creating-metered-features) 
+
+  
+## Providing visibility to customers' current usage
+
+### In your application
+
+Leverage's Stigg's snap-in customer portal widget or the Stigg JavaScript SDK to implement your own design.
+
+[ ![](/images/39506e7-Group_16979.png)  Stigg's customer portal widget React SDK ](react-sdk#rendering-a-customer-portal) 
+
+  
+[ ![](/images/d3fa46c-Unofficial_JavaScript_logo_2.svg.png)  Getting the entitlement of a customer to a specific feature JavaScript SDK ](javascript-sdk#checking-if-a-customer-has-access-to-a-metered-feature) 
+
+### In third-party analytics solutions
+
+[ ![](/images/403e25d-zap_1.png)  Integrate Stigg with additional applications using webhooks Business app integration ](webhooks) 
+
+### In the Stigg app
+
+#### Visibility for a specific customer
+
+[ ![](/images/a2e4ee2-couple.png)  Viewing customers' entitlement usage Managing customers & subscriptions ](customers#viewing-customers-entitlement-usage) 
+
+  
+[ ![](/images/49580f8-arrows_counterclockwise.png)  Viewing the entitlement usage of a specific subscription Managing customers & subscriptions ](subscriptions#viewing-the-details-of-a-specific-subscription) 
+
+#### Visibility across the entire customer base
+
+[ ![](/images/a2e4ee2-couple.png)  Feature inspector Gaining insights about your pricing strategy ](customers#viewing-customers-entitlement-usage) 
+
+  
+## Enforcing customer access
+
+To enforce access to features based on reported usage, add the features as entitlements to plans and add-ons and set the relevant. Stigg can also automatically reset reported usage for you, which is useful for example for calculating monthly active users (MAU).
+
+Leverage the Stigg SDKs to enforce access based on the defined entitlement limit and reported usage.
+
+> ## 🚧
+> 
+> Access enforcement behaves slightly differently depending on the usage data source type:
+> 
+> 1. Calculated usage - enforcement is immediate
+> 2. Raw events - enforcement is near real-time (up to 10 seconds)
+
+| [ ![](/images/79ff1a0-Group_14154.png)  Assigning features to plans Modeling your pricing ](plans#assigning-features-to-plans) | [ ![](/images/79ff1a0-Group_14154.png)  Assigning features to add-ons Modeling your pricing ](add-ons#assigning-features-to-add-ons) |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+
+| Getting the entitlement of a customer to a specific feature                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [ ![](/images/d96f126-Node.js_logo.svg) ](nodejs-sdk#checking-if-a-customer-has-access-to-a-metered-feature) [ ![](/images/7469835-python-original.png) ](python-sdk-v2#getting-the-entitlement-of-a-customer-for-a-specific-feature) [ ![](/images/9705d6b-ruby-original.png) ](ruby-sdk#getting-the-entitlement-of-a-customer-for-a-specific-feature) [ ![](/images/ccb79d0-go-original-wordmark.png) ](go-sdk#getting-the-entitlement-of-a-customer-for-a-specific-feature) [ ![](/images/e088aed-image.png) ](graphql-api#getting-the-entitlement-of-a-customer-for-a-specific-feature) [ ![](/images/d3fa46c-Unofficial_JavaScript_logo_2.svg.png) ](javascript-sdk#checking-if-a-customer-has-access-to-a-metered-feature) |
+
+  
+## Billing customers according to their usage
+
+To bill customers for usage:
+
+1. Integrate Stigg with a billing solution, such as Stripe
+2. Add the relevant metered features as usage-based charges in plans
+
+[ ![](/images/1b13737-Stripe_wordmark_-_blurple_small.png)  Learn about Stigg's integration with Stripe Billing Business app integration ](stripe) 
+
+  
+[ ![](/images/79ff1a0-Group_14154.png)  Usage-based charges in plans Modeling your pricing ](plans#usage-based-charges) 
+
+  
+## Triggering notifications
+
+[ ![](/images/403e25d-zap_1.png)  Integrate Stigg with additional applications using webhooks Business app integration ](webhooks) 

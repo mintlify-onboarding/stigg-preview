@@ -1,0 +1,301 @@
+---
+title: "Customer portal"
+---
+
+## Overview
+
+Stigg's customer portal widget allows you to introduce self-service and drive in-app expansions using only a few lines of codes. 
+
+The customer portal:
+
+1. Provides customers with visibility to their current subscription details - subscribed plan, purchased add-ons, granted promotional entitlements.
+2. Provides customers with visibility to the usage of their subscription's features.
+3. Allows customers to upgrade and downgrade their subscription in a self-served manner - when you update your pricing model in Stigg, customers will auto-magically be able to upgrade or downgrade their subscription according to the updated pricing model 😎.
+4. Allows customers to view their billing and payment information - when Stigg is integrated with a billing solution (such as Stripe), customers can also update this information and view previous invoices directly from the billing solution's billing portal.
+![](/images/55ae4d3-Frame_18882.png) 
+
+## Customer portal sections
+
+Stigg's customer portal widget is composed of the following sections.
+
+### Subscription overview
+
+The Subscription Overview section provides customers with visibility to their current subscription details - subscribed plan, purchased add-ons, granted promotional entitlements.
+
+![](/images/ec4f76d-image.png)
+
+### Usage
+
+The Usage section provides customers with visibility to the usage of their subscription's features.
+
+![](/images/579dccc-image.png)
+
+### Plan picker
+
+The Plan Picker section allows customers to upgrade and downgrade their subscription in a self-served manner.
+
+When you update your pricing model in Stigg, customers will auto-magically be able to upgrade or downgrade their subscription according to the updated pricing model 😎.
+
+Behind the scenes, this section leverages the [Stigg Pricing Table widget](pricing-table).
+
+![](/images/b2f1007-image.png)
+
+### Payment details
+
+The Payment Details section allows customers to view their billing and payment information.
+
+Customers that have a an active paid subscription can update their billing details (name, address) and payment method in the Stripe Billing Portal via link from the Stigg Customer Portal.
+
+![](/images/a218189-image.png)
+
+> ## 🚧
+> 
+> 1. Stigg must be integrated with [Stripe](stripe)
+> 2. To ensure that the functionality of Stigg's Customer Portal doesn't collide with Stripe's Billing Portal, ensure that [Stripe's Billing Portal is configured correctly](stripe#integration-with-stripes-billing-portal).
+
+### Invoices
+
+Customers that have a an active paid subscription or had one in the past can view past invoices in the Stripe Billing Portal via a link from the Stigg Customer Portal.
+
+![](/images/cad3eea-image.png)
+
+> ## 🚧
+> 
+> Stigg must be integrated with [Stripe](stripe) to allow customers to view past invoices.
+
+> ## 📘
+> 
+> Visibility for invoices directly in the Stigg Customer Portal is on our roadmap.
+
+## Rendering a customer portal
+
+To render customer portals inside your application, when a customer signs-in or restores their session set the customer ID:
+
+ReactVue.js
+
+`import { useStiggContext } from '@stigg/react-sdk';
+
+function App() {
+  const { stigg } = useStiggContext();
+
+  useEffect(() => {
+    // after user sign in call to setCustomerId
+    stigg.setCustomerId('<LOGGED_IN_CUSTOMER_ID>');
+  })
+}
+`
+
+`<script setup lang="ts">
+import { StiggProvider, StiggProviderProps } from '@stigg/vue-sdk';
+
+const stiggProvider: StiggProviderProps = {
+  apiKey: "<STIGG_CLIENT_API_KEY>",
+  customerId: "<CUSTOMER_ID>",
+};
+
+</script>
+
+<template>
+   <StiggProvider v-bind="stiggProvider">
+      <NestedComponents />
+   </StiggProvider>
+</template>
+`
+
+Use the `CustomerPortal` component to render the customer portal.
+
+The CustomerPortal component support [component composition](https://reactjs.org/docs/composition-vs-inheritance.html) so it's possible to pass as a parameter the Paywall component and it will be rendered inside the customer portal.
+
+ReactVue.js
+
+`<CustomerPortal
+	paywallComponent={<Paywall />}
+	theme={...}
+	textOverrides={...}
+/>
+`
+
+`` <script setup lang="ts">
+import { CustomerPortal, CustomerPortalProps, Paywall, PaywallProps } from '@stigg/vue-sdk';
+
+const customerPortal: CustomerPortalProps = {
+   onManageSubscription: () => {
+     console.log('Manage subscription');
+   }
+};
+
+const paywall: PaywallProps = {
+  onPlanSelected: ({plan}) => {
+    console.log(`Selected plan: ${plan.displayName}`);
+  }
+};
+
+</script>
+
+<template>
+  <CustomerPortal v-bind="customerPortal">
+    <template v-slot:paywall-component>
+      <Paywall v-bind="paywall" />
+    </template>
+  </CustomerPortal>
+</template>
+ ``
+
+> ## 📘
+> 
+> Learn more on how to [refresh Stigg cache](/docs/react-sdk#refreshing-the-cache) after performing an operation that modifies the customer to immediately reflect the customer changes on the customer portal
+
+  
+## Widget modularity
+
+The `CustomerPortal` component is just an opinionated way to render the customer portal in a specific layout which is based on our experience after reviewing many customer portals, but if you need more flexibility in how the customer portal is rendered, you can directly each of its sections separately.
+
+To do so, wrap all the section components with `CustomerPortalProvider` which will pass the necessary data to each component:
+
+React
+
+`import { 
+  CustomerPortalProvider,
+  CustomerUsageData,
+  PaymentDetailsSection,
+  /* more components that can be used as standalone
+  SubscriptionsOverview,
+  AddonsList,
+  Promotions,
+  InvoicesSection
+  */
+} from '@stigg/react-sdk"
+
+function App() {
+ 	return (
+		<CustomerPortalProvider theme={...} textOverrides={...}>
+			<CustomerUsageData />
+			<PaymentDetailsSection />
+		</CustomerPortalProvider>    
+  )
+}
+
+`
+
+## Subscriptions with a custom price
+
+Customers that are subscribed to a subscription with a custom price can't upgrade on downgrade their subscription in a self-served manner using the customer portal widget. Instead, you can handle the `onContactSupport` method to allow customers contact a sales or customer success representative that can do so on their behalf. 
+
+![](/images/9cabf08-Frame_18882_1.png) 
+
+## Customization
+
+### No-code widget designer
+
+The Stigg app offers a no-code widget designer, which allows you to control the widget colors, typography and layout.
+
+![](/images/0952528-Screenshot_2023-09-12_at_1.33.06.png) 
+
+### Custom CSS
+
+For more advanced customization, custom CSS can be applied using the widget designer of the Stigg app. Alternatively, custom CSS can also be applied using code.
+
+Below you can find a list of the supported CSS classes:
+
+| Class name                           | Description                                                   |
+| ------------------------------------ | ------------------------------------------------------------- |
+| stigg-payment-details-section-layout | Styles applied to billing information title                   |
+| stigg-payment-details-section-header | Styles applied to payment details title layout                |
+| stigg-payment-details-section-title  | Styles applied to payment details title                       |
+| stigg-customer-name                  | Styles applied to payment details customer name               |
+| stigg-customer-email                 | Styles applied to payment details customer email              |
+| stigg-credit-card                    | Styles applied to payment details credit card                 |
+| stigg-credit-card-expiration         | Styles applied to payment details credit card expiration date |
+| stigg-invoices-section-layout        | Styles applied to invoice section layout                      |
+| stigg-invoices-section-header        | Styles applied to invoice section title layout                |
+| stigg-invoices-section-title         | Styles applied to invoice section title                       |
+| stigg-view-invoice-history-button    | Styles applied to invoice history button                      |
+| stigg-edit-payment-details-button    | Styles applied to update payment details button               |
+| stigg-user-information-layout        | Styles applied to user information                            |
+
+In addition, since the Plans section of the customer portal can include the Stigg pricing table widget you can leverage [its CSS classes](pricing-tables#custom-css) to customize its styling.
+
+### Texts
+
+The default widget texts can currently be overridden using code:
+
+ReactVue.js
+
+`const textOverrides = {  
+	manageSubscription: 'Manage',
+	usageTabTitle: 'Usage',
+	addonsTabTitle: 'Add-ons',
+	promotionsTabTitle: 'Promotions',
+	promotionsSubtitle: 'You were granted access to additional functionality at no additional cost.',
+  contactSupportTitle: 'Have questions about your subscription?',
+  contactSupportLink: 'Contact support',
+  editBilling: 'Edit billing details',
+  invoicesTitle: 'Invoices',
+  viewInvoiceHistory: 'View invoice history',
+  editPaymentDetails: 'Edit',
+  paywallSectionTitle: 'Plans',
+  cancelScheduledUpdatesButtonTitle: 'Cancel update',
+}
+
+<CustomerPortal
+    textOverrides={textOverrides}
+    paywallComponent={<Paywall />}
+/>
+
+`
+
+`` <script setup lang="ts">
+import { CustomerPortal, CustomerPortalProps, Paywall, PaywallProps } from '@stigg/vue-sdk';
+
+const textOverrides = {
+  manageSubscription: 'Manage',
+  usageTabTitle: 'Usage',
+  addonsTabTitle: 'Add-ons',
+  promotionsTabTitle: 'Promotions',
+  promotionsSubtitle: 'You were granted access to additional functionality at no additional cost.',
+  contactSupportTitle: 'Have questions about your subscription?',
+  contactSupportLink: 'Contact support',
+  editBilling: 'Edit billing details',
+  invoicesTitle: 'Invoices',
+  viewInvoiceHistory: 'View invoice history',
+  editPaymentDetails: 'Edit',
+  paywallSectionTitle: 'Plans',
+  cancelScheduledUpdatesButtonTitle: 'Cancel update',
+}
+
+const customerPortal: CustomerPortalProps = {
+   textOverrides,
+   onManageSubscription: () => {
+     console.log('Manage subscription');
+   }
+};
+
+const paywall: PaywallProps = {
+  onPlanSelected: ({plan}) => {
+    console.log(`Selected plan: ${plan.displayName}`);
+  }
+};
+
+</script>
+
+<template>
+  <CustomerPortal v-bind="customerPortal">
+    <template v-slot:paywall-component>
+      <Paywall v-bind="paywall" />
+    </template>
+  </CustomerPortal>
+</template>
+ ``
+
+> ## 📘
+> 
+> You can find more text overrides options [here](https://react-sdk-docs.stigg.io/types/customerportalprops)
+
+## Additional resources
+
+[ ![](/images/6485b4f-codingbrowser_102152.png)  Customer portal properties React SDK reference ](https://react-sdk-docs.stigg.io/types/customerportalprops) 
+
+## Related SDKs
+
+| [ ![](/images/176351e-React-icon.svg.png) ](react-sdk) | [ ![](/images/cd5d8b2-1200px-Vue.js_Logo_2.svg_1.png) ](vuejs) | [ ![](/images/b6e8ec3-next-js-logo-8FCFF51DD2-seeklogo.com.png) ](nextjs) |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |

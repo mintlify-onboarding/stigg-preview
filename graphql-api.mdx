@@ -1,0 +1,1452 @@
+---
+title: "GraphQL API"
+description: "How to use the Stigg API on the server-side"
+---
+
+## The GraphQL endpoint
+
+The GraphQL API has a single endpoint:
+
+`https://api.stigg.io/graphql
+
+`
+
+The endpoint remains constant no matter what operation you perform.
+
+  
+## Retrieving the server API Key
+
+In the Stigg Cloud Console, go to [Settings > Account > Environments](https://app.stigg.io/account/settings).
+
+Copy the **Server API key** of the relevant environment.
+
+  
+## Discovering the GraphQL API
+
+### GraphQL explorer
+
+You can run queries on real Stigg data using our GraphQL Explorer, an integrated development environment in your browser that includes docs, syntax highlighting, and validation errors.
+
+> ## 📘
+> 
+> To authenticate you need to pass the **Server API key** in the **X-API-KEY** request header.
+
+[![Stigg API's Graph | Apollo Studio](/images/og-logo.288fe3ddcb36cf8b9283ecfb578926f6.png)studio.apollographql.comStigg API's Graph | Apollo Studio](https://studio.apollographql.com/public/Stigg-API/explorer?variant=Production)
+
+  
+### GraphQL introspection
+
+GraphQL is introspective. This means you can query a GraphQL schema for details about itself.  
+You can run an introspection query by passing your Server API key as a query parameter:
+
+`https://api.stigg.io/graphql?apiKey=YOUR_SERVER_API_KEY
+`
+
+For example, running the following curl, will get all the available root types:
+
+cURL
+
+`curl --request POST  
+     --header 'content-type: application/json'  
+     --url "https://api.stigg.io/graphql?apiKey={YOUR_SERVER_API_KEY}"  
+     --data '{"query":"query { \_\_schema { types { name } } }"}'
+`
+
+  
+## Provisioning customers
+
+When a new customer is provisioned within your application (for example: as part of your registration or onboarding process), you should also provision them in Stigg.
+
+The customer's billing information can also be passed to Stigg when a customer is created or updated. When Stigg is integrated with additional service, this information will be propagated to the active integrations. The billing information is not persisted on Stigg's servers.
+
+You can optionally pass `subscriptionParams` to create subscription for that customer using a single operation. Doing so, will allow Stigg admins to override the requested subscription with no-code from the Stigg Console using the [product's Customer Journey configuration](products#defining-the-customer-journey).
+
+#### Query
+
+GraphQL
+
+`mutation ProvisionCustomer($input: ProvisionCustomerInput!) {  
+  provisionCustomer(input: $input) {  
+    customer {
+      refId  
+      name 				# optional 
+      email				# optional - billing email address
+      createdAt  
+      billingId  
+      crmId  
+      hasPaymentMethod  
+      additionalMetaData # optional
+    }
+    subscriptionDecisionStrategy
+    subscription {
+      refId
+      status
+      plan {
+        refId
+      }
+    }
+  }  
+}
+`
+
+#### Variables
+
+JSON
+
+`{  
+  "input": {  
+    "refId": "customer-id",  
+    "name": "Acme",  
+    "email": "[[email protected]](/cdn-cgi/l/email-protection)",  
+    "couponRefId": "coupon-id",  
+    "billingInformation": {  
+      "language": "en",  
+      "timezone": "America/New_York",  
+      "billingAddress": {  
+        "country": "US",  
+        "city": "New York",  
+        "state": "NY",  
+        "addressLine1": "123 Main Street",  
+        "addressLine2": "Apt. 1",  
+        "phoneNumber": "+1 212-499-5321",  
+        "postalCode": "10164"  
+      },  
+      "shippingAddress": {  
+        "country": "US", // country format must be in the ISO-3166-1 format
+        "city": "New York",  
+        "state": "NY",  
+        "addressLine1": "123 Main Street",  
+        "addressLine2": "Apt. 1",  
+        "phoneNumber": "+1 212-499-5321",  
+        "postalCode": "10164"  
+      }  
+    },  
+    "additionalMetaData": {  
+      "key": "value"  
+    },
+    "subscriptionParams": {
+      "planId": "plan-revvenu-basic",
+    }
+  },
+}
+`
+
+Response 
+
+JSON
+
+`{
+  "data": {
+    "provisionCustomer": {
+      "customer": {
+        "refId": "customer-id",
+        "name": "Acme",
+        "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+        "createdAt": "2022-09-22T08:00:28.965Z",
+        "billingId": null,
+        "crmId": null,
+        "hasPaymentMethod": false,
+        "additionalMetaData": {
+          "key": "value"
+        }
+      },
+      "subscriptionDecisionStrategy": "REQUESTED_PLAN",
+      "subscription": {
+        "refId": "subscription-plan-revvenu-basic-7b5a40",
+        "status": "ACTIVE",
+        "plan": {
+          "refId": "plan-revvenu-basic"
+        }
+      }
+    }
+  }
+}
+`
+
+  
+## Updating customers
+
+Customer information can also be updated whenever you like assuming it already exists, for example: In order to update the customer's email, you only need to send the new email value without the rest of the customer.  
+Due to the fact that the customer's billing information is not persisted on Stigg's servers, in order to update it, the entire billing information object must be passed each time.
+
+#### Query
+
+GraphQL
+
+`mutation UpdateOneCustomer($input: UpdateCustomerInput!) {  
+  updateOneCustomer(input: $input) {  
+    refId  
+    name  
+    email  
+    createdAt  
+    billingId  
+    crmId  
+    hasPaymentMethod  
+    additionalMetaData  
+  }  
+}
+`
+
+#### Variables
+
+JSON
+
+`{
+  "input": {
+    "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+    "name": "Acme",
+    "refId": "customer-id",
+    "billingInformation": {
+      "language": "en",
+      "timezone": "America/New_York",
+      "currency":"USD",
+      "taxIds": [
+        {"type": "...", "value": "..."}
+      ],
+    },
+    "additionalMetaData": {
+      "key": "value"
+    }
+  }
+}
+`
+
+Response 
+
+JSON
+
+`{
+  "data": {
+    "updateOneCustomer": {
+      "refId": "customer-id",
+      "name": "Acme",
+      "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+      "createdAt": "2022-08-24T20:37:46.194Z",
+      "billingId": null,
+      "crmId": null,
+      "hasPaymentMethod": false,
+      "additionalMetaData": {
+        "key": "value"
+      }
+    }
+  }
+}
+`
+
+  
+## Getting customer data
+
+#### Query
+
+GraphQL
+
+`fragment CouponFragment on Coupon {
+  id
+  discountValue
+  additionalMetaData
+  refId
+  name
+  description
+  createdAt
+  updatedAt
+  billingId
+  type
+  status
+}
+
+fragment PromotionalEntitlementFragment on PromotionalEntitlement {
+  status
+  usageLimit
+  featureId
+  hasUnlimitedUsage
+  resetPeriod
+  endDate
+  isVisible
+  feature {
+    displayName
+    description
+    refId
+  }
+}
+
+fragment CustomerFragment on Customer {
+  id
+  name
+  email
+  createdAt
+  updatedAt
+  hasPaymentMethod
+  customerId
+  billingId
+  additionalMetaData
+  coupon {
+    ...CouponFragment
+  }
+  promotionalEntitlements {
+    ...PromotionalEntitlementFragment
+  }
+}
+
+query GetCustomerByRefId($input: GetCustomerByRefIdInput!) {
+  getCustomerByRefId(input: $input) {
+    ...CustomerFragment
+  }
+}
+`
+
+#### Variables
+
+GraphQL
+
+`{
+  "input": {
+    "customerId": "customer-demo-01"
+  }
+}
+`
+
+Response 
+
+JSON
+
+`{
+  "data": {
+    "customers": {
+      "edges": [
+        {
+          "node": {
+            "id": "a1c08d83-4175-4402-99de-0924a158eaa1",
+            "name": "Acme",
+            "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+            "createdAt": "2022-08-24T20:37:46.194Z",
+            "updatedAt": "2022-08-24T21:43:50.593Z",
+            "hasPaymentMethod": false,
+            "refId": "customer-id",
+            "billingId": "",
+            "additionalMetaData": {
+              "key": "value"
+            },
+            "coupon": null,
+            "promotionalEntitlements": [],
+          }
+        }
+      ]
+    }
+  }
+}
+`
+
+  
+## Getting customer active subscriptions
+
+#### Query
+
+GraphQL
+
+`fragment PriceFragment on Price {
+  billingModel
+  billingPeriod
+  price {
+    amount
+    currency
+  }
+  feature {
+    featureUnits
+    featureUnitsPlural
+    displayName
+    refId
+  }
+}
+
+fragment TotalPriceFragment on CustomerSubscriptionTotalPrice {
+  subTotal {
+    amount
+    currency
+  }
+  total {
+    amount
+    currency
+  }
+}
+
+fragment AddonFragment on Addon {
+  id
+  refId
+  displayName
+  description
+  additionalMetaData
+}
+
+fragment PlanFragment on Plan {
+  id
+  refId
+  displayName
+  description
+  additionalMetaData
+}
+
+fragment SubscriptionFragment on CustomerSubscription {
+  id
+  startDate
+  endDate
+  trialEndDate
+  cancellationDate
+  effectiveEndDate
+  status
+  refId
+  currentBillingPeriodEnd
+  additionalMetaData
+  prices {
+    usageLimit
+    price {
+      ...PriceFragment
+    }
+  }
+  totalPrice {
+    ...TotalPriceFragment
+  }
+  pricingType
+  plan {
+    ...PlanFragment
+  }
+  addons {
+    id
+    quantity
+    addon {
+      ...AddonFragment
+    }
+  }
+  paymentCollection
+  latestInvoice {
+    billingId
+    status
+    createdAt
+    updatedAt
+    requiresAction
+    paymentUrl
+    paymentSecret
+    errorMessage
+  }
+}
+
+query GetActiveSubscriptions($input: GetActiveSubscriptionsInput!) {
+  getActiveSubscriptions(input: $input) {
+    ...SubscriptionFragment
+  }
+}
+`
+
+#### Variables
+
+GraphQL
+
+`{
+  "input": {
+    "customerId": "customer-demo-01",
+    "resourceId": "resource-01",  // optional, pass it to get subscription of specific resource
+  }
+}
+`
+
+Response 
+
+JSON
+
+`{
+  "data": {
+    "getActiveSubscriptions": [
+      {
+        "id": "0136d54d-c34d-435d-b53c-e0e6f358608a",
+        "startDate": "2022-08-24T21:25:51.921Z",
+        "endDate": null,
+        "trialEndDate": null,
+        "cancellationDate": null,
+        "effectiveEndDate": null,
+        "status": "ACTIVE",
+        "refId": "subscription-plan-revvenu-basic-e24ddb",
+        "currentBillingPeriodEnd": "2022-09-24T21:25:51.921Z",
+        "additionalMetaData": {
+          "key": "value"
+        },
+        "prices": [],
+        "totalPrice": null,
+        "pricingType": "FREE",
+        "plan": {
+          "id": "08b249b1-5d15-4d09-a9f8-da4af00836d5",
+          "refId": "plan-revvenu-basic",
+          "displayName": "Basic",
+          "description": null,
+          "additionalMetaData": null
+        },
+        "addons": []
+      },
+      {
+        "id": "b55b6164-19c2-463c-b326-5606fe561bb9",
+        "startDate": "2022-08-24T21:23:36.291Z",
+        "endDate": null,
+        "trialEndDate": null,
+        "cancellationDate": "2022-08-24T21:25:52.278Z",
+        "effectiveEndDate": "2022-08-24T21:25:52.278Z",
+        "status": "CANCELED",
+        "refId": "subscription-plan-revvenu-basic-aa98bd",
+        "currentBillingPeriodEnd": "2022-09-24T21:23:36.291Z",
+        "additionalMetaData": {
+          "key": "value"
+        },
+        "prices": [],
+        "totalPrice": null,
+        "pricingType": "FREE",
+        "plan": {
+          "id": "08b249b1-5d15-4d09-a9f8-da4af00836d5",
+          "refId": "plan-revvenu-basic",
+          "displayName": "Basic",
+          "description": null,
+          "additionalMetaData": null
+        },
+        "addons": []
+      },
+      {
+        "id": "7d4be2d9-ffc8-42f4-a79e-19960b631ef2",
+        "startDate": "2022-08-24T21:00:13.000Z",
+        "endDate": null,
+        "trialEndDate": null,
+        "cancellationDate": "2022-08-24T21:23:36.622Z",
+        "effectiveEndDate": "2022-08-24T21:23:36.622Z",
+        "status": "CANCELED",
+        "refId": "subscription-plan-revvenu-basic-fc1e1d",
+        "currentBillingPeriodEnd": "2023-08-24T21:00:13.000Z",
+        "additionalMetaData": null,
+        "prices": [],
+        "totalPrice": null,
+        "pricingType": "FREE",
+        "plan": {
+          "id": "08b249b1-5d15-4d09-a9f8-da4af00836d5",
+          "refId": "plan-revvenu-basic",
+          "displayName": "Basic",
+          "description": null,
+          "additionalMetaData": null
+        },
+        "addons": [],
+        "paymentCollection": "NOT_REQUIRED", // status of the payment collection of the subscription - can be either 'NOT_REQUIRED', 'FAILED', 'ACTION_REQUIRED' or 'PROCESSING'
+        "latestInvoice": {
+          "billingId": "invoice-01", // ID of the invoice of the billing provider
+          "status": "PAID", // can be either 'OPEN', 'CANCELED' or 'PAID'
+          "createdAt": "2023-08-22T11:27:41.000Z",
+          "updatedAt": "2023-08-22T11:27:44.608Z",
+          "requiresAction": false, // indicate of the payment requires action to complete the payment
+          "paymentUrl": "https://...", // payment url that can be sent to the customer to complete the payment
+          "paymentSecret": "secret-01", // secret to be used to initiate next action with billing provider
+          "errorMessage": "", // optinal error message, if the status is FAILED
+        },
+      }
+    ]
+  }
+}
+`
+
+  
+## Provisioning subscriptions
+
+When a customer subscribes to a new plan (free, paid, trial, etc.), provision the subscription in Stigg.
+
+#### Query
+
+GraphQL
+
+`mutation CreateSubscription($input: ProvisionSubscriptionInput!) {  
+  provisionSubscription: provisionSubscriptionV2(subscription: $input) {  
+    id  
+    refId  
+    status  
+    additionalMetaData  
+    plan {  
+      id  
+      refId  
+    }  
+    addons {  
+      quantity  
+      addon {  
+        id  
+        refId  
+      }  
+    }  
+    customer {  
+      id  
+      refId  
+    }
+    resource {
+      resourceId
+    }
+    paymentCollection
+    latestInvoice {
+      billingId
+      status
+      createdAt
+      updatedAt
+      requiresAction
+      paymentUrl
+      paymentSecret
+      errorMessage
+    }
+  }  
+}
+`
+
+#### Variables
+
+JSON
+
+`{  
+  "input": {  
+    "customerId": "customer-id",  
+    "planId": "plan-revvenu-basic",  
+    "billingPeriod": "MONTHLY",  
+    "billingCountryCode":"DK",   // optional - if multicurrency is enabled
+    "addons": [  
+      {  
+        "addonId": "addon-extra-stuff",  
+        "quantity": 2  
+      }  
+    ],  
+    "additionalMetaData": {  
+      "key": "value"  
+    },
+    "resourceId": "resource-01"   // optional, required for multiple subscription for same product
+  }  
+}
+`
+
+Response 
+
+JSON
+
+`{
+  "data": {
+    "createSubscription": {
+      "id": "e8ca2feb-e57e-4e93-9007-f14814524944",
+      "refId": "subscription-plan-revvenu-essentials-65768c",
+      "status": "PAYMENT_PENDING",
+      "additionalMetaData": {
+        "key": "value"
+      },
+      "plan": {
+        "id": "3b0c9144-f6ea-4a39-af7b-2c9dda38a813",
+        "refId": "plan-revvenu-essentials"
+      },
+      "addons": [
+        {
+          "quantity": 2,
+          "addon": {
+            "id": "83763342-93af-4ea7-995f-9598be7393f0",
+            "refId": "addon-10-campaigns"
+          }
+        }
+      ],
+      "customer": {
+        "id": "8e527bc0-9822-4b02-acbd-dadec77a01b2",
+        "refId": "customer-9a88b4"
+      },
+      "resource": {
+        "resourceId": "resource-01"
+      },
+      "paymentCollection": "NOT_REQUIRED", // status of the payment collection of the subscription - can be either 'NOT_REQUIRED', 'FAILED', 'ACTION_REQUIRED' or 'PROCESSING'
+      "latestInvoice": {
+        "billingId": "invoice-01", // ID of the invoice of the billing provider
+        "status": "PAID", // can be either 'OPEN', 'CANCELED' or 'PAID'
+        "createdAt": "2023-08-22T11:27:41.000Z",
+        "updatedAt": "2023-08-22T11:27:44.608Z",
+        "requiresAction": false, // indicate of the payment requires action to complete the payment
+        "paymentUrl": "https://...", // payment url that can be sent to the customer to complete the payment
+        "paymentSecret": "secret-01", // secret to be used to initiate next action with billing provider
+        "errorMessage": "", // optinal error message, if the status is FAILED
+      },
+    }
+  }
+}
+`
+
+> ## 🚧
+> 
+> 1. A customer can have both a non-trial (free or paid) subscription and trial subscription to different plans of the same product in parallel - this logic allows customers to trial a higher tier plan, while still paying for an existing plan.
+> 2. When the customer has a trial subscription for plan X of product A and a new subscription is created for the same plan, the new subscription will be created as non-trial (paid) subscription - this logic follows an upgrade flow of a trial subscription to a paid subscription of a specific plan.
+> 3. Except in the above-mentioned cases, when a customer has an active subscription for product X, and another subscription for the same product is created with start date S, the existing subscription will automatically be cancelled and the new subscription will start on start date S.  
+> It's also possible to explicitly skip the trial period of the selected plan by providing the `skipTrial: true` parameter to the `CreateSubscription` mutation.
+
+  
+## Updating subscriptions
+
+Updating an existing subscription, this can be used to update the feature quantity that the customer is subscribed for.
+
+#### Query
+
+GraphQL
+
+`mutation UpdateOneSubscription($input: UpdateSubscriptionInput!) {  
+  updateOneSubscription(input: $input) {  
+    id  
+    refId  
+    status  
+    additionalMetaData  
+    plan {  
+      id  
+      refId  
+    }  
+    addons {  
+      quantity  
+      addon {  
+        id  
+        refId  
+      }  
+    }  
+    customer {  
+      id  
+      refId  
+    }
+    paymentCollection
+    latestInvoice {
+      billingId
+      status
+      createdAt
+      updatedAt
+      requiresAction
+      paymentUrl
+      paymentSecret
+      errorMessage
+    }
+  }  
+}
+`
+
+#### Variables
+
+JSON
+
+`{
+  "input": {
+    "refId": "subscription-plan-professional-4dfecf",
+    "billableFeatures": [{
+      "featureId": "feature-01-templates",
+      "quantity": 2
+    }],
+  }
+}
+`
+
+Response 
+
+JSON
+
+`{
+  "data": {
+    "updateOneSubscription": {
+      "id": "e8ca2feb-e57e-4e93-9007-f14814524944",
+      "refId": "subscription-plan-professional-4dfecf",
+      "status": "ACTIVE",
+      "additionalMetaData": {
+        "key": "value"
+      },
+      "plan": {
+        "id": "3b0c9144-f6ea-4a39-af7b-2c9dda38a813",
+        "refId": "plan-revvenu-essentials"
+      },
+      "addons": [
+        {
+          "quantity": 2,
+          "addon": {
+            "id": "83763342-93af-4ea7-995f-9598be7393f0",
+            "refId": "addon-10-campaigns"
+          }
+        }
+      ],
+      "customer": {
+        "id": "8e527bc0-9822-4b02-acbd-dadec77a01b2",
+        "refId": "customer-9a88b4"
+      },
+      "paymentCollection": "NOT_REQUIRED", // status of the payment collection of the subscription - can be either 'NOT_REQUIRED', 'FAILED', 'ACTION_REQUIRED' or 'PROCESSING'
+      "latestInvoice": {
+        "billingId": "invoice-01", // ID of the invoice of the billing provider
+        "status": "PAID", // can be either 'OPEN', 'CANCELED' or 'PAID'
+        "createdAt": "2023-08-22T11:27:41.000Z",
+        "updatedAt": "2023-08-22T11:27:44.608Z",
+        "requiresAction": false, // indicate of the payment requires action to complete the payment
+        "paymentUrl": "https://...", // payment url that can be sent to the customer to complete the payment
+        "paymentSecret": "secret-01", // secret to be used to initiate next action with billing provider
+        "errorMessage": "", // optinal error message, if the status is FAILED
+      },
+    }
+  }
+}
+`
+
+  
+## Cancel subscription
+
+#### Query
+
+GraphQL
+
+`mutation CancelSubscription($input: SubscriptionCancellationInput!) {  
+  cancelSubscription(input: $input) {  
+    refId  
+    status  
+    additionalMetaData  
+  }  
+}
+`
+
+#### Variables
+
+JSON
+
+`{
+  "input": {
+    "subscriptionRefId": "subscription-id",
+    "subscriptionCancellationTime":  "IMMEDIATE"
+  }
+}
+`
+
+Response 
+
+JSON
+
+`{
+  "data": {
+    "cancelSubscription": {
+      "refId": "subscription-plan-revvenu-essentials-5f7470",
+      "status": "CANCELED",
+      "additionalMetaData": {
+        "key": "value"
+      }
+    }
+  }
+}
+`
+
+> ## 🚧
+> 
+> Subscription cancellation will take place according to the defined product behavior.
+
+  
+## Getting the entitlement of a customer for a specific feature
+
+Used to check if the customer has access to a feature, the usage limit, and the current usage.
+
+#### Query
+
+GraphQL
+
+`query GetEntitlement($query: FetchEntitlementQuery!) {  
+  entitlement(query: $query) {  
+    isGranted  
+    feature {  
+      refId  
+      displayName  
+      featureUnits  
+      featureUnitsPlural  
+      featureType  
+      meterType  
+      description  
+    }  
+    currentUsage  
+    customerId  
+    accessDeniedReason  
+    requestedUsage  
+    usageLimit  
+    hasUnlimitedUsage  
+    nextResetDate  
+    resetPeriod  
+  }  
+}
+`
+
+#### Variables
+
+JSON
+
+`{  
+  "query": {  
+    "customerId": "customer-id",  
+    "featureId": "feature-01-templates",  
+    "options": {  
+      "requestedUsage": 0  
+    },
+    "resourceId": "resource-01",       // optional, pass it to get entitlement of specific resource
+  }  
+}
+`
+
+Response 
+
+JSON
+
+`{
+  "data": {
+    "entitlement": {
+      "isGranted": true,
+      "feature": {
+        "refId": "feature-01-templates",
+        "displayName": "Templates",
+        "featureUnits": "Template",
+        "featureUnitsPlural": "Templates",
+        "featureType": "NUMBER",
+        "meterType": "Fluctuating",
+        "description": null
+      },
+      "currentUsage": 0,
+      "customerId": "a1c08d83-4175-4402-99de-0924a158eaa1",
+      "accessDeniedReason": null,
+      "requestedUsage": 0,
+      "usageLimit": 3,
+      "hasUnlimitedUsage": false,
+      "nextResetDate": null,
+      "resetPeriod": null
+    }
+  }
+}
+`
+
+  
+## Getting all of the entitlements of a customer
+
+Used to check to what features the customer has access to, the usage limit , and the current usage of each entitlement.
+
+#### Query
+
+GraphQL
+
+`query GetEntitlements($query: FetchEntitlementsQuery!) {
+  cachedEntitlements(query: $query) {
+    feature {
+      refId
+      displayName
+      featureUnits
+      featureUnitsPlural
+      featureType
+      meterType
+      description
+    }
+    currentUsage
+    customerId
+    usageLimit
+    hasUnlimitedUsage
+    nextResetDate
+    resetPeriod
+  }
+}
+`
+
+#### Variables
+
+JSON
+
+`{
+  "query": {
+    "customerId": "customer-id",
+    "resourceId": "resource-01",    // optional, pass it to get entitlements of specific resource
+  }
+}
+`
+
+Response 
+
+JSON
+
+`{
+  "data": {
+    "cachedEntitlements": [
+      {
+        "feature": {
+          "refId": "feature-03-custom-domain",
+          "displayName": "Custom domain",
+          "featureUnits": null,
+          "featureUnitsPlural": null,
+          "featureType": "BOOLEAN",
+          "meterType": "None",
+          "description": null
+        },
+        "currentUsage": 0,
+        "customerId": "96ed6019-031a-4c52-bc41-b8fa3b5d86c5",
+        "usageLimit": null,
+        "hasUnlimitedUsage": false,
+        "nextResetDate": null,
+        "resetPeriod": null
+      },
+      {
+        "feature": {
+          "refId": "feature-04-analytics",
+          "displayName": "Analytics",
+          "featureUnits": null,
+          "featureUnitsPlural": null,
+          "featureType": "BOOLEAN",
+          "meterType": "None",
+          "description": null
+        },
+        "currentUsage": 0,
+        "customerId": "96ed6019-031a-4c52-bc41-b8fa3b5d86c5",
+        "usageLimit": null,
+        "hasUnlimitedUsage": false,
+        "nextResetDate": null,
+        "resetPeriod": null
+      },
+      {
+        "feature": {
+          "refId": "feature-01-templates",
+          "displayName": "Templates",
+          "featureUnits": "Template",
+          "featureUnitsPlural": "Templates",
+          "featureType": "NUMBER",
+          "meterType": "Fluctuating",
+          "description": null
+        },
+        "currentUsage": 3,
+        "customerId": "96ed6019-031a-4c52-bc41-b8fa3b5d86c5",
+        "usageLimit": 5,
+        "hasUnlimitedUsage": false,
+        "nextResetDate": null,
+        "resetPeriod": null
+      },
+      {
+        "feature": {
+          "refId": "feature-02-campaigns",
+          "displayName": "Campaigns",
+          "featureUnits": "Campaign",
+          "featureUnitsPlural": "Campaigns",
+          "featureType": "NUMBER",
+          "meterType": "Incremental",
+          "description": null
+        },
+        "currentUsage": 10,
+        "customerId": "96ed6019-031a-4c52-bc41-b8fa3b5d86c5",
+        "usageLimit": 12,
+        "hasUnlimitedUsage": false,
+        "nextResetDate": "2022-09-21T00:00:00.000Z",
+        "resetPeriod": "MONTH"
+      }
+    ]
+  }
+}
+`
+
+  
+## Reporting usage measurements to Stigg
+
+The Stigg API allows you to report usage measurements for [metered features](features#overview). The reported usage will be used to track, limit and bill the customer's usage of metered features.
+
+Stigg supports metering of usage from the following data sources:
+
+1. [Calculated usage](#calculated-usage) \- usage that has been aggregated and calculated by **your application**. This type is useful for features, such as: seats.
+2. [Raw events](#raw-events) \- raw events from your application, which **Stigg** filters and aggregates aggregate to calculate customer usage. This type is useful for features, such as: monthly active users (MAUs).
+
+More details about Stigg's metering and aggregation capabilities can be found here:
+
+[ ![](/images/865027c-1085657.png)  Stigg's metering and aggregation capabilities Getting usage data into Stigg ](metering-overview) 
+
+> ## 🚧
+> 
+> 1. Reporting of measurements to Stigg should be done only after the relevant resources have been provisioned in your application.
+> 2. To ensure that the provisioned resources are aligned with the measurements that are reported to Stigg, ensure that customers are not allowed to allocate new resources until an acknowledgement about the processed measurement is received from the Stigg backend.
+
+> ## 📘
+> 
+> Validating that a measurement was successfully reported to Stigg is also possible in the [customer details section](customers#viewing-customers-entitlement-usage) of the relevant customer in the Stigg Cloud Console.
+
+### Calculated usage
+
+#### Query
+
+GraphQL
+
+`mutation CreateUsageMeasurement($input: UsageMeasurementCreateInput!) {  
+  createUsageMeasurement(usageMeasurement: $input) {  
+    id  
+  }  
+}
+`
+
+#### Variables
+
+JSON
+
+`{  
+  "input": {  
+    "value": 5,  
+    "customerId": "customer-id",  
+    "featureId": "feature-02-campaigns",
+    "resourceId": "resource-01",       // optional, pass it to report usage for specific resource
+  }  
+}
+`
+
+Response 
+
+JSON
+
+`{
+  "data": {
+    "createUsageMeasurement": {
+      "id": "05e3a286-acaa-42cd-b76b-b49befbd5113"
+    }
+  }
+}
+`
+
+  
+### Raw events
+
+#### Query
+
+GraphQL
+
+`mutation ReportEvent($events: UsageEventsReportInput!) {
+  reportEvent(events: $events)
+}
+`
+
+#### Variables
+
+JSON
+
+`{
+  "events": {
+    "usageEvents": [
+      {
+        "customerId": "customer-demo-01",
+        "dimensions": {"user_id": "a_user_id"},
+        "eventName": "user_login",
+        "idempotencyKey": "888888888"
+      }
+    ]
+  }
+}
+`
+
+It's also possible to send a batch of events in one invocation. To do so, simply pass an array of events to the `reportEvent` method.
+
+Result 
+
+The mutation has no return value
+
+  
+## Getting available coupons
+
+#### Query
+
+GraphQL
+
+`fragment CouponFragment on Coupon {  
+    id  
+    discountValue  
+    type  
+    additionalMetaData  
+    refId  
+    name  
+    description  
+    createdAt  
+    updatedAt  
+    billingId  
+    type  
+    status  
+}
+
+query FetchCoupons($filter: CouponFilter) {  
+    coupons(filter: $filter, sorting: $sorting, paging: $paging) {  
+      edges {  
+        node {  
+          ...CouponFragment  
+        }  
+      }  
+    }  
+}
+`
+
+#### Variables
+
+JSON
+
+`{  
+  "filter": {  
+    "status": {  
+      "eq": "ACTIVE",  
+    },  
+  },  
+}
+`
+
+Response 
+
+JSON
+
+`{
+  "data": {
+    "coupons": {
+      "edges": [
+        {
+          "node": {
+            "id": "d7644ee3-6370-444e-bd0a-f73ed8f9cc76",
+            "discountValue": 20,
+            "type": "PERCENTAGE",
+            "additionalMetaData": null,
+            "refId": "coupon-215e17",
+            "name": "VIP",
+            "description": null,
+            "createdAt": "2022-08-25T00:27:56.368Z",
+            "updatedAt": "2022-08-25T00:27:56.761Z",
+            "billingId": "TYvB8jF8",
+            "billingLinkUrl": "https://dashboard.stripe.com/test/coupons/TYvB8jF8",
+            "status": "ACTIVE"
+          }
+        }
+      ]
+    }
+  }
+}
+`
+
+  
+## Estimate subscription cost
+
+You can estimate the subscription cost using the `estimateSubscription` method.  
+This can help the customer to understand the costs before paying.
+
+#### Query
+
+GraphQL
+
+`mutation EstimateSubscription($input: EstimateSubscriptionInput!) {
+  estimateSubscription(input: $input) {
+    subTotal {
+      amount
+      currency
+    }
+    total {
+      amount
+      currency
+    }
+    billingPeriodRange {
+      start
+      end
+    }
+    proration {
+      prorationDate
+      credit {
+        amount
+        currency
+      }
+      debit {
+        amount
+        currency
+      }
+    }
+  }
+}
+`
+
+#### Variables
+
+JSON
+
+`{
+  "input": {
+    "customerId": "customer-demo-01",
+    "billingPeriod": "MONTHLY",
+    "planId": "plan-revvenu-essentials",
+    "billableFeatures": [{
+      "featureId": "feature-01-templates",
+      "quantity": 2
+    }],
+    "addons": [
+      {
+        "addonId": "addon-10-campaigns",
+        "quantity": 2
+      }
+    ],
+    "startDate": null,
+    "billingInformation": {
+      "taxRateIds": null
+    }
+  }
+}
+`
+
+Result 
+
+JSON
+
+`
+{
+  "data": {
+    "estimateSubscription": {
+      "subTotal": {
+        "amount": 30,
+        "currency": "USD"
+      },
+      "total": {
+        "amount": 30,
+        "currency": "USD"
+      },
+      "billingPeriodRange": {
+        "start": "2022-10-26T15:32:57.016Z",
+        "end": "2022-11-26T15:32:57.016Z"
+      },
+      "proration": null
+    }
+  }
+}
+`
+
+  
+You can also estimate the cost of updating an existing subscription using the `updateSubscription` method, which also returns a breakdown of the proration amounts:
+
+#### Query
+
+GraphQL
+
+`mutation EstimateSubscriptionUpdate($input: EstimateSubscriptionUpdateInput!) {
+  estimateSubscriptionUpdate(input: $input) {
+    subTotal {
+      amount
+      currency
+    }
+    total {
+      amount
+      currency
+    }
+    billingPeriodRange {
+      start
+      end
+    }
+    proration {
+      prorationDate
+      credit {
+        amount
+        currency
+      }
+      debit {
+        amount
+        currency
+      }
+    }
+  }
+}
+`
+
+#### Variables
+
+JSON
+
+`{
+  "input": {
+    "subscriptionId": "subscription-plan-revvenu-growth-da6324",
+    "billableFeatures": [{
+      "featureId": "feature-01-templates",
+      "quantity": 7
+    }],
+    "addons": [
+      {"addonId": "addon-10-campaigns", "quantity": 2 }
+    ]
+  }
+}
+`
+
+Result 
+
+JSON
+
+`{
+  "data": {
+    "estimateSubscriptionUpdate": {
+      "subTotal": {
+        "amount": 7,
+        "currency": "USD"
+      },
+      "total": {
+        "amount": 7,
+        "currency": "USD"
+      },
+      "billingPeriodRange": {
+        "start": "2022-10-26T17:07:17.000Z",
+        "end": "2022-11-26T17:07:17.000Z"
+      },
+      "proration": {
+        "prorationDate": "2022-10-26T17:08:23.000Z",
+        "credit": {
+          "amount": -10,
+          "currency": "USD"
+        },
+        "debit": {
+          "amount": 17,
+          "currency": "USD"
+        }
+      }
+    }
+  }
+}
+`
+
+  
+## Migrating subscriptions to the latest plan and add-on version
+
+When changes to plans and add-ons are rolled out only to new subscriptions, grandfathering takes place. In order to prevent a SKU sprawl, Stigg allows you to manually migrate subscriptions to the latest plan and add-on version on a subscription-by-subscription basis.
+
+> ## 🚧
+> 
+> When the current price of the subscription is different than the latest published package version, during the migration the customer will be charged or credited the prorated amount until the end of the current billing period depending on whether the latest price is more expensive or cheaper than the current subscription price.
+
+#### Query
+
+GraphQL
+
+`mutation MigrateSubscriptionToLatest($input: SubscriptionMigrationInput!) {
+  migrateSubscriptionToLatest(input: $input) {
+    subscriptionId
+  }
+}
+`
+
+#### Variables
+
+JSON
+
+`{
+  "input": {
+    "subscriptionId": "subscription-plan-revvenu-basic-6fb76d",
+    "subscriptionMigrationTime":"END_OF_BILLING_PERIOD"
+  }
+}
+`
+
+Response 
+
+JSON
+
+`{
+  "data": {
+    "migrateSubscriptionToLatest": {
+      "subscriptionId": "subscription-plan-revvenu-basic-6fb76d"
+    }
+  }
+}
+`
+
+## Archiving customers
+
+When a customer is archived:
+
+1. Its PII (name and email address) will be nullified.
+2. It will no longer appear in the Stigg app UI.
+3. It will no longer be returned by the Stigg API and SDKs.
+
+When Stigg is integrated with a billing solution, customers that are archived in Stigg will still exist in the billing solution to allow upcoming invoices to be finalized. Archiving customers in the billing solution can be done manually in the billing solution.
+
+To archive a customer:
+
+Node.js
+
+`await stiggClient.archiveCustomer("customer-a18f01")
+`
+
+  
+## Full API reference
+
+[![Stigg API's Graph | Apollo Studio](/images/og-logo.288fe3ddcb36cf8b9283ecfb578926f6.png)studio.apollographql.comStigg API's Graph | Apollo Studio](https://studio.apollographql.com/public/Stigg-API/explorer?variant=Production)

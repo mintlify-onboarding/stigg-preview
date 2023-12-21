@@ -1,0 +1,130 @@
+---
+title: "Freemium"
+---
+
+## Overview
+
+A freemium pricing model allows you to offer customers limited functionality of your product for free and charge them a premium for supplemental or advanced features. 
+
+Conversion between the free limited functionality and the advanced features is achieved by gating access to features after the customer has reached a specific limit, as well as by gating access to the advanced features
+
+The freemium model allow your customers to try your product and see value before they need to make a purchase decision, which results in increased [product stickiness](https://userpilot.com/blog/increase-product-stickiness-saas/) and reduced churn.
+
+The main difference between a freemium model and a free trial is that in the freemium model customers dictate when they'll need to make a purchase decision, where as in free trials this determined according to the number of days in the trial period.
+
+Stigg allows you to implement a freemium model without requiring additional code changes in your application.
+
+> ## 📘
+> 
+> Not sure whether to implement a freemium model, [free trial](free-trials) or[ reverse trial](free-trials)? [Leverage Stigg to experiment between the trial different flows](experiments) and learn which flow has a better conversion rate.
+
+## Implementing a freemium model using Stigg
+
+### Create free and paid plans
+
+To implement a freemium model using Stigg, [create](plans#creating-plans) a free plan and one or more paid or custom plans.
+
+![](/images/7a11f3a-image.png)
+
+  
+### Assign entitlements to plans
+
+When [assigning entitlements](plans#assigning-features-to-plans) to the free plan, set limits that will allow customers to see your product's value, but just enough that will encourage them to pay in order to gain more access to your product's features.
+
+![](/images/685d5d8-image.png)
+
+> ## 📘
+> 
+> Not sure which limits to set in the free plan? Leverage Stigg's [Feature Inspector](feature-inspector) to gain insights customers' feature usage in each plan and optimize limits in order to drive conversion.
+
+  
+### Report feature usage
+
+Whenever customers consume a certain feature, report this usage to Stigg in order to allow enforcement and gating for that feature.
+
+Node.js
+
+`// increment usage of a metered feature  
+await stiggClient.reportUsage({  
+  customerId: 'customer-test-id',  
+  featureId: 'feature-test-metered',  
+  value: 10  
+});
+`
+
+For more details and additional frameworks, see:
+
+[ ![](/images/ad4e0e2-computer.png)  Backend integration Codebase integration ](backend-integration) 
+
+  
+### Enforce feature access
+
+Stigg offers an API, as well as backend and frontend SDKs for enforcing customer access to features according to their entitlement for those features.
+
+Node.js
+
+`const requestedUsage = 10;
+
+const entitlement = await stiggClient.getMeteredEntitlement({  
+  customerId: 'customer-demo-01',  
+  featureId: 'feature-demo-03',  
+  options: {  
+    requestedUsage
+  }  
+});
+
+if (entitlement.hasAccess) {  
+  // has access and the requested usage is within the allowed quota  
+} else {  
+  // the customer has exceeded his quota for this feature  
+}
+`
+
+For more details and additional frameworks, see:
+
+[ ![](/images/ad4e0e2-computer.png)  Integrate Stigg into your codebase ](codebase-integration-overview) 
+
+  
+### Offer an in-app upgrade experience
+
+When customer attempt to access a gated feature, it's useful to allow them to resolve the issue within the context of their action by offering them the ability to upgrade to a paid plan. 
+
+The in-app upgrade experience can be fully self-served, as well as one that requires an interaction with a sales representative.
+
+Stigg offers embeddable widgets that can be used offer customers with an in-app upgrade experience.
+
+[ ![](/images/9ee9b64-Group_17013.png)  In-app paywall Allow customers to select what plan they'd like to upgrade to. ](pricing-table#in-app-paywalls) 
+
+  
+[ ![](/images/9a0f073-Group_16979_1.png)  Customer portal Introduce self-service and drive in-app expansions using only a few lines of codes ](customer-portal) 
+
+  
+[ ![](/images/43ba9d9-Group_17044.png)  Checkout Easily accept payments without ever worrying about changes to your pricing model or migration to another billing provider ](checkout) 
+
+  
+## Automatic downgrade to a free plan
+
+When a freemium model is implemented, it's common to allow customers to downgrade to the free plan when they cancel a paid subscription and when a free trial ends. This behavior allows them to continue seeing value in the product, and encourages them to upgrade to a paid plan when they need to access additional functionality.
+
+Stigg allows you to control to control the subscription and trial end behavior, and specifically to **automatically** downgrade customers to a free plan upon these events.
+
+To do so, select the relevant product in the Product Catalog > Products section.
+
+Under the "Customer Journey" section and the "Trial end / subscription cancelation" column, select "When a customer's subscription ends, **downgrade them to a free plan**".
+
+Select the free plan that the customer will be downgraded to.
+
+Click "Publish changes"
+
+Confirm the action by clicking "Publish".
+
+![](/images/af198d7-image.png)
+
+> ## 📘
+> 
+> More details about the Customer Journey configuration can be found [here](/docs/products#defining-the-customer-journey).
+
+  
+## Additional resources
+
+[ ![](/images/5e1190b-amplitude-logo-67DFD43C34-seeklogo.com.png)  Trial or Freemium? Get the Best of Both with a Reverse Trial Amplitude blog ](https://amplitude.com/blog/reverse-trial) 

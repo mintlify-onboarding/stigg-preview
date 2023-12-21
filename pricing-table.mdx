@@ -1,0 +1,329 @@
+---
+title: "Pricing table"
+---
+
+## Overview
+
+Pricing tables allow your customers to select the plan that that they'd like to subscribe to. Pricing tables can be used on your public pricing page, as well as part of in-app paywalls.
+
+One of the major benefits of leverage Stigg's pricing table widget, is that any change that you make to your pricing model is auto-magically reflected in the pricing table - no additional coding is required 😎.
+
+## Rendering pricing tables
+
+### In public pricing pages
+
+Rendering Stigg's pricing table widget on your public pricing page allows you to present the available pricing to your website's visitors.
+
+You can leverage the [product's customer journey](products#defining-the-customer-journey) configuration to control what plan the customer will be provisioned a subscription for once they click on "Get started".
+
+![](/images/3afa385-image.png)
+
+ReactVue.jsHTML
+
+`<Paywall
+   onPlanSelected={({ plan, intentionType }) => {  
+     switch(intentionType) {
+        case SubscribeIntentionType.START_TRIAL:
+          // TODO: provision trial subscription
+          break;
+        case SubscribeIntentionType.REQUEST_CUSTOM_PLAN_ACCESS:
+          // TODO: redirect to contact us form
+          break;
+        case SubscribeIntentionType.UPGRADE_PLAN:
+        case SubscribeIntentionType.DOWNGRADE_PLAN:
+          // TODO: show checkout experience
+          break;
+     }
+  }}  
+/>
+`
+
+`<script setup lang="ts">
+import {
+  StiggProvider, StiggProviderProps, Paywall, PaywallProps
+} from '@stigg/vue-sdk';
+
+const stiggProvider: StiggProviderProps = {
+  apiKey: "<STIGG_CLIENT_API_KEY>",
+}
+
+  
+const paywall: PaywallProps = {
+   onPlanSelected: ({plan}) => {
+    	// TODO: handle customer intention to subscribe to plan  
+   }
+}
+</script>
+
+<template>
+   <StiggProvider v-bind="stiggProvider">
+      <Paywall v-bind="paywall" />
+   </StiggProvider>
+</template>
+`
+
+`<body>
+  <div id="paywall"/>
+</body>
+
+<script>
+  const stigg = Stigg({
+      apiKey: "<STIGG_CLIENT_API_KEY>",
+    });
+  
+    const paywall = stigg.Paywall({
+      onPlanSelected: (...args) => {
+    		// TODO: handle customer intention to subscribe to plan  
+      },
+    });
+
+    // mount the paywall to the container element
+    paywall.mount('#paywall');
+</script>
+`
+
+### In-app paywalls
+
+To render paywalls inside your application, when a customer signs-in or restores their session set the customer ID:
+
+ReactVue.js
+
+`import { useStiggContext } from '@stigg/react-sdk';
+
+function App() {
+  const { stigg } = useStiggContext();
+
+  useEffect(() => {
+    // after user sign in call to setCustomerId
+    stigg.setCustomerId('<LOGGED_IN_CUSTOMER_ID>');
+  })
+}
+`
+
+`<script setup lang="ts">
+import { StiggProvider, StiggProviderProps } from '@stigg/vue-sdk';
+
+const stiggProvider: StiggProviderProps = {
+  apiKey: "<STIGG_CLIENT_API_KEY>",
+  customerId: "<CUSTOMER_ID>",
+};
+
+</script>
+
+<template>
+   <StiggProvider v-bind="stiggProvider">
+      <NestedComponents />
+   </StiggProvider>
+</template>
+`
+
+#### Downgrades and upgrades
+
+Users that are logged in to the application can view the current plan that they're subscribed to, as well as downgrade and upgrade options.
+
+![](/images/1a0e094-Screenshot_2023-09-11_at_13.40.04.png) 
+
+ReactVue.js
+
+`<Paywall
+   onPlanSelected={({ plan, customer, intentionType }) => {  
+     switch(intentionType) {
+        case SubscribeIntentionType.START_TRIAL:
+          // TODO: provision trial subscription
+          break;
+        case SubscribeIntentionType.REQUEST_CUSTOM_PLAN_ACCESS:
+          // TODO: redirect to contact us form
+          break;
+        case SubscribeIntentionType.CHANGE_UNIT_QUANTITY:
+        case SubscribeIntentionType.UPGRADE_PLAN:
+        case SubscribeIntentionType.DOWNGRADE_PLAN:
+          // TODO: show checkout experience
+          break;
+        case SubscribeIntentionType.CANCEL_SCHEDULED_UPDATES:
+          // TODO: show confirmation dialog
+          // once confirmed, cancel the scheduled subscription update
+          break;
+     }
+  }}  
+/>
+`
+
+`<script setup lang="ts">
+import {
+  StiggProvider, StiggProviderProps, Paywall, PaywallProps
+} from '@stigg/vue-sdk';
+
+const paywall: PaywallProps = {
+   onPlanSelected: ({plan}) => {
+    // TODO: handle customer intention to subscribe to plan  
+   }
+}
+</script>
+
+<template>
+   <StiggProvider v-bind="stiggProvider">
+      <Paywall v-bind="paywall" />
+   </StiggProvider>
+</template>
+`
+
+#### Upgrade only
+
+It's also possible to only present the upgrade options (and hide lower tier/free plans); thereby, encouraging customers to upsell:
+
+![](/images/3972b12-Screenshot_2023-09-11_at_13.58.14.png) 
+
+ReactVue.js
+
+`<Paywall
+   showOnlyEligiblePlans
+   onPlanSelected={({ plan, customer, intentionType }) => {
+      switch(intentionType) {
+        case SubscribeIntentionType.START_TRIAL:
+          // TODO: provision trial subscription
+          break;
+        case SubscribeIntentionType.REQUEST_CUSTOM_PLAN_ACCESS:
+          // TODO: redirect to contact us form
+          break;
+        case SubscribeIntentionType.CHANGE_UNIT_QUANTITY:
+        case SubscribeIntentionType.UPGRADE_PLAN:
+        case SubscribeIntentionType.DOWNGRADE_PLAN:
+          // TODO: show checkout experience
+          break;
+        case SubscribeIntentionType.CANCEL_SCHEDULED_UPDATES:
+          // TODO: show confirmation dialog
+          // once confirmed, cancel the scheduled subscription update
+          break;
+      }
+  }}  
+/>
+`
+
+`<script setup lang="ts">
+import {
+  StiggProvider, StiggProviderProps, Paywall, PaywallProps
+} from '@stigg/vue-sdk';
+
+const paywall: PaywallProps = {
+   showOnlyEligiblePlans: true,
+   onPlanSelected: ({plan}) => {
+     // TODO: handle customer intention to subscribe to plan  
+   }
+}
+</script>
+
+<template>
+   <StiggProvider v-bind="stiggProvider">
+      <Paywall v-bind="paywall" />
+   </StiggProvider>
+</template>
+`
+
+#### Volume pricing
+
+You may also add volume pricing to your plans to allow your customers to add a certain amount of units for an additional feature, on top of the base charge. Here's how it will be reflected on the pricing table:
+
+![](/images/92c4f76-image.png) 
+
+## Customization
+
+### No-code widget designer
+
+The Stigg app offers a no-code widget designer, which allows you to control the widget colors, typography and layout.
+
+![](/images/0f5152e-image.png)
+
+### Custom CSS
+
+For more advanced customization, custom CSS can be applied using the widget designer of the Stigg app. Alternatively, custom CSS can also be applied using code.
+
+Below you can find a list of the supported CSS classes:
+
+#### General layout
+
+| Class name                 | Description                                     |
+| -------------------------- | ----------------------------------------------- |
+| stigg-paywall-layout       | Styles applied to the entire paywall page       |
+| stigg-paywall-plans-layout | Styles applied to the container of all plans    |
+| stigg-starting-at-text     | Styles applied to the plan price starts at text |
+
+#### Billing period switcher
+
+| Class name                    | Description                                                 |
+| ----------------------------- | ----------------------------------------------------------- |
+| stigg-period-picker-container | Styles applied to the period toggle section                 |
+| stigg-period-switch           | Styles applied to the period switch button                  |
+| stigg-monthly-period-text     | Styles applied to the monthly period text                   |
+| stigg-annual-period-text      | Styles applied to the annual period text                    |
+| stigg-discount-rate-text      | Styles applied to the discount rate given to annual billing |
+
+#### Plan card
+
+| Class name                       | Description                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------- |
+| stigg-plan-offering-container    | Styles applied to the plan container                                                  |
+| stigg-header-wrapper             | Styles applied to the plan header section                                             |
+| stigg-plan-header                | Styles applied to the title of the plan                                               |
+| stigg-price-text                 | Styles applied to the price of the plan                                               |
+| stigg-plan-description           | Styles applied to the description of the plan                                         |
+| stigg-price-billing-period-text  | Styles applied to the text stating the billing period of the plan                     |
+| stigg-plan-header-divider        | Styles applied to the divider between the header section and entitlements section     |
+| stigg-paywall-plan-button-layout | Styles applied to the button section                                                  |
+| stigg-paywall-plan-button        | Styles applied to the button of the plan                                              |
+| stigg-paywall-plan-button-text   | Styles applied to the text of the button                                              |
+| stigg-highlight-badge            | Styles applied to the recommended plan badge                                          |
+| stigg-highlight-badge-text       | Styles applied to the recommended plan badge text                                     |
+| stigg-trial-days-left-text       | Styles applied to the text describing how many days are left of the plan's free trial |
+| stigg-{planID}                   | Styles applied to specific plans according to their unique ID                         |
+
+#### Plan entitlements
+
+| Class name                        | Description                                    |
+| --------------------------------- | ---------------------------------------------- |
+| stigg-plan-entitlements-container | Styles applied to the entire section           |
+| stigg-plan-entitlements-title     | Styles applied to the title of the section     |
+| stigg-entitlement-row-container   | Styles applied to the area of each entitlement |
+| stigg-entitlement-name            | Styles applied to the text of each entitlement |
+| stigg-entitlement-row-icon        | Styles applied to the icon of each entitlement |
+
+### Texts
+
+The default widget texts can currently be overridden using code:
+
+React
+
+`` const textOverrides = {  
+    highlightChip: 'Best value',  
+    planCTAButton: {  
+        startTrial: (plan: Plan) => `Start trial (${plan.defaultTrialConfig.duration} days)`,  
+        upgrade: 'Start now',
+        custom: 'Contact us',  
+        switchToBillingPeriod: billingPeriod => `Switch to ${billingPeriod.toLowerCase()}`,
+        cancelScheduledUpdate: 'Cancel update',
+    },  
+    price: {  
+        custom: 'Contact us',  
+    },  
+}
+
+<Paywall  
+    highlightedPlanId="plan-id"  
+    onPlanSelected={({ plan, customer }) => {  
+        ...  
+    }}  
+    textOverrides={textOverrides}  
+/>
+ ``
+
+> ## 📘
+> 
+> You can find additional text override options [here](https://react-sdk-docs.stigg.io/types/paywalllocalization)
+
+## Additional resources
+
+[ ![](/images/6485b4f-codingbrowser_102152.png)  Pricing table properties React SDK reference ](https://react-sdk-docs.stigg.io/types/paywallprops) 
+
+## Related SDKs
+
+| [ ![](/images/176351e-React-icon.svg.png) ](react-sdk) | [ ![](/images/cd5d8b2-1200px-Vue.js_Logo_2.svg_1.png) ](vuejs) | [ ![](/images/b6e8ec3-next-js-logo-8FCFF51DD2-seeklogo.com.png) ](nextjs) | [ ![](/images/2a4e4f5-2048px-HTML5_logo_and_wordmark.svg.png) ](html) |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |

@@ -1,0 +1,1078 @@
+---
+title: "Python SDK (deprecated)"
+description: "How to install and use the Stigg Python SDK on the server-side"
+---
+
+> ## 📘
+> 
+> Stigg's Python SDK is a thin wrapper around the [GraphQL API](graphql-api) and does not support caching, polling or streaming of customer entitlements.
+
+## Overview
+
+This library provides a python wrapper to [Stigg's GraphQL API ](/docs/graphql-api)based on the operations the [Stigg's Node.js SDK](/docs/nodejs-sdk) is using under the hood.
+
+It leverages the [sgqlc](https://github.com/profusion/sgqlc) library to generate Python classes for GraphQL types, and utilizes the `sgqlc.endpoint.requests.RequestsEndpoint` class to send the API requests. The responses are automatically converted into native Python types.
+
+> ## 👍
+> 
+> Looking for an async and more typesafe version of the Python client?
+> 
+> Try the Python SDK client v2: [stigg-api-client-v2](python-sdk-v2)
+
+## Installing the SDK
+
+The first step is to install the Stigg SDK as a dependency in your application using your application's dependency manager:
+
+Shell
+
+`pip install stigg-api-client
+`
+
+## Retrieving the server API Key
+
+In the Stigg Cloud Console, go to [Settings > Account > Environments](https://app.stigg.io/account/settings).
+
+Copy the   **Server API key** of the relevant environment.
+
+## Initializing the SDK
+
+Import the Stigg client and initialize it with the API key:
+
+Python
+
+`import os
+from stigg import Stigg
+
+api_key = os.environ.get("STIGG_SERVER_API_KEY")
+
+stigg_client = Stigg.create_client(api_key)
+`
+
+## Provisioning customers
+
+When a new customer is provisioned within your application (for example: as part of your registration or onboarding process), you should also provision them in Stigg.
+
+The customer's billing information can also be passed to Stigg when a customer is created or updated. When Stigg is integrated with additional service, this information will be propagated to the active integrations. The billing information is not persisted on Stigg's servers.
+
+You can optionally pass `subscriptionParams` to create subscription for that customer using a single operation. Doing so, will allow Stigg admins to override the requested subscription with no-code from the Stigg Console using the [product's Customer Journey configuration](products#defining-the-customer-journey).
+
+#### Query
+
+python
+
+`data = client.request(Stigg.mutation.provision_customer, {
+    "input": {
+        "refId": "customer-id1",
+        "name": "Acme", 						# optional
+        "email": "[[email protected]](/cdn-cgi/l/email-protection)", 	# optional - billing email address
+        "couponRefId": "coupon-id", # optional
+      	"subscriptionParams": {
+            "planId": "plan-revvenu-basic"
+             "billingCountryCode": "DK"  # optional, required for price localization, must be in the ISO-3166-1 format
+        }
+        "billingInformation": { 		# optional
+            "language": "en",
+            "timezone": "America/New_York",
+            "billingAddress": {
+                "country": "US",
+                "city": "New York",
+                "state": "NY",
+                "addressLine1": "123 Main Street",
+                "addressLine2": "Apt. 1",
+                "phoneNumber": "+1 212-499-5321",
+                "postalCode": "10164"
+            },
+            "shippingAddress": {
+                "country": "US",
+                "city": "New York",
+                "state": "NY",
+                "addressLine1": "123 Main Street",
+                "addressLine2": "Apt. 1",
+                "phoneNumber": "+1 212-499-5321",
+                "postalCode": "10164"
+            }
+        },
+        "additionalMetaData": {			 # optional
+            "key": "value"
+        }        
+    },
+})
+
+`
+
+Response 
+
+JSON
+
+`{
+    "provision_customer": {
+        "customer": {
+            "__typename": "Customer",
+            "id": "customer-id",
+            "name": "Acme",
+            "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+            "created_at": "2022-10-30T23:31:47.914Z",
+            "updated_at": "2022-10-30T23:31:47.914Z",
+            "promotional_entitlements": [],
+            "has_payment_method": false,
+            "coupon": null,
+            "billing_id": null,
+            "metadata": {
+                "key": "value"
+            }
+        },
+        "subscription_strategy_decision": "REQUESTED_PLAN",
+        "subscription": {
+            "__typename": "CustomerSubscription",
+            "id": "subscription-plan-revvenu-basic-f0c14f",
+            "status": "ACTIVE",
+            "metadata": null,
+            "billing_id": null,
+            "billing_link_url": null,
+            "effective_end_date": null,
+            "current_billing_period_end": "2022-11-30T23:31:48.112Z",
+            "pricing_type": "FREE",
+            "prices": [],
+            "total_price": null,
+            "plan": {
+                "id": "plan-revvenu-basic"
+            },
+            "addons": [],
+            "customer": {
+                "id": "customer-id"
+            }
+        }
+    }
+}
+`
+
+## Updating customers
+
+Customer information can also be updated whenever you like assuming it already exists, for example: In order to update the customer's email, you only need to send the new email value without the rest of the customer.  
+Due to the fact that the customer's billing information is not persisted on Stigg's servers, in order to update it, the entire billing information object must be passed each time.
+
+#### Query
+
+Python
+
+`data = client.request(Stigg.mutation.update_customer, {
+    "input": {
+        "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+        "name": "Acme",
+        "refId": "customer-id2",
+        "billingInformation": {
+            "language": "en",
+            "timezone": "America/New_York",
+            "currency": "USD",
+            "taxIds": [
+                {"type": "...", "value": "..."}
+            ],
+        },
+        "additionalMetaData": {
+            "key": "value"
+        }
+    }
+})
+
+`
+
+Response 
+
+JSON
+
+`{
+    "update_customer": {
+        "__typename": "Customer",
+        "id": "customer-id2",
+        "name": "Acme",
+        "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+        "created_at": "2022-10-30T23:25:44.099Z",
+        "updated_at": "2022-10-30T23:46:50.675Z",
+        "promotional_entitlements": [],
+        "has_payment_method": false,
+        "coupon": null,
+        "billing_id": null,
+        "metadata": {
+            "key": "value"
+        }
+    }
+}
+`
+
+## Getting customer data
+
+#### Query
+
+Python
+
+`data = client.request(Stigg.query.get_customer_by_id, {
+  "input": {"customerId": "CUSTOMER-ID"}
+})
+`
+
+Response 
+
+JSON
+
+`
+{
+  "get_customer_by_ref_id": {
+    "__typename": "Customer",
+    "id": "customer-id2",
+    "name": "Acme",
+    "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+    "created_at": "2022-10-30T23:25:44.099Z",
+    "updated_at": "2022-10-30T23:46:50.675Z",
+    "promotional_entitlements": [],
+    "has_payment_method": false,
+    "coupon": null,
+    "billing_id": null,
+    "metadata": {
+      "key": "value"
+    }
+  }
+}
+`
+
+## Getting customer active subscriptions
+
+#### Query
+
+Python
+
+`data = client.request(Stigg.query.get_active_subscriptions, {
+  "input": {
+    "customerId": "CUSTOMER-ID",
+    "resourceId": "RESOURCE-ID"   # optional - pass it to get subscription of specific resource 
+  }
+})
+`
+
+Response 
+
+JSON
+
+`{
+  "get_active_subscriptions": [
+    {
+      "__typename": "CustomerSubscription",
+      "id": "subscription-plan-revvenu-basic-169747",
+      "status": "ACTIVE",
+      "start_date": "2022-10-30T23:25:44.258Z",
+      "end_date": null,
+      "trial_end_date": null,
+      "cancellation_date": null,
+      "effective_end_date": null,
+      "current_billing_period_end": "2022-11-30T23:25:44.258Z",
+      "metadata": null,
+      "billing_id": null,
+      "billing_link_url": null,
+      "prices": [],
+      "total_price": null,
+      "pricing_type": "FREE",
+      "plan": {
+        "__typename": "Plan",
+        "id": "plan-revvenu-basic",
+        "display_name": "Basic",
+        "description": null,
+        "metadata": null,
+        "product": {
+          "id": "product-revvenu",
+          "display_name": "Revvenu",
+          "description": null
+        },
+        "base_plan": null,
+        "entitlements": [
+          {
+            "__typename": "PackageEntitlement",
+            "usage_limit": 3,
+            "has_unlimited_usage": null,
+            "feature_id": "6d15081c-a3dc-4091-ab8c-9f25dc366173",
+            "reset_period": null,
+            "feature": {
+              "__typename": "Feature",
+              "id": "feature-01-templates",
+              "feature_type": "NUMBER",
+              "meter_type": "Fluctuating",
+              "feature_units": "template",
+              "feature_units_plural": "templates",
+              "display_name": "Templates",
+              "description": null
+            }
+          },
+          {
+            "__typename": "PackageEntitlement",
+            "usage_limit": 4,
+            "has_unlimited_usage": null,
+            "feature_id": "08a4a367-4286-4dfd-bfae-6c77a723e80c",
+            "reset_period": "MONTH",
+            "feature": {
+              "__typename": "Feature",
+              "id": "feature-02-campaigns",
+              "feature_type": "NUMBER",
+              "meter_type": "Incremental",
+              "feature_units": "campaign",
+              "feature_units_plural": "campaigns",
+              "display_name": "Campaigns",
+              "description": null
+            }
+          }
+        ],
+        "inherited_entitlements": [],
+        "compatible_addons": [],
+        "prices": [],
+        "pricing_type": "FREE",
+        "default_trial_config": null
+      },
+      "addons": [],
+      "paymentCollection": "NOT_REQUIRED", // status of the payment collection of the subscription - can be either 'NOT_REQUIRED', 'FAILED', 'ACTION_REQUIRED' or 'PROCESSING'
+      "latestInvoice": {
+        "billingId": "invoice-01", // ID of the invoice of the billing provider
+        "status": "PAID", // can be either 'OPEN', 'CANCELED' or 'PAID'
+        "createdAt": "2023-08-22T11:27:41.000Z",
+        "updatedAt": "2023-08-22T11:27:44.608Z",
+        "requiresAction": false, // indicate of the payment requires action to complete the payment
+        "paymentUrl": "https://...", // payment url that can be sent to the customer to complete the payment
+        "paymentSecret": "secret-01", // secret to be used to initiate next action with billing provider
+        "errorMessage": "", // optinal error message, if the status is FAILED
+      }
+    }
+  ]
+}
+`
+
+## Provision subscriptions
+
+When a customer subscribes to a new plan (for example: during an upgrade from a free plan to a paid plan, or downgrade from a higher tier to a lower tier), a subscription needs to be created in Stigg. 
+
+When provisioning of a paid subscription is attempted, Stigg is integrated with a billing solution and payment details have not been previously provided by the customer, Stigg will auto-magically redirect customers to a the billing solution's checkout page. After the customer enters the required payment details in the presented checkout page, the relevant subscription will be created in both Stigg and the billing solution.
+
+When no payment is required or when Stigg is not integrated with a billing solution, the subscription will be immediately created in Stigg.
+
+When a customer subscribes to a new plan (free, paid, trial, etc.), provision a subscription in Stigg. The provision result can be a successfully created subscription, or a redirect link to stripe checkout in case payment is needed. 
+
+python
+
+`data = client.request(Stigg.mutation.provision_subscription, {
+    "input": {
+        "customerId": "customer-id",
+        "planId": "plan-revvenu-basic",
+        "resourceId": "resource-01",  # optional, required for multiple subscription for same product
+        "billingPeriod": "MONTHLY",   # optional, required for paid subscriptions
+      	"billableFeatures": [{				# optional, required for plans with per-unit pricing
+          "featureId": "feature-01-templates",
+          "quantity": 2
+        }],
+        "addons": [										# optional
+            {
+                "addonId": "addon-extra-stuff",
+                "quantity": 2
+            }
+        ],
+        "billingCountryCode":"DK"     # optional, required for price localization, must be in the ISO-3166-1 format
+    		"checkoutOptions": {					# optional
+      		"successUrl": "https://your-success-url.com",
+      		"cancelUrl": "https://your-cancel-url.com",
+      		"allowPromoCodes": True,
+      		"collectBillingAddress": True,
+          "collectPhoneNumber": True,
+    		},
+ 	      "awaitPaymentConfirmation": True,
+        "additionalMetaData": {				# optional
+            "key": "value"
+        }
+    }
+})
+`
+
+Success Result 
+
+JSON
+
+`{
+  "provision_subscription": {
+    "checkout_url": "https:\/\/your-success-url.com",
+    "status": "SUCCESS",
+    "subscription": {
+      "id": "subscription-plan-revvenu-essentials-93981d",
+      "status": "PAYMENT_PENDING",
+      "metadata": null,
+      "billing_id": null,
+      "billing_link_url": null,
+      "effective_end_date": null,
+      "current_billing_period_end": "2022-12-17T15:26:01.291Z",
+      "pricing_type": "PAID",
+      "prices": [
+        {
+          "usage_limit": null,
+          "price": {
+            "billing_model": "FLAT_FEE",
+            "billing_period": "MONTHLY",
+            "price": {
+              "amount": 20,
+              "currency": "USD"
+            },
+            "feature": null
+          }
+        }
+      ],
+      "total_price": {
+        "sub_total": {
+          "amount": 20,
+          "currency": "USD"
+        },
+        "total": {
+          "amount": 20,
+          "currency": "USD"
+        }
+      },
+      "plan": {
+        "id": "plan-revvenu-essentials"
+      },
+      "addons": [
+        
+      ],
+      "customer": {
+        "id": "customer-demo-02"
+      },
+      "payment_collection": "NOT_REQUIRED",
+      "latest_invoice": {
+        "billing_id": "invoice-01",
+        "status": "PAID",
+      }
+    }
+  }
+}
+`
+
+Payment requires action 
+
+JSON
+
+`{
+  "provision_subscription": {
+    "status": "SUCCESS",
+    "subscription": {
+      "payment_collection": "ACTION_REQUIRED",
+      "latest_invoice": {
+        "payment_url": "https...",
+        "payment_secret": "secret",
+      }
+    }
+  }
+}
+`
+
+Payment failed 
+
+JSON
+
+`{
+  "provision_subscription": {
+    "status": "SUCCESS",
+    "subscription": {
+      "payment_collection": "FAILED",
+      "latestInvoice": {
+        "payment_url": "https...",
+        "error_message": "no sufficient funds"
+      }
+    }
+  }
+}
+`
+
+Payment requires checkout 
+
+JSON
+
+`{
+  "provision_subscription": {
+    "checkout_url": "https:\/\/checkout.stripe.com\/c\/pay\/cs_test_a1ZW8HpF4G7hV6w9Q9hV7MGYpzBU2BPpt6RJRZXE2PC7WyxRHQKqQ2UvDj#fidkdWxOYHwnPyd1blpxYHZxWjA0Tzx1TlNJSHxCYEZGd1BHPU1kM0JAXVFHfXdrREhnQ3VJdldAS1MwZjRkNGxxcWBVf09SSE0zRzBcYTN3cXNkbFdMQnI0V3ZrN0toSGc3NnB9QEdBPVJMNTVzM3NpdnVDSycpJ2N3amhWYHdzYHcnP3F3cGApJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYCkndnF3bHVgRGZmanBrcSc%2FJ2RmZnFaNE5MdGtyQDRiU1E3f3JfUyd4JSUl",
+    "status": "PAYMENT_REQUIRED",
+    "subscription": null
+  }
+}
+`
+
+  
+> ## 🚧
+> 
+> 1. A customer can have both a non-trial (free or paid) subscription and trial subscription to different plans of the same product in parallel - this logic allows customers to trial a higher tier plan, while still paying for an existing plan.
+> 2. When the customer has a trial subscription for plan X of product A and a new subscription is created for the same plan, the new subscription will be created as as non-trial (paid) subscription - this logic follows an upgrade flow of a trial subscription to a paid subscription of a specific plan.
+> 3. Except in the above mentioned cases, when a customer has an active subscription for product X, and another subscription for the same product is created with start date S, the existing subscription will automatically be cancelled and the new subscription will start on start date S.
+> 4. It's also possible to explicitly skip the trial period of the selected plan by providing the `skipTrial: true` parameter to the `provisionSubscription()` method.
+
+## Updating subscriptions
+
+Updating an existing subscription, this can be used to update the feature quantity that the customer is subscribed for or the add-ons.
+
+#### Query
+
+Python
+
+`data = client.request(Stigg.mutation.update_subscription, {
+  "input": {
+    "refId": "subscription-plan-revvenu-growth-589879",
+    "billableFeatures": [{
+      "featureId": "feature-01-templates",
+      "quantity": 2
+    }],
+  }
+})
+`
+
+Response 
+
+JSON
+
+`{
+    "update_subscription": {
+        "__typename": "CustomerSubscription",
+        "id": "subscription-plan-revvenu-growth-589879",
+        "status": "ACTIVE",
+        "metadata": null,
+        "billing_id": "sub_1LxD4TE1gVT2zwZVSav7tZvC",
+        "billing_link_url": "https:\/\/dashboard.stripe.com\/test\/subscriptions\/sub_1LxD4TE1gVT2zwZVSav7tZvC",
+        "effective_end_date": null,
+        "current_billing_period_end": "2022-11-26T17:07:17.000Z",
+        "pricing_type": "PAID",
+        "prices": [
+            {
+                "usage_limit": 2,
+                "price": {
+                    "__typename": "Price",
+                    "billing_model": "PER_UNIT",
+                    "billing_period": "MONTHLY",
+                    "price": {
+                        "amount": 1,
+                        "currency": "USD"
+                    },
+                    "feature": {
+                        "__typename": "Feature",
+                        "id": "feature-01-templates",
+                        "feature_type": "NUMBER",
+                        "meter_type": "Fluctuating",
+                        "feature_units": "template",
+                        "feature_units_plural": "templates",
+                        "display_name": "Templates",
+                        "description": null
+                    }
+                }
+            }
+        ],
+        "total_price": {
+            "__typename": "CustomerSubscriptionTotalPrice",
+            "sub_total": {
+                "amount": 17,
+                "currency": "USD"
+            },
+            "total": {
+                "amount": 17,
+                "currency": "USD"
+            }
+        },
+        "plan": {
+            "id": "plan-revvenu-growth"
+        },
+        "addons": [
+            {
+                "quantity": 3,
+                "addon": {
+                    "id": "addon-10-campaigns"
+                }
+            }
+        ],
+        "customer": {
+            "id": "customer-demo-01"
+        }
+    }
+}
+`
+
+## Cancel subscription
+
+#### Query
+
+Python
+
+`data = client.request(Stigg.mutation.cancel_subscription, {
+  "input": {
+    "subscriptionRefId": "subscription-plan-revvenu-growth-589879",
+    "subscriptionCancellationTime":  "IMMEDIATE"
+  }
+})
+`
+
+Response 
+
+JSON
+
+`{
+    "cancel_subscription": {
+        "__typename": "CustomerSubscription",
+        "id": "subscription-plan-revvenu-growth-589879",
+        "status": "CANCELED",
+        "metadata": null,
+        "billing_id": "sub_1LxD4TE1gVT2zwZVSav7tZvC",
+        "billing_link_url": "https:\/\/dashboard.stripe.com\/test\/subscriptions\/sub_1LxD4TE1gVT2zwZVSav7tZvC",
+        "effective_end_date": "2022-10-30T23:54:38.582Z",
+        "current_billing_period_end": "2022-11-26T17:07:17.000Z",
+        "pricing_type": "PAID",
+        "prices": [
+            {
+                "usage_limit": 2,
+                "price": {
+                    "__typename": "Price",
+                    "billing_model": "PER_UNIT",
+                    "billing_period": "MONTHLY",
+                    "price": {
+                        "amount": 1,
+                        "currency": "USD"
+                    },
+                    "feature": {
+                        "__typename": "Feature",
+                        "id": "feature-01-templates",
+                        "feature_type": "NUMBER",
+                        "meter_type": "Fluctuating",
+                        "feature_units": "template",
+                        "feature_units_plural": "templates",
+                        "display_name": "Templates",
+                        "description": null
+                    }
+                }
+            }
+        ],
+        "total_price": {
+            "__typename": "CustomerSubscriptionTotalPrice",
+            "sub_total": {
+                "amount": 17,
+                "currency": "USD"
+            },
+            "total": {
+                "amount": 17,
+                "currency": "USD"
+            }
+        },
+        "plan": {
+            "id": "plan-revvenu-growth"
+        },
+        "addons": [
+            {
+                "quantity": 3,
+                "addon": {
+                    "id": "addon-10-campaigns"
+                }
+            }
+        ],
+        "customer": {
+            "id": "customer-demo-01"
+        }
+    }
+}
+`
+
+> ## 🚧
+> 
+> Subscription cancellation will take place according to the defined product behavior.
+
+## Getting the entitlement of a customer for a specific feature
+
+Used to check if the customer has access to a feature, the usage limit, and the current usage.
+
+#### Query
+
+Python
+
+`resp = client.request(Stigg.query.get_entitlement, {
+  "query": {
+    "customerId": "customer-id",
+    "featureId": "feature-01-templates",
+    "options": {  
+      "requestedUsage": 10  
+    },
+    "resourceId": "resource-01",  # optional, pass it to get entitlement of specific resource
+  }
+})
+
+if resp.entitlement.is_granted:
+  # customer has access to the feature
+  pass
+else:
+  # access denied
+  pass
+`
+
+Response 
+
+JSON
+
+`{
+        "entitlement": {
+            "is_granted": true,
+            "access_denied_reason": null,
+            "customer_id": "eb741bdb-4ca7-416f-a6f1-49483ed2a2e2",
+            "usage_limit": 3,
+            "has_unlimited_usage": false,
+            "current_usage": 0,
+            "requested_usage": null,
+            "next_reset_date": null,
+            "reset_period": null,
+            "feature": {
+                "id": "feature-01-templates",
+                "feature_type": "NUMBER",
+                "meter_type": "Fluctuating",
+                "feature_units": "template",
+                "feature_units_plural": "templates",
+                "display_name": "Templates",
+                "description": null
+            },
+            "reset_period_configuration": null
+        }
+}
+`
+
+## Getting all of the entitlements of a customer
+
+Used to check to what features the customer has access to, the usage limit , and the current usage of each entitlement.
+
+#### Query
+
+Python
+
+`
+data = client.get_entitlements({
+  "query": {
+    "customerId": "customer-id",
+    "resourceId": "resource-01",  # optional, pass it to get entitlement of specific resource
+  }
+})
+`
+
+Response 
+
+JSON
+
+`{
+    "data": {
+        "entitlements": [
+            {
+                "feature": {
+                    "refId": "feature-03-custom-domain",
+                    "displayName": "Custom domain",
+                    "featureUnits": null,
+                    "featureUnitsPlural": null,
+                    "featureType": "BOOLEAN",
+                    "meterType": "None",
+                    "description": null
+                },
+                "currentUsage": 0,
+                "customerId": "96ed6019-031a-4c52-bc41-b8fa3b5d86c5",
+                "usageLimit": null,
+                "hasUnlimitedUsage": false,
+                "nextResetDate": null,
+                "resetPeriod": null
+            },
+            {
+                "feature": {
+                    "refId": "feature-04-analytics",
+                    "displayName": "Analytics",
+                    "featureUnits": null,
+                    "featureUnitsPlural": null,
+                    "featureType": "BOOLEAN",
+                    "meterType": "None",
+                    "description": null
+                },
+                "currentUsage": 0,
+                "customerId": "96ed6019-031a-4c52-bc41-b8fa3b5d86c5",
+                "usageLimit": null,
+                "hasUnlimitedUsage": false,
+                "nextResetDate": null,
+                "resetPeriod": null
+            },
+            {
+                "feature": {
+                    "refId": "feature-01-templates",
+                    "displayName": "Templates",
+                    "featureUnits": "Template",
+                    "featureUnitsPlural": "Templates",
+                    "featureType": "NUMBER",
+                    "meterType": "Fluctuating",
+                    "description": null
+                },
+                "currentUsage": 3,
+                "customerId": "96ed6019-031a-4c52-bc41-b8fa3b5d86c5",
+                "usageLimit": 5,
+                "hasUnlimitedUsage": false,
+                "nextResetDate": null,
+                "resetPeriod": null
+            },
+            {
+                "feature": {
+                    "refId": "feature-02-campaigns",
+                    "displayName": "Campaigns",
+                    "featureUnits": "Campaign",
+                    "featureUnitsPlural": "Campaigns",
+                    "featureType": "NUMBER",
+                    "meterType": "Incremental",
+                    "description": null
+                },
+                "currentUsage": 10,
+                "customerId": "96ed6019-031a-4c52-bc41-b8fa3b5d86c5",
+                "usageLimit": 12,
+                "hasUnlimitedUsage": false,
+                "nextResetDate": "2022-09-21T00:00:00.000Z",
+                "resetPeriod": "MONTH"
+            }
+        ]
+    }
+}
+
+`
+
+## Reporting usage measurements to Stigg
+
+The Stigg SDK allows you to report usage measurements for [metered features](features#overview). The reported usage will be used to track, limit and bill the customer's usage of metered features.
+
+Stigg supports metering of usage from the following data sources:
+
+1. [Calculated usage](#calculated-usage) \- usage that has been aggregated and calculated by **your application**. This type is useful for features, such as: seats.
+2. [Raw events](#raw-events) \- raw events from your application, which **Stigg** filters and aggregates aggregate to calculate customer usage. This type is useful for features, such as: monthly active users (MAUs).
+
+More details about Stigg's metering and aggregation capabilities can be found here:
+
+[ ![](/images/865027c-1085657.png)  Stigg's metering and aggregation capabilities Getting usage data into Stigg ](features#creating-metered-features) 
+
+> ## 🚧
+> 
+> 1. Reporting of measurements to Stigg should be done only after the relevant resources have been provisioned in your application.
+> 2. To ensure that the provisioned resources are aligned with the measurements that are reported to Stigg, ensure that customers are not allowed to allocate new resources until an acknowledgement about the processed measurement is received from the Stigg backend.
+
+> ## 📘
+> 
+> Validating that a measurement was successfully reported to Stigg is also possible in the [customer details section](customers#viewing-customers-entitlement-usage) of the relevant customer in the Stigg Cloud Console.
+
+### Calculated usage
+
+#### Query
+
+Python
+
+`data = client.request(Stigg.mutation.report_usage, {
+    "input": {
+        "value": 5,
+        "customerId": "customer-id",
+        "featureId": "feature-02-campaigns",
+        "resourceId": "resource-01",  # optional, pass it to report usage for specific resource
+    }
+})
+`
+
+By default, the value reported should represent the **change** in usage of the feature, for example user added 2 more seats then the report usage call should have the value of 2.
+
+In some cases, it's more useful to set the usage to some value instead of reporting the change value, it's possible by passing the `updateBehavior` parameter:
+
+Python
+
+`data = client.request(Stigg.mutation.report_usage, {
+    "input": {
+        "value": 5,
+        "customerId": "customer-id",
+        "featureId": "feature-02-campaigns",
+        "updateBehavior": "SET",
+        "resourceId": "resource-01",  # optional, pass it to report usage for specific resource
+    }
+})
+`
+
+Response 
+
+JSON
+
+`{
+    "create_usage_measurement": {
+        "id": "d723d1c6-64fa-4a8b-aa2d-a6dc57e13804"
+    }
+}
+`
+
+  
+### Raw events
+
+JavaScript
+
+`// report event of a user login
+data = client.request(Stigg.mutation.report_event, {
+    "input": {
+  							"usageEvents": [{
+                  "customerId": "customer-test-id",
+							    "resourceId": "resource-01",      // optional, pass it to report event for specific resource
+							    "eventName": "user_login",
+							    "idempotencyKey": "227c1b73-883a-457b-b715-6ba5a2c69ce4",
+							    "dimensions": {
+																	"user_id": "user-01",
+													    		"user_email": "[[email protected]](/cdn-cgi/l/email-protection)"
+												    		},
+									"timestamp": "2022-10-26T15:01:55.768Z" // optional, pass it to report event with specific timestamp
+                }]
+});
+`
+
+It's also possible to send a batch of events in one invocation. To do so, simply pass an array of events to the `reportEvent` method.
+
+  
+## Getting available coupons
+
+#### Query
+
+Python
+
+`data = client.request(Stigg.query.get_coupons, {
+  "filter": {
+    "status": {
+      "eq": "ACTIVE",
+    },
+  },
+})
+
+`
+
+Response 
+
+JSON
+
+`{
+    "coupons": {
+        "edges": [
+            {
+                "node": {
+                    "__typename": "Coupon",
+                    "id": "coupon-vip",
+                    "name": "VIP",
+                    "description": null,
+                    "type": "PERCENTAGE",
+                    "discount_value": 20,
+                    "metadata": null,
+                    "created_at": "2022-10-26T15:01:55.768Z",
+                    "updated_at": "2022-10-26T15:01:56.432Z",
+                    "billing_id": "YSkVNwUu",
+                    "billing_link_url": "https:\/\/dashboard.stripe.com\/test\/coupons\/YSkVNwUu",
+                    "status": "ACTIVE"
+                }
+            }
+        ]
+    }
+}
+`
+
+## Estimate subscription cost
+
+You can estimate the subscription cost using the `estimateSubscription` method.  
+This can help the customer to understand the costs before paying.
+
+#### Query
+
+Python
+
+`data = client.request(Stigg.mutation.estimate_subscription, {
+    "input": {
+        "customerId": "customer-demo-01",
+        "billingPeriod": "MONTHLY",
+        "planId": "plan-revvenu-essentials",
+      	"billableFeatures": [{								# optional, required for plans with per-unit pricing
+          "featureId": "feature-01-templates",
+          "quantity": 2
+        }],
+        "addons": [														# optional
+            {
+                "addonId": "addon-10-campaigns",
+                "quantity": 2
+            }
+        ],
+        "billingCountryCode": "DK"  # optional, required for price localization, must be in the ISO-3166-1 format
+        "resourceId": "resource-01",  # optional, required for multiple subscription for same product
+    }
+})
+
+`
+
+Result 
+
+JSON
+
+`{
+    "estimate_subscription": {
+        "__typename": "SubscriptionPreview",
+        "sub_total": {
+            "amount": 30,
+            "currency": "USD"
+        },
+        "total": {
+            "amount": 30,
+            "currency": "USD"
+        },
+        "billing_period_range": {
+            "start": "2022-10-31T00:26:06.028Z",
+            "end": "2022-11-30T00:26:06.028Z"
+        },
+        "proration": null
+    }
+}
+`
+
+  
+You can also estimate the cost of updating an existing subscription using the `updateSubscription` method, which also returns a breakdown of the proration amounts:
+
+#### Query
+
+Python
+
+`data = client.request(Stigg.mutation.estimate_subscription_update,{
+  "input": {
+    "subscriptionId": "subscription-plan-revvenu-growth-dfe598",
+    "billableFeatures": [{
+      "featureId": "feature-01-templates",
+      "quantity": 2
+    }],
+    "addons": [
+      {"addonId": "addon-10-campaigns", "quantity": 2 }
+    ]
+  }
+})
+`
+
+Result 
+
+JSON
+
+`{
+    "data": {
+        "estimate_subscription_update": {
+            "sub_total": {
+                "amount": 7,
+                "currency": "USD"
+            },
+            "total": {
+                "amount": 7,
+                "currency": "USD"
+            },
+            "billing_period_range": {
+                "start": "2022-10-26T17:07:17.000Z",
+                "end": "2022-11-26T17:07:17.000Z"
+            },
+            "proration": {
+                "proration_date": "2022-10-26T17:08:23.000Z",
+                "credit": {
+                    "amount": -10,
+                    "currency": "USD"
+                },
+                "debit": {
+                    "amount": 17,
+                    "currency": "USD"
+                }
+            }
+        }
+    }
+}
+`
+
+  

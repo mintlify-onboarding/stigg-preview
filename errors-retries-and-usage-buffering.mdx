@@ -1,0 +1,5 @@
+---
+title: "Errors, retries, and usage buffering"
+---
+
+Stigg's Server SDK automatically handles network errors and engages in periodic retries until the connectivity is back up again. Usage measurements are buffered in-memory or in a persistent cache (if configured) and will be sent to the API as soon as possible. During that time, the SDK will gracefully return results from its cache or use fallback values if it's empty.

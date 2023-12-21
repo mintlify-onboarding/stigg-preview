@@ -1,0 +1,17 @@
+---
+title: "High availability architecture"
+---
+
+Stigg's mission is to create a reliable and highly available solution that won't interrupt the mission-critical functionality of your application. To make sure that the critical paths are not affected, in case of a network error or if our services are unavailable for any reason, we have a few guardrails in place.
+
+We prioritized the following SDK functions as "mission-critical":
+
+* Accessing customer entitlements (P95 latency of 100ms)
+* Reporting usage measurements (P95 latency of 200ms)
+  
+![](/images/02f5fe8-image_13.png)
+
+| Management API | Mission-critical APIs                           |                                  | Stack | ELB  Fargate  RDS  SQS  Lambda  Aurora Global Database  Route 53 | CloudFront  Lambda@Edge  DynamoDB |
+| -------------- | ----------------------------------------------- | -------------------------------- | ----- | ---------------------------------------------------------------- | --------------------------------- |
+| Architecture   | Multi region  Active-Active  Automated failover | Multi region  Automated failover |       |                                                                  |                                   |
+| SLA            | \>99.9999% for ≥2 origins                       | \>99.9975% for ≥2 origins        |       |                                                                  |                                   |

@@ -1,0 +1,38 @@
+---
+title: "Reporting calculated usage"
+---
+
+## Overview
+
+When calculated usage is reported to Stigg, **your application** is responsible for aggregating and calculating the usage and then reporting it to Stigg.
+
+## Supported ingestion behaviors
+
+Stigg supports 2 behaviors for reporting calculated usage:
+
+1. **Delta** \- the reported usage represents the **change** in usage of the feature, for example: when a customer adds 2 more seats, the reported value should be 2\. This is default behavior.
+2. **Set** \- the reported usage represents the **end state** after the change, for example: when a customer adds 2 more seats and the total number of seats after the change is 5, the reported value should be 5.
+
+## Supported ingestion methods
+
+### SDKs
+
+| [ ![](/images/ad19957-Node.js1.png) ](nodejs-sdk#reporting-usage-measurements-to-stigg) | [ ![](/images/7a4020e-Python1.png) ](python-sdk-v2#reporting-usage-measurements-to-stigg) | [ ![](/images/01a3e57-Ruby1.png) ](ruby-sdk#reporting-usage-measurements-to-stigg) | [ ![](/images/2f9e362-Ruby1-1.png) ](go-sdk#reporting-usage-measurements-to-stigg) |
+| ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+
+### API
+
+| [ ![](/images/317aa21-GraphQL1.png) ](graphql-api#reporting-usage-measurements-to-stigg) |  |  |  |
+| -------------------------------------------------------------------------------------------------------- |  |  |  |
+
+## Example use-case
+
+### Seats
+
+When a customer invites additional users to their environment, report the number of new seats that were added to Stigg.
+
+Similarly, when a customer removes users from their environment report the number of seats that were removed from the environment to Stigg.
+
+### Bandwidth
+
+Periodically query the infrastructure that tracks used bandwidth (for example: AWS CloudWatch) and report the calculated usage to Stigg.

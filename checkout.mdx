@@ -1,0 +1,415 @@
+---
+title: "Checkout"
+---
+
+## Overview
+
+The Stigg checkout widget allows you to easily accept payments without ever worrying about changes to your pricing model or migration to another billing provider.
+
+Using only a few lines of code you can offer customers a cart-like experience where they can configure their plans, add and remove add-ons and apply promo codes.
+
+Stigg's checkout widget is optimized for SaaS and includes built-in support for advanced use-cases, such as multiple billable metrics, volume pricing, pay-as-you-go pricing, scheduled downgrades, downgrade to free, handling of prorations, and grandfathering.
+
+The widget can be embedded directly into your application's UI, in a modal or even a completely separate page.
+
+Once integrated into your applications, changes to pricing and styling in the Stigg app are auto-magically reflected in the widget.
+
+## Checkout widget sections
+
+### Plan configuration
+
+In this section customers can configure the subscription of their **plan**, specifically:
+
+1. Billing period - when a plan allows both monthly and annual billing period
+2. Charges - when the plan pricing allows customers to select the quantity that they want to commit to. For example: the seat quantity
+![](/images/b2ec9cb-Screenshot_2023-09-12_at_3.49.55.png) 
+
+### Add-ons
+
+In this section customers can purchase add-ons, update the purchased quantity or remove them altogether in a self-served manner.
+
+This section will only appear when there are add-ons that are compatible with the selected plan.
+
+![](/images/79123fd-Screenshot_2023-09-12_at_3.50.17.png) 
+
+### Payment details
+
+In this section customers can enter their payment details, specifically:
+
+1. Billing address
+2. Credit card details
+
+Customers that have entered payment details in the past can choose to pay using the same payment details, or enter new ones.
+
+Payment details can later be updated from the [customer portal](customer-portal#payment-details).
+
+![](/images/a6d5413-Screenshot_2023-09-12_at_3.50.30.png) 
+
+> ## 📘
+> 
+> Stigg does **not** store any payment details (billing address, credit card information) - they're stored directly in the billing solution that's integrated with Stigg.
+
+### Order summary
+
+The order summary appears on the right side of the checkout widget, and is visible throughout the checkout session.
+
+The summary provide visibility for the following information:
+
+1. Plan charges
+2. Add-ons and their cost
+3. Discounts (when applicable) - including the ability to enter promotion codes
+4. Tax rates (when applicable)
+5. Total subscription price after discounts and taxes
+6. Prorated amount due today (when applicable)
+7. Applied credits (when applicable)
+8. Price amount due today
+9. Summary foot note  
+   1. Number of credits granted to the customer due to the change, for example: in the case of [immediate downgrades](subscription-updates-in-stigg#downgrades-between-paid-plans)  
+   2. Indication when updates to subscriptions will take place if they don't take effect immediately, for example in the case of [scheduled downgrades](subscription-updates-in-stigg#scheduled-downgrades)  
+   3. Indication when the next billing period will take place - for example: on the 4th of every month, every year on September 12th
+![](/images/9077ed7-Screenshot_2023-09-12_at_3.50.47_copy.png) 
+
+## Rendering a checkout session
+
+### Prerequisites
+
+> ## 🚧
+> 
+> To render a checkout session, Stigg must be integrated with a billing solution such as [Stripe](stripe)
+
+To render pricing tables inside your application, when a customer signs-in or restores their session set the customer ID:
+
+ReactVue.js
+
+`import { useStiggContext } from '@stigg/react-sdk';
+
+function App() {
+  const { stigg } = useStiggContext();
+
+  useEffect(() => {
+    // after user sign in call to setCustomerId
+    stigg.setCustomerId('<LOGGED_IN_CUSTOMER_ID>');
+  })
+}
+`
+
+`<script setup lang="ts">
+import {StiggProvider} from '@stigg/vue-sdk';
+
+const apiKey = "<STIGG_CLIENT_API_KEY>";
+const customerId = "<LOGGED_IN_CUSTOMER_ID>";
+</script>
+
+<template>
+   <StiggProvider :apiKey="apiKey" :customerId="customerId">
+      <NestedComponents />
+   </StiggProvider>
+</template>
+`
+
+### Plan upgrade or downgrade
+
+To initiate a checkout session for plan upgrade or downgrade, simply pass the **target** plan ID when rendering the checkout widget.
+
+ReactVue.js
+
+`<Checkout
+        planId={"<TARGET_PLAN_ID>"}
+        onCheckoutCompleted={({ success, error }) => {
+          // TODO: handle checkout completion
+        }}
+      />
+`
+
+`<script setup lang="ts">
+import { Checkout, CheckoutProps } from "@stigg/vue-sdk";
+
+const checkout: CheckoutProps = {
+  planId: "<TARGET_PLAN_ID>",
+  onCheckoutCompleted: async ({ success, error }) => {
+    // TODO: handle checkout completion
+  },
+};
+</script>
+
+<template>
+	<Checkout v-bind="checkout" />
+</template>
+`
+
+### Updating an existing subscription
+
+To allow customers update their subscription to an existing plan, for example:
+
+1. Change billing period
+2. Add or remove seats
+3. Purchase add-ons
+
+Simply pass the **current plan ID** when rendering the checkout widget:
+
+ReactVue.js
+
+`<Checkout
+        planId={"<CURRENT_PLAN_ID>"}
+        onCheckoutCompleted={({ success, error }) => {
+          // TODO: handle checkout completion
+        }}
+      />
+`
+
+`<script setup lang="ts">
+import { Checkout, CheckoutProps } from "@stigg/vue-sdk";
+
+const checkout: CheckoutProps = {
+  planId: "<CURRENT_PLAN_ID>",
+  onCheckoutCompleted: async ({ success, error }) => {
+    // TODO: handle checkout completion
+  },
+};
+</script>
+
+<template>
+	<Checkout v-bind="checkout" />
+</template>
+`
+
+### Tax calculation
+
+#### Automatically using Stripe Tax
+
+When Stigg is [integrated with Stripe Tax](stripe#integration-with-stripe-tax), subscription tax rate are automatically calculated by Stripe according to the customer billing address.
+
+#### Via integration with third-party tax providers
+
+The Stigg Checkout widget can be integrated with third-party tax providers such as Avalara to preview and collect tax amounts.
+
+##### Previewing the estimated tax amount
+
+To preview customers with the estimated tax rates under the widget's "order summary" section:
+
+1. Handle the `onBillingAddressChange` callback.
+2. In the callback:  
+   1. Pass the customer's billing address to the third-party tax vendor.  
+   2. Set the tax rate that was returned by the third-party tax vendor as the widget's `billingInformation.taxDetails.taxPercentage` property.
+
+##### Collecting taxes
+
+Tax collection takes place in the **backend** when new subscriptions are provisioned and existing subscriptions are updated. To collect taxes, follow the below steps:
+
+**In the frontend:**
+
+1. Handle the `onCheckout` callback.
+2. In the callback send the `checkoutParams` and `customerId` to your backend.
+
+**In the backend:**
+
+1. Retrieve the customer's billing address from the `checkoutParams.billingInformation.billingAddress` object.
+2. Pass the customer's billing address to the third-party tax vendor for calculation of the tax rate.
+3. At the tax percentage that was calculated by the third-party tax vendor to the `checkoutParams` object under under the `checkoutParams.billingInformation.taxPercentage` property.
+4. Call the `applySubscription` method of the Stigg backend SDK with the following parameters:  
+   1. The `checkoutParams` object, that now includes the `checkoutParams.billingInformation.taxPercentage` property.  
+   2. The `customerId` parameter from the checkout widget.
+
+**In the frontend (again 🙃):**
+
+Return the result of the `applySubscription` method invocation to the `onCheckout` callback.
+
+ReactVue.js
+
+`` <Checkout
+        planId={"<TARGET_PLAN_ID>"}
+        onBillingAddressChange={async ({ billingAddress })=> {
+          // pass the customer's billing address to the third-party tax provider
+          const taxPercentage = await taxProvider.calculate(billingAddress);
+          
+          // set the tax percentage state
+          setCalculatedTaxPercentage(taxPercentage);
+        }}
+        
+        // calculated tax should be provided in `billingInformation`
+        // used only for previewing the subscription fees
+        billingInformation={{ taxDetails: { taxPercentage: calculatedTaxPercentage } }}
+        
+        onCheckout={async ({ customerId, checkoutParams }) => {
+          // TODO: 
+          // 1. Send checkoutParams & customerId to backend to securely calculate
+          // the tax using the `billingAddress` field on the `checkoutParams.billingInformation`
+          // 2. call `applySubscription` method using the Stigg backend SDK
+          // 3. return the `applySubscription` method results to the `onCheckout` method
+          
+          return applySubscriptionResults;
+        }}
+        onCheckoutCompleted={({ success, error }) => {
+          // TODO: handle checkout completion
+        }}
+      />
+ ``
+
+`` <script setup lang="ts">
+import { Checkout, CheckoutProps } from "@stigg/vue-sdk";
+import { ref } from "vue";
+
+const calculatedTaxPercentage = ref();
+
+const checkout: CheckoutProps = {
+  planId: "<TARGET_PLAN_ID>",
+
+  onBillingAddressChange: async ({ billingAddress }) => {
+    // pass the customer's billing address to the third-party tax provider
+    const taxPercentage = await taxProvider.calculate(billingAddress);
+
+    // set the tax percentage state
+    calculatedTaxPercentage.value = taxPercentage;
+  },
+
+  // calculated tax should be provided in `billingInformation`
+  // used only for previewing the subscription fees
+  billingInformation: {
+    taxDetails: { taxPercentage: calculatedTaxPercentage.value },
+  },
+
+  onCheckout: async ({ customerId, checkoutParams }) => {
+    // TODO:
+    // 1. Send checkoutParams & customerId to backend to securely calculate
+    // the tax using the `billingAddress` field on the `checkoutParams.billingInformation`
+    // 2. call `applySubscription` method using the Stigg backend SDK
+    // 3. return the `applySubscription` method results to the `onCheckout` method
+
+    return applySubscriptionResults;
+  },
+
+  onCheckoutCompleted: async ({ success, error }) => {
+    // TODO: handle checkout completion
+  },
+};
+</script>
+
+<template>
+  <Checkout v-bind="checkout" />
+</template>
+
+ ``
+
+## Special cases
+
+### Immediate downgrades
+
+When customers attempt to reduce their subscription cost (for example by selecting a lower tier, reducing seat or add-on quantity, or changing their billing period from annual to monthly) and will receive credits for unused time on their current subscription configuration, a footnote that includes the amount of credits granted will appear under the [order summary section](#order-summary).
+
+![](/images/ee48d99-Screenshot_2023-09-12_at_4.08.00.png) 
+
+[ ![](/images/49580f8-arrows_counterclockwise.png)  Immediate downgrades Subscriptions in Stigg ](subscription-updates-in-stigg#immediate-downgrades) 
+
+### Scheduled downgrades
+
+When customers attempt to reduce their subscription cost (for example by selecting a lower tier, reducing seat or add-on quantity, or changing their billing period from annual to monthly) and the changes will be applied at the end of the billing period, a footnote that includes the amount of credits granted will appear under the [order summary section](#order-summary).
+
+[ ![](/images/49580f8-arrows_counterclockwise.png)  Scheduled downgrades Subscriptions in Stigg ](subscription-updates-in-stigg#scheduled-downgrades) 
+
+### Downgrades to a free plan
+
+When customers attempt to downgrade from a paid subscription to a free one, a dedicated view will be presented to the customer indicating that they're about to cancel their paid subscription:
+
+![](/images/c61c286-Screenshot_2023-09-12_at_4.08.00.png) 
+
+## Multiple subscriptions for the same product
+
+## Customization
+
+### No-code widget designer
+
+The Stigg app offers a no-code widget designer, which allows you to control the widget colors, typography, layout and whether customer phone numbers will be collected.
+
+### Phone number collection
+
+Collection of customer phone numbers can sometimes be useful when trying to upsell self-service customers to sales-led enterprise plans.
+
+The checkout widget can be configured whether or not to collect customer's phone numbers upon checkout using the "Content" section the no-code widget designer in the Stigg app.
+
+![](/images/185044a-Screenshot_2023-09-12_at_13.59.36.png) 
+
+### Custom CSS
+
+For more advanced customization, custom CSS can be applied using the widget designer of the Stigg app. Alternatively, custom CSS can also be applied using code.
+
+| Class name                                         | Description                                                                         |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| stigg-checkout-change-plan-button                  | Styles applied to the change plan button                                            |
+| stigg-checkout-change-plan-button-text             | Styles applied to the text inside the change plan button                            |
+| stigg-checkout-layout                              | Styles applied to the overall layout of the checkout page                           |
+| stigg-checkout-plan-header-divider                 | Styles applied to the divider under the plan header                                 |
+| stigg-checkout-downgrade-to-free-container         | Styles applied to the container for downgrading to a free plan                      |
+| stigg-checkout-downgrade-to-free-text-header       | Styles applied to the text header for downgrading to a free plan                    |
+| stigg-checkout-downgrade-to-free-plan-name         | Styles applied to the name of the free plan in the downgrade section                |
+| stigg-checkout-downgrade-to-free-price-text        | Styles applied to the price text in the downgrade section                           |
+| stigg-checkout-downgrade-to-free-alert             | Styles applied to the alert message in the downgrade section                        |
+| stigg-checkout-downgrade-to-free-plans-container   | Styles applied to the container for the list of free plans in the downgrade section |
+| stigg-checkout-downgrade-to-free-arrow             | Styles applied to the arrow icon in the downgrade section                           |
+| stigg-checkout-summary-add-coupon-code-button      | Styles applied to the Add Coupon Code button in the summary                         |
+| stigg-checkout-summary-add-coupon-code-button-icon | Styles applied to the icon inside the Add Promotion Code button                     |
+| stigg-checkout-success-container                   | Styles applied to the container showing the checkout success message                |
+| stigg-checkout-summary-divider                     | Styles applied to the divider in the checkout summary                               |
+| stigg-checkout-summary-cta-button                  | Styles applied to the call-to-action button in the checkout summary                 |
+| stigg-checkout-summary-cta-button-text             | Styles applied to the text inside the call-to-action button in the checkout summary |
+
+### Texts
+
+The default widget texts can currently be overridden using code:
+
+ReactText
+
+`<Checkout
+        planId={"<TARGET_PLAN_ID>"}
+        onCheckoutCompleted={({ success, error }) => {
+          // TODO: handle checkout completion
+        }}
+        textOverrides={{
+        changePlan: "Change plan",
+        checkoutButton: {
+          upgradeText: "Purchase",
+        },
+        summary: {
+          title: "Summary",
+        },
+      }}
+      />
+`
+
+`<script setup lang="ts">
+import { Checkout, CheckoutProps } from "@stigg/vue-sdk";
+
+const checkout: CheckoutProps = {
+  planId: "<TARGET_PLAN_ID>",
+  onCheckoutCompleted: async ({ success, error }) => {
+    // TODO: handle checkout completion
+  },
+  textOverrides: {
+    changePlan: "Change plan",
+    checkoutButton: {
+      upgradeText: "Purchase",
+    },
+    summary: {
+      title: "Summary",
+    },
+  },
+};
+</script>
+
+<template>
+  <Checkout v-bind="checkout" />
+</template>
+
+`
+
+> ## 📘
+> 
+> You can find additional text override options [here](https://react-sdk-docs.stigg.io/types/checkoutlocalization)
+
+## Additional resources
+
+[ ![](/images/6485b4f-codingbrowser_102152.png)  Checkout properties React SDK reference ](https://react-sdk-docs.stigg.io/types/checkoutprops) 
+
+## Related SDKs
+
+| [ ![](/images/176351e-React-icon.svg.png) ](react-sdk) | [ ![](/images/cd5d8b2-1200px-Vue.js_Logo_2.svg_1.png) ](vuejs) | [ ![](/images/b6e8ec3-next-js-logo-8FCFF51DD2-seeklogo.com.png) ](nextjs) | [ ![](/images/2a4e4f5-2048px-HTML5_logo_and_wordmark.svg.png) ](html) |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |

@@ -1,0 +1,9 @@
+---
+title: "My pricing localization changes won't apply to my pricing table"
+---
+
+You've been trying to localize your pricing to a certain country by passing `billingCountryCode` but the result is not displayed on the pricing page. In that case, it is possible that you have overwritten the text using [Text Overrides](/docs/pricing-table#texts).
+
+Text Overrides allow you to customize the default text when setting price localization.
+
+To revert that, go to `textOverrides` and make sure that `textOverrides.price.free` doesn't have a value overriding the default text.

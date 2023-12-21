@@ -1,0 +1,71 @@
+---
+title: "Reporting raw events"
+---
+
+## Overview
+
+A raw usage event typically corresponds to a user-triggered action or measurement from an underlying infrastructure.
+
+When raw events are reported by your application, **Stigg** does the heavy lifting of filtering events and aggregating them to calculate customer usage.
+
+## Dimensions
+
+Reported events should include properties that are required for the filtering and aggregation of those events, referred to in Stigg as **dimensions**. 
+
+Event _metadata_ can also be reported as an event dimension. There's no limit on the number of dimensions that can be reported on each event; therefore, we encourage you to include as much metadata as possible in reported events to have maximum flexibility on how usage is calculated. Including these dimensions as part of the initial integration will prevent the need to backfill them at later date.
+
+Example dimensions include:
+
+* Cloud region - i.e. us-east-1, eu-central-1, etc.
+* Environment - i.e. production, development, etc.
+* Compute type - i.e. read, write, etc.
+
+## Event schema
+
+| Field name     | Required                                                               | Type                          | Description                                                                                                                                    |                                                                      |
+| -------------- | ---------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| idempotencyKey | ✅                                                                      | String                        | A unique key that's used to ensure that the event is only processed once.                                                                      |                                                                      |
+| customerId     | ✅                                                                      | String                        | The ID of the customer that usage is reported for.                                                                                             |                                                                      |
+| resourceId     | Yes, when reporting an event for a product with multiple subscriptions | String                        | The ID of the resource that the event is reported for. This is mostly relevant when reporting events for products with multiple subscriptions. |                                                                      |
+| eventName      | ✅                                                                      | String                        | The name of that event that's being reported, which usually represents that action that took place.                                            |                                                                      |
+| dimensions     | ❌                                                                      | Hash<String, String \| Number | Boolean>                                                                                                                                       | User-defined properties about the event, i.e. "region" : "us-east-1" |
+| timestamp      | ❌                                                                      | Timestamp                     | The timestamp of the event. When not provided, the Stigg server time (UTC) will be used.                                                       |                                                                      |
+
+## Ingestion methods
+
+### SDKs
+
+| [ ![](/images/d96f126-Node.js_logo.svg) ](nodejs-sdk#reporting-usage-measurements-to-stigg) | [ ![](/images/7469835-python-original.png) ](python-sdk-v2#reporting-usage-measurements-to-stigg) | [ ![](/images/9705d6b-ruby-original.png) ](ruby-sdk#reporting-usage-measurements-to-stigg) | [ ![](/images/ccb79d0-go-original-wordmark.png) ](go-sdk#reporting-usage-measurements-to-stigg) |
+| ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+
+### API
+
+| [ ![](/images/e088aed-image.png) ](graphql-api#reporting-usage-measurements-to-stigg) |  |  |  |
+| ----------------------------------------------------------------------------------------------------- |  |  |  |
+
+## Supported aggregation methods
+
+Stigg currently supports the following aggregation methods:
+
+1. Count
+2. Count unique
+3. Sum
+4. Maximum
+5. Minimum
+6. Average
+
+All aggregation methods besides `count` require you to specify the [dimension](#dimensions) that will be used for the aggregation, for example: when calculating a `sum` using what dimension the sum will be calculated.
+
+## Example use-cases
+
+### Active users
+
+When a customer logs into your application or performs an action, report an event to Stigg with the customer ID. If you already leverage an analytics solution, this can be a simple as reporting an event to Stigg whenever the `track` method of the analytics solution is called.
+
+[Create an event-based metered feature](features#event-meters), and select the `count unique` aggregation method while specifying the `customerId` property as the dimension that will be used for computation of the aggregation.
+
+### Used bandwidth
+
+Whenever a resource is accessed, report an event to Stigg with the resource file size dimension.
+
+[Create an event-based metered feature](features#event-meters), and select the `sum` aggregation method while specifying the resource file size property as the dimension that will be used for computation of the aggregation.

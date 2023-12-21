@@ -1,0 +1,66 @@
+---
+title: "Local caching and fallback strategy"
+---
+
+## Local caching
+
+Stigg SDKs support local caching, which means that customer entitlements are stored in-memory to prevent network trips for subsequent entitlement access checks. It also makes our API redundant in the case it is unreachable for any reason (like a network outage), and the SDK can continue to evaluate access checks even when it's offline.
+
+The local cache is invalidated by frequently polling for updates, or by listening to real-time updates delivered by a WebSocket streaming connection to our API (currently only available for the backend SDKs).
+
+Node.js
+
+`const client = await Stigg.initialize({  
+  	// set the polling interval, default to 30 seconds  
+  	entitlementPollingInterval: 5000,
+});
+`
+
+## Fallback strategy
+
+In the case where the entitlement local data is missing (for example: when a new [feature](features) was added to the codebase, but has still not been added to a [plan](plans)) or our API is unreachable (for example: during a drop of internet connectivity), a fallback strategy can be configured using the Stigg SDKs.
+
+### Global fallback configuration
+
+A global fallback strategy can be defined during the SDK initialization, for example:
+
+Node.js
+
+`const stiggClient = Stigg.initialize({
+  apiKey,
+  entitlementsFallback: {
+    'feature-number-of-seats': {
+     	hasAccess: true,
+    },
+    'feature-templates': {
+      hasAccess: true,
+      usageLimit: 10
+    }
+  },
+});
+`
+
+### Entitlement-check fallback configuration
+
+A fallback can also be defined during an entitlement check. When defined, entitlement-check fallbacks will override the global fallback configuration for the specific feature. For example:
+
+Node.js
+
+`const entitlement = stiggClient.getMeteredEntitlement({  
+  featureId: 'feature-number-of-seats',
+  customerId: 'customer-demo-id',  
+  options: {  
+    //if an error occurs, allow access with unlimited usage  
+    fallback: {  
+      hasAccess: true,  
+      isUnlimited: true  
+    }  
+  }  
+});
+`
+
+## Metering usage when there's no internet connectivity
+
+While the entitlements checks continue to work in offline mode, usage metering is postponed until the SDK will become online again. During that period, usage measurements are buffered in-memory and will not be counted as actual usage before they're sent and reach Stigg servers.
+
+In case of a long-term outage, the measurements can be stored in a persistent cache (if provided) to avoid data loss if the process will crash while the SDK is offline.

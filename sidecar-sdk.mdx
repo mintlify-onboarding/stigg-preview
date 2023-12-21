@@ -1,0 +1,876 @@
+---
+title: "Sidecar SDK"
+description: "How to install and use the Sidecar SDK on the server-side"
+---
+
+## Installing the SDK
+
+The first step is to install the Stigg SDK as a dependency in your application::
+
+PythonJava (Gradle)Java (Maven)
+
+`$ pip install stigg-sidecar-sdk
+`
+
+`repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation 'io.stigg:stigg-sidecar-sdk:+'
+  implementation "com.google.protobuf:protobuf-java:3.25.0"
+  implementation "io.grpc:grpc-protobuf:1.59.0"
+  implementation "io.grpc:grpc-stub:1.59.0"
+  runtimeOnly "io.grpc:grpc-netty-shaded:1.59.0"
+
+  // API client dependencies
+  implementation "com.stigg:stigg-api-client:+"
+  implementation "com.apollographql.apollo3:apollo-runtime:3.8.2"
+  implementation "com.apollographql.apollo3:apollo-api-jvm:3.8.2"
+  implementation "com.apollographql.apollo3:apollo-adapters-jvm:3.8.2"
+}
+`
+
+`<dependencies>
+	<dependency>
+		<groupId>io.stigg</groupId>
+		<artifactId>stigg-sidecar-sdk</artifactId>
+		<version>LATEST</version>
+	</dependency>
+	<dependency>
+		<groupId>com.google.protobuf</groupId>
+		<artifactId>protobuf-java</artifactId>
+		<version>3.25.0</version>
+	</dependency>
+	<dependency>
+		<groupId>io.grpc</groupId>
+		<artifactId>grpc-protobuf</artifactId>
+		<version>1.59.0</version>
+	</dependency>
+	<dependency>
+		<groupId>io.grpc</groupId>
+		<artifactId>grpc-stub</artifactId>
+		<version>1.59.0</version>
+	</dependency>
+	<dependency>
+		<groupId>io.grpc</groupId>
+		<artifactId>grpc-netty-shaded</artifactId>
+		<version>1.59.0</version>
+    <scope>runtime</scope>
+	</dependency>
+  
+  // API client dependencies
+	<dependency>
+		<groupId>io.stigg</groupId>
+		<artifactId>stigg-api-client</artifactId>
+		<version>LATEST</version>
+	</dependency>
+	<dependency>
+		<groupId>com.apollographql.apollo3</groupId>
+		<artifactId>apollo-runtime</artifactId>
+		<version>3.8.2</version>
+	</dependency>
+	<dependency>
+		<groupId>com.apollographql.apollo3</groupId>
+		<artifactId>apollo-api-jvm</artifactId>
+		<version>3.8.2</version>
+	</dependency>
+	<dependency>
+		<groupId>com.apollographql.apollo3</groupId>
+		<artifactId>apollo-adapters-jvm</artifactId>
+		<version>3.8.2</version>
+	</dependency>
+</dependencies>
+`
+
+## Retrieving the server API Key
+
+In the Stigg Cloud Console, go to [Settings > Account > Environments](https://app.stigg.io/account/settings).
+
+Copy the   **Server API key** of the relevant environment.
+
+  
+## Initializing the SDK
+
+> ## 📘
+> 
+> More SDKs are coming!
+> 
+> Can't find your programming language? No worries, SDKs in other languages are coming very soon ![:rocket:](/images/rocket.png ":rocket:")
+
+### Development
+
+Import the Stigg SDK and initialize it with your environment API key:
+
+PythonJava
+
+`from stigg_sidecar_sdk import Stigg, ApiConfig, LocalSidecarConfig
+
+stigg = Stigg(
+  ApiConfig(
+    api_key="<SERVER_API_KEY>",
+  ),
+  # for development purposes, a sidecar will be spawned as a subprocess: 
+  local_sidecar_config=LocalSidecarConfig(
+    redis=RedisOptions(
+      environment_prefix="development",
+      host="localhost",
+      port=6379,
+      db=0
+    )
+  )
+)
+`
+
+`import io.stigg.sidecar.sdk.Stigg;
+import io.stigg.sidecar.proto.v1.*;
+
+class App {
+  public static void main(String[] ...args) {
+    var stigg = Stigg.init(
+      StiggConfig.builder()
+      .apiConfig(ApiConfig.newBuilder().setApiKey("<SERVER-API-KEY>").build())
+
+      // Running the sidecar as a subprocess is not yet supported in Java. 
+      // Please refer to how to run the sidecar service in production. 
+      // Set remote sidecar host and port:
+      .remoteSidecarHost("localhost")
+      .remoteSidecarPort(8443)
+      .build()
+    );
+  }
+}
+`
+
+> ## 🚧
+> 
+> Local Sidecar (Python only)
+> 
+> For testing & development purposes, Stigg will run the Sidecar service in a child process.  
+> The service listens for requests on address `localhost:8433` by default.
+> 
+> For production, it is **highly recommend** to do run the Sidecar in a separate container, you can find more info in the [Sidecar](/docs/sidecar) page..
+
+### Production
+
+For production use, its recommended to deploy the Sidecar service using the sidecar pattern, or as a standalone service. You set the remote sidecar host and port parameters as part of the SDK initialization:
+
+PythonJava
+
+`from stigg_sidecar_sdk import Stigg, ApiConfig
+
+stigg = Stigg(
+  	# To access the API you need to set the server AP key
+    ApiConfig(
+	    api_key="<SERVER_API_KEY>",
+    ),
+    # For production use, set remote sidecar host and port:
+    remote_sidecar_host='localhost',
+    remote_sidecar_port=8443
+)
+`
+
+`import io.stigg.sidecar.sdk.Stigg;
+import io.stigg.sidecar.proto.v1.*;
+
+class App {
+  public static void main(String[] ...args) {
+    var stigg = Stigg.init(
+      StiggConfig.builder()
+      // To access the API you need to set the server AP key:
+      .apiConfig(ApiConfig.newBuilder().setApiKey("<SERVER-API-KEY>").build())
+      // For production use, set remote sidecar host and port:
+      .remoteSidecarHost("localhost")
+      .remoteSidecarPort(8443)
+      .build()
+    );
+  }
+}
+`
+
+> ## 📘
+> 
+> Running the Sidecar service
+> 
+> Read about how to run the Sidecar service as separate container in the [Sidecar](/docs/sidecar) page.
+
+  
+## Getting the entitlement of a customer to a specific feature
+
+#### Checking the entitlement of a boolean feature
+
+PythonJava
+
+`from stigg_sidecar_sdk import GetBooleanEntitlementRequest
+
+resp = await stigg.get_boolean_entitlement(GetBooleanEntitlementRequest(
+  customer_id='customer-demo-01',
+  feature_id='feature-03-custom-domain',
+  resource_id='site-01' # Optional, specify the resource ID
+))
+
+if resp.has_access:   
+  pass # Customer has access to the feature
+`
+
+`var req =
+  GetBooleanEntitlementRequest.newBuilder()
+  .setCustomerId("customer-demo-01")
+  .setFeatureId("feature-03-custom-domain")
+  .setResourceId("site-01") // Optional, specify the resource ID
+  .build();
+
+var res = stigg.getBooleanEntitlement(req);
+
+if (res.getHasAccess()) {
+  // Customer has access to the feature
+}
+`
+
+Result - has access 
+
+JSON
+
+`{
+  "hasAccess": true,
+  "isFallback": false,
+  "accessDeniedReason": null,
+  "entitlement": {
+    "feature": {
+      "id": "feature-04-analytics",
+      "featureType": "FEATURE_TYPE_BOOLEAN",
+      "units": "",
+      "unitsPlural": "",
+      "meterType": "METER_TYPE_NONE",
+      "isMetered": false
+    }
+  }
+}
+`
+
+Result - no access 
+
+JSON
+
+`{
+  "hasAccess": true,
+  "isFallback": false,
+  "accessDeniedReason": null,
+  "entitlement": {
+    "feature": {
+      "id": "feature-03-custom-domain",
+      "featureType": "FEATURE_TYPE_BOOLEAN",
+      "units": "",
+      "unitsPlural": "",
+      "meterType": "METER_TYPE_NONE",
+      "isMetered": false
+    }
+  }
+}
+`
+  
+  
+#### Checking the entitlement of a numeric configuration feature
+
+PythonJava
+
+`from stigg_sidecar_sdk import GetNumericEntitlementRequest
+
+resp = await stigg.get_numeric_entitlement(GetNumericEntitlementRequest(
+  customer_id='customer-demo-01',
+  feature_id='feature-06-max-file-size',
+  resource_id='site-01' # Optional, resource ID
+))
+
+if resp.has_access:   
+  value = resp.entitlement.value # Entitlement value  
+`
+
+`var req =
+  GetNumericEntitlementRequest.newBuilder()
+  .setCustomerId("customer-demo-01")
+  .setFeatureId("feature-06-max-file-size")
+  .setResourceId("site-01") // Optional, specify the resource ID
+  .build();
+
+var res = stigg.getNumericEntitlement(req);
+
+if (res.getHasAccess()) {
+  var value = res.getEntitlement().getValue(); // Entitlement value
+}
+`
+
+Result - has access 
+
+JSON
+
+`{
+  "hasAccess": true,
+  "isFallback": false,
+  "accessDeniedReason": null,
+  "entitlement": {
+    "feature": {
+      "id": "feature-06-max-file-size",
+      "featureType": "FEATURE_TYPE_NUMBER",
+      "units": "MB",
+      "unitsPlural": "MB",
+      "meterType": "METER_TYPE_NONE",
+      "isMetered": false
+    },
+    "value": 100,
+    "isUnlimited": false
+  }
+}
+`
+
+Result - no access 
+
+JSON
+
+` {
+  "hasAccess": false,
+  "isFallback": false,
+  "accessDeniedReason": "ACCESS_DENIED_REASON_NO_FEATURE_ENTITLEMENT_IN_SUBSCRIPTION",
+  "entitlement": {
+    "feature": null,
+    "value": null,
+    "isUnlimited": false
+  }
+}
+`
+
+  
+#### Checking if a customer has access to a metered feature
+
+PythonJava
+
+`from stigg_sidecar_sdk import GetMeteredEntitlementRequest
+
+resp = await stigg.get_metered_entitlement(GetMeteredEntitlementRequest(
+  customer_id='customer-demo-01',
+  feature_id='feature-01-templates',
+  resource_id='site-01', # Optional, resource ID
+))	
+
+if resp.has_access:   
+  pass # Has access, current usage is under the entitlement limit
+`
+
+`var req =
+  GetMeteredEntitlementRequest.newBuilder()
+  .setCustomerId("customer-demo-01")
+  .setFeatureId("feature-01-templates")
+  .setResourceId("site-01") // Optional, specify the resource ID
+  .build();
+
+var resp = stigg.getMeteredEntitlement(req);
+
+if (resp.getHasAccess()){
+  // Has access, current usage is under the entitlement limit
+}
+`
+
+Result - has access 
+
+JSON
+
+`{
+  "hasAccess": true,
+  "isFallback": false,
+  "accessDeniedReason": null,
+  "requestedUsage": 0.0,
+  "entitlement": {
+    "feature": {
+      "id": "feature-01-templates",
+      "featureType": "FEATURE_TYPE_NUMBER",
+      "units": "template",
+      "unitsPlural": "templates",
+      "meterType": "METER_TYPE_FLUCTUATING",
+      "isMetered": true
+    },
+    "usageLimit": 6.0,
+    "isUnlimited": false,
+    "currentUsage": 3.0,
+    "resetPeriod": "ENTITLEMENT_RESET_PERIOD_UNSPECIFIED",
+    "nextResetDate": null
+  }
+}
+`
+
+Result - no access 
+
+JSON
+
+`{
+  "hasAccess": false,
+  "isFallback": false,
+  "accessDeniedReason": "ACCESS_DENIED_REASON_NO_FEATURE_ENTITLEMENT_IN_SUBSCRIPTION",
+  "requestedUsage": 1.0,
+  "entitlement": {
+    "feature": null,
+    "usageLimit": null,
+    "isUnlimited": false,
+    "currentUsage": 0.0,
+    "resetPeriod": "ENTITLEMENT_RESET_PERIOD_UNSPECIFIED",
+    "nextResetDate": null
+  }
+}
+`
+
+  
+#### Proactively checking if a customer will have access to X units of a metered feature
+
+PythonJava
+
+`resp = await stigg.get_metered_entitlement(GetMeteredEntitlementRequest(
+  customer_id='customer-demo-01',
+  feature_id='feature-01-templates',
+  resource_id='site-01', # Optional, resource ID
+  options=MeteredEntitlementOptions(requested_usage=10)
+))
+
+if resp.has_access:   
+  pass # Has access, (current + requested usage) is under the entitlement limit
+`
+
+`var req =
+  GetMeteredEntitlementRequest.newBuilder()
+  .setCustomerId("customer-demo-01")
+  .setFeatureId("feature-01-templates")
+  .setResourceId("site-01") // Optional, specify the resource ID
+  .setOptions(MeteredEntitlementOptions.newBuilder()
+              .setRequestedUsage(10)
+              .build())
+  .build();
+
+var resp = stigg.getMeteredEntitlement(req);
+
+if (resp.getHasAccess()){
+  // Has access, (current + requested usage) is under the entitlement limit
+}
+`
+
+Result - has access 
+
+JSON
+
+`{
+  "hasAccess": true,
+  "isFallback": false,
+  "accessDeniedReason": null,
+  "requestedUsage": 1.0,
+  "entitlement": {
+    "feature": {
+      "id": "feature-01-templates",
+      "featureType": "FEATURE_TYPE_NUMBER",
+      "units": "template",
+      "unitsPlural": "templates",
+      "meterType": "METER_TYPE_FLUCTUATING",
+      "isMetered": true
+    },
+    "usageLimit": 6.0,
+    "isUnlimited": false,
+    "currentUsage": 3.0,
+    "resetPeriod": "ENTITLEMENT_RESET_PERIOD_UNSPECIFIED",
+    "nextResetDate": null
+  }
+}
+`
+
+Result - no access 
+
+JSON
+
+`{
+  "hasAccess": false,
+  "isFallback": false,
+  "accessDeniedReason": "ACCESS_DENIED_REASON_REQUESTED_USAGE_EXCEEDING_LIMIT",
+  "requestedUsage": 10.0,
+  "entitlement": {
+    "feature": {
+      "id": "feature-01-templates",
+      "featureType": "FEATURE_TYPE_NUMBER",
+      "units": "template",
+      "unitsPlural": "templates",
+      "meterType": "METER_TYPE_FLUCTUATING",
+      "isMetered": true
+    },
+    "usageLimit": 6.0,
+    "isUnlimited": false,
+    "currentUsage": 3.0,
+    "resetPeriod": "ENTITLEMENT_RESET_PERIOD_UNSPECIFIED",
+    "nextResetDate": null
+  }
+}
+`
+
+  
+## Getting all of the entitlements for a specific customer
+
+PythonJava
+
+`from stigg_sidecar_sdk import GetEntitlementsRequest
+
+resp = await stigg.get_entitlements(GetEntitlementsRequest(
+  customer_id='customer-demo-01',
+  resource_id='site-01' # Optional, resource ID
+))
+
+# All the entitlements the customer is entitled to  
+entitlements = resp.entitlements
+`
+
+`var req =
+  GetEntitlementsRequest.newBuilder()
+  .setCustomerId("customer-demo-01")
+  .setResourceId("site-01") // Optional, specify the resource ID
+  .build();
+
+var resp = stigg.getEntitlements(req);
+    
+// All the entitlements the customer is entitled to  
+List<Entitlement> entitlements = resp.getEntitlementsList();
+`
+
+Result 
+
+JSON
+
+`{
+  "entitlements": [
+    {
+      "metered": {
+        "feature": {
+          "id": "feature-07-active-users",
+          "featureType": "FEATURE_TYPE_NUMBER",
+          "units": "active user",
+          "unitsPlural": "active users",
+          "meterType": "METER_TYPE_INCREMENTAL",
+          "isMetered": true
+        },
+        "usageLimit": 25000.0,
+        "currentUsage": 1.0,
+        "resetPeriod": "ENTITLEMENT_RESET_PERIOD_MONTH",
+        "nextResetDate": "2023-12-21T00:00:00Z"
+      }
+    },
+    {
+      "boolean": {
+        "feature": {
+          "id": "feature-04-analytics",
+          "featureType": "FEATURE_TYPE_BOOLEAN",
+          "units": "",
+          "unitsPlural": "",
+          "meterType": "METER_TYPE_NONE"
+        }
+      }
+    },
+    {
+      "numeric": {
+        "feature": {
+          "id": "feature-06-max-file-size",
+          "featureType": "FEATURE_TYPE_NUMBER",
+          "units": "MB",
+          "unitsPlural": "MB",
+          "meterType": "METER_TYPE_NONE"
+        },
+        "value": 100
+      }
+    },
+    {
+      "metered": {
+        "feature": {
+          "id": "feature-02-campaigns",
+          "featureType": "FEATURE_TYPE_NUMBER",
+          "units": "campaign",
+          "unitsPlural": "campaigns",
+          "meterType": "METER_TYPE_INCREMENTAL",
+          "isMetered": true
+        },
+        "usageLimit": 32.0,
+        "resetPeriod": "ENTITLEMENT_RESET_PERIOD_MONTH",
+        "nextResetDate": "2023-12-21T00:00:00Z"
+      }
+    },
+    {
+      "metered": {
+        "feature": {
+          "id": "feature-01-templates",
+          "featureType": "FEATURE_TYPE_NUMBER",
+          "units": "template",
+          "unitsPlural": "templates",
+          "meterType": "METER_TYPE_FLUCTUATING",
+          "isMetered": true
+        },
+        "usageLimit": 6.0,
+        "currentUsage": 3.0,
+        "resetPeriod": "ENTITLEMENT_RESET_PERIOD_UNSPECIFIED"
+      }
+    },
+    {
+      "boolean": {
+        "feature": {
+          "id": "feature-03-custom-domain",
+          "featureType": "FEATURE_TYPE_BOOLEAN",
+          "units": "",
+          "unitsPlural": "",
+          "meterType": "METER_TYPE_NONE"
+        }
+      }
+    }
+  ]
+}
+`
+
+  
+## Reporting usage measurements to Stigg
+
+The Stigg SDK allows you to report usage measurements for [metered features](features#overview). The reported usage will be used to track, limit and bill the customer's usage of metered features.
+
+Stigg supports metering of usage from the following data sources:
+
+1. [Calculated usage](#calculated-usage) \- usage that has been aggregated and calculated by **your application**. This type is useful for features, such as: seats.
+2. [Raw events](#raw-events) \- raw events from your application, which **Stigg** filters and aggregates aggregate to calculate customer usage. This type is useful for features, such as: monthly active users (MAUs).
+
+More details about Stigg's metering and aggregation capabilities can be found here:
+
+[ ![](/images/865027c-1085657.png)  Stigg's metering and aggregation capabilities Getting usage data into Stigg ](metering-overview) 
+
+> ## 🚧
+> 
+> 1. Reporting of measurements to Stigg should be done only after the relevant resources have been provisioned in your application.
+> 2. To ensure that the provisioned resources are aligned with the measurements that are reported to Stigg, ensure that customers are not allowed to allocate new resources until an acknowledgement about the processed measurement is received from the Stigg backend.
+
+> ## 📘
+> 
+> Validating that a measurement was successfully reported to Stigg is also possible in the [customer details section](customers#viewing-customers-entitlement-usage) of the relevant customer in the Stigg Cloud Console.
+
+### Calculated usage
+
+PythonJava
+
+`from stigg_sidecar_sdk import ReportUsageRequest
+
+# Example: incrementing usage of a metered feature by 2
+
+await stigg.report_usage(ReportUsageRequest(
+  customer_id='customer-demo-01',
+  feature_id='feature-01-templates',
+  value=2,  # usage amount
+  resource_id='site-01' # Optional, resource ID
+))
+`
+
+`// Example: incrementing usage of a metered feature by 2
+
+var req =
+  ReportUsageRequest.newBuilder()
+  .setCustomerId("customer-demo-01")
+  .setFeatureId("feature-01-templates")
+  .setResourceId("site-01") // Optional, specify the resource ID
+  .setValue(2)
+  .build();
+
+stigg.reportUsage(req);
+`
+
+By default, the value reported should represent the **change** in usage of the feature, for example user added 2 more seats then the report usage call should have the value of 2.
+
+In some cases, it's more useful to set the usage to some value instead of reporting the change value, it's possible by passing the `updateBehavior` parameter:
+
+PythonJava
+
+`# Example: set usage of a metered feature to 3
+
+resp = await stigg.report_usage(ReportUsageRequest(
+  customer_id='customer-demo-01',
+  feature_id='feature-01-templates',
+  value=3,  # Usage amount
+  update_behavior=UsageUpdateBehavior.USAGE_UPDATE_BEHAVIOR_SET,
+  resource_id='site-01' # optional, resource ID
+))
+`
+
+`// Example: set usage of a metered feature to 3
+
+var req =
+  ReportUsageRequest.newBuilder()
+  .setCustomerId("customer-demo-01")
+  .setFeatureId("feature-01-templates")
+  .setResourceId("site-01") // Optional, specify the resource ID
+  .setValue(3) // Usage amount
+  .setUpdateBehavior(UsageUpdateBehavior.USAGE_UPDATE_BEHAVIOR_SET)
+  .build();
+
+stigg.reportUsage(req);
+`
+
+Result 
+
+JSON
+
+`{
+  "measurementId": "2bbd8473-ab28-4a2e-93ec-25d2489cf2b4"
+}
+`
+
+  
+### Raw events
+
+PythonJava
+
+`from stigg_sidecar_sdk import ReportEventsRequest, EventDimensionValue
+
+# Example: report user_login events
+
+resp = await stigg.report_events(ReportEventsRequest(
+  events=[Event(
+    customer_id="customer-demo-01",
+    resource_id='site-01', # Optional, resource ID
+    event_name="user_login",
+    idempotency_key="227c1b73-883a-457b-b715-6ba5a2c69ce4",
+    dimensions={
+      'user_id': EventDimensionValue(string_value='user-01'),
+      'user_email': EventDimensionValue(string_value='[[email protected]](/cdn-cgi/l/email-protection)'),
+    },
+    timestamp=datetime.datetime.now(),  # Optional, pass it to report event with specific timestamp
+  )]
+))
+`
+
+`// example: report user_login events
+
+var req =
+  ReportEventsRequest.newBuilder()
+  .addEvents(
+  Event.newBuilder()
+  .setCustomerId("customer-demo-01")
+  .setResourceId("site-01") // Optional, resource ID
+  .setEventName("user_login")
+  .setIdempotencyKey("227c1b73-883a-457b-b715-6ba5a2c69ce4")
+  .putDimensions("user_id", EventDimensionValue.newBuilder().setStringValue("user-01").build())
+  .putDimensions("user_email", EventDimensionValue.newBuilder().setStringValue("[[email protected]](/cdn-cgi/l/email-protection)").build())
+  .setTimestamp(Timestamp.newBuilder().setSeconds(System.currentTimeMillis() / 1000).build()) // Optional, pass it to report event with specific timestamp
+  .build()
+).build();
+
+stigg.reportEvents(req);
+`
+
+It's also possible to send a batch of events in one invocation. 
+
+  
+> ## 🚧
+> 
+> The `dimensions` field support key value pairs, while keys are strictly of type `string` values can be `string | number | boolean`
+
+  
+## Accessing the API
+
+Sidecar SDK exposes a type-safe generated API client that can be used for send requests to the Stigg API:
+
+PythonJava
+
+`` from stigg.generated import ProvisionCustomerInput, ProvisionSubscriptionInput, BillingPeriod
+
+# Example: access the client through the `.api` field
+
+cust_resp = await stigg.api.provision_customer(ProvisionCustomerInput(
+  name='customer-demo-01',
+  email='[[email protected]](/cdn-cgi/l/email-protection)'
+))
+
+sub_resp = await stigg.api.provision_subscription(ProvisionSubscriptionInput(
+  customer_id=cust_resp.provision_customer.customer.customer_id,
+  plan_id='plan-revvenu-essentials',
+  billing_period=BillingPeriod.MONTHLY
+))
+
+print(sub_resp.provision_subscription.status)  # SUCCESS
+ ``
+
+`` // Example: access the client through the `.api` field
+
+var customerRes = stigg.api().mutation(ProvisionCustomerMutation.builder()
+                                       .input(ProvisionCustomerInput.builder()
+                                              .customerId("customer-demo-01")
+                                              .email("[[email protected]](/cdn-cgi/l/email-protection)")
+                                              .build())
+                                       .build());
+
+var customerId = customerRes.provisionCustomer.customer.slimCustomerFragment.customerId;
+
+var subscriptionRes = stigg.api().mutation(ProvisionSubscriptionMutation.builder()
+                                           .input(ProvisionSubscriptionInput.builder()
+                                                  .customerId(customerId)
+                                                  .planId("plan-revvenu-essentials")
+                                                  .billingPeriod(BillingPeriod.MONTHLY)
+                                                  .unitQuantity(2.)
+                                                  .build())
+                                           .build());
+
+if (subscriptionRes.provisionSubscription.status == ProvisionSubscriptionStatus.SUCCESS) {
+  // subscription provisioned
+}
+ ``
+
+You can find all the available API client functions under each SDK language:
+
+* [Python SDK](/docs/python-sdk-v2)
+* [Java SDK](/docs/java-sdk)
+
+## Persistent cache
+
+In order for the cache to survive between restarts or to be shared across multiple instances of the Sidecar service, you can configure the Sidecar to use Redis as a cache provider.
+
+PythonJava
+
+`
+from stigg_sidecar_sdk import Stigg, ApiConfig, LocalSidecarConfig, RedisOptions
+
+stigg = Stigg(
+  ApiConfig(
+    api_key="<SERVER_API_KEY>",
+  ),
+  # For development purposes, configure local sidecar to use redis: 
+  local_sidecar_config=LocalSidecarConfig(
+    redis=RedisOptions(
+      environment_prefix="development",
+      host="localhost",
+      port=6379,
+      db=0
+    )
+  ),
+  # For production use, provide remote sidecar with the REDIS_* env vars:
+  remote_sidecar_host='localhost',
+  remote_sidecar_port=8443
+)
+`
+
+`import io.stigg.sidecar.sdk.Stigg;
+import io.stigg.sidecar.proto.v1.*;
+
+class App {
+  public static void main(String[] ...args) {
+    var stigg = Stigg.init(
+      StiggConfig.builder()
+      // To access the API you need to set the server AP key:
+      .apiConfig(ApiConfig.newBuilder().setApiKey("<SERVER-API-KEY>").build())
+      
+      // For production use, provide remote sidecar with the REDIS_* env vars:
+      .remoteSidecarHost("localhost")
+      .remoteSidecarPort(8443)
+      .build()
+    );
+  }
+}
+`
+
+To keep the cache up-to-date, you will also need to run a [persistent cache service](persistent-caching) in a separate process.
+
+  
+> ## 📘
+> 
+> Running the Sidecar service
+> 
+> Read about how to run the Sidecar service as separate container in the [Sidecar](/docs/sidecar) page.

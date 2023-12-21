@@ -1,0 +1,23 @@
+---
+title: "Scalability and durability"
+---
+
+![](/images/74099e0-image.png)
+
+## Scalability
+
+Stigg's metering and aggregation capabilities are designed from the ground up for managing high-volume real-time use cases:
+
+* The Stigg API and SDKs allow you to report usage events in batches, with up to 1000 events per batch.
+* Usage events can be reported in parallel from multiple distributed reporters without requiring any coordination.
+* Built-in idempotency guarantees that duplicate events are only reported once.
+* Current usage is accessed from a [distributed cache](/docs/accessible-from-everywhere) and is automatically replicated across multiple regions.
+* [Local caching](/docs/local-caching-and-fallback-strategy) allows you to access reported usage without needing to make a call over the network.
+
+> ## 📘
+> 
+> If you're expected to report more than 1000 events per second [let us know](/cdn-cgi/l/email-protection#e3909693938c9197a390978a8484cd8a8c).
+
+## Durability and recovery
+
+Reported usage events are stored in their original format in a highly available persistent data store with 99.999999999% of durability. This is allows you to rebuild usage data from scratch at any point in time if needed.

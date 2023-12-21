@@ -1,0 +1,120 @@
+---
+title: "Example - email automation for trial subscriptions"
+---
+
+## Overview
+
+One of the main benefits of the HubSpot CRM platform is that allows you to automate marketing emails to customers. When Stigg is integrated with HubSpot, data from Stigg can be used to trigger these automations.
+
+A common use-case is to notify customers before their trial subscription expires, upon trial expiration and shortly afterwards. Such emails can help remind customers about the value that they received from the product, and increase conversion to paid subscriptions.
+
+  
+## Prerequisites
+
+* [You've defined a marketing email subscription type in HubSpot](https://knowledge.hubspot.com/contacts/how-do-subscription-preferences-and-types-work)
+* [You've defined a CAN-SPAM Act of 2003 email footer in HubSpot](https://knowledge.hubspot.com/email/can-i-customize-my-can-spam-email-footer)
+* [You've defined an email template in HubSpot](https://knowledge.hubspot.com/email/create-marketing-emails-in-the-drag-and-drop-email-editor)
+* [Stigg is integrated with HubSpot](hubspot)
+  
+## Setting up the email automation workflow in HubSpot
+
+### Create a new workflow
+
+In HubSpot, click on the **Workflows** item in the top navigation bar.
+
+![](/images/f053bfe-Screen_Shot_2022-09-29_at_13.44.52.png)
+
+In the opened screen, click on the "**Create workflow**" button and select "**From scratch**".
+
+![](/images/13b6cc2-Screen_Shot_2022-09-29_at_17.28.09.png)
+
+**Name the workflow**, for example: "Trial expiration automation".
+
+Select a **Deal-based** workflow, and use a **blank workflow**.
+
+Click "**Next**".
+
+![](/images/24994c7-Screen_Shot_2022-09-29_at_15.57.05.png)
+
+  
+### Set up the workflow triggers
+
+#### Add a deal enrollment trigger
+
+> ## 📘
+> 
+> The deal enrollment trigger will determine how deals enter the new workflow.
+
+Click "**Set up triggers**".
+
+Select the "**Deal**" filter type.
+
+![](/images/662b20c-Screen_Shot_2022-09-29_at_16.08.03.png)
+
+In the opened search box, enter **trial**.
+
+Select the "**Trial end date**" property under the "**Stigg metadata**" section.
+
+![](/images/2ad98bd-Screen_Shot_2022-09-29_at_16.08.22.png)
+
+Select "is known".
+
+Click "**Apply filter**".
+
+![](/images/930327c-Screen_Shot_2022-09-29_at_17.31.06.png)
+
+Click "**Save**".
+
+  
+#### Add a delay action
+
+Click on the "**+**" icon in the workflow canvas.
+
+![](/images/f485b72-Screen_Shot_2022-09-29_at_17.38.58.png)
+
+Select the "**Delay until a date**" action.
+
+![](/images/535ca7b-Screen_Shot_2022-09-29_at_17.39.35.png)
+
+Select a "**Deal date property**".
+
+Search for the **Trial end date** deal property.
+
+Select whether to trigger the action **before** the trial end date occurs, **on** the end date or **after** the end date. 
+
+When selecting before or after the trial end date, select how many days before or after the date the action should occur.
+
+Select the **time of day** (in the timezone of _your_ account) that the action should be delayed until, for example: 9am EDT.
+
+Click "**Save**".
+
+  
+#### Add an external email action
+
+Click on the "**+**" icon in the workflow canvas.
+
+In the search box, enter "**email**".
+
+Select "**Send email**" under "External communication".
+
+Select the contact association label - by default: "All contacts".
+
+Select the **email template** that you've published in advance.
+
+Click "**Save**".
+
+  
+#### Repeat the addition of the delay and external email actions
+
+Continue adding delay and external email actions until you've defined automated emails before, on and after customers trial subscription expires.
+
+> ## 📘
+> 
+> You can apply additional filters based on data from Stigg, for example: not send the trial expiration reminder when the customer already has a paid subscription
+
+  
+### Review and publish the workflow
+
+Decide whether the apply the workflow to existing deals or only ones that are created after the workflow is published.
+
+Turn the workflow **ON**.

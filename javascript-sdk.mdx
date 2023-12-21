@@ -1,0 +1,1125 @@
+---
+title: "JavaScript SDK"
+description: "How to install and use the Stigg SDK on the client-side"
+---
+
+## Overview
+
+The JavaScript SDK allows you access customer data from Stigg, and leverage it to implement mind-blowing customer experiences.
+
+> ## 📘
+> 
+> Stigg also offers plug-and-play customizable widgets for [React](react-sdk), [Vue.js](vuejs-sdk), [Webflow, Wordpress, and plain HTML](html).
+
+## Installing the SDK
+
+The first step is to install the Stigg SDK as a dependency in your application using your application's dependency manager:
+
+Shell
+
+`npm install @stigg/js-client-sdk
+`
+
+## Retrieving the client API key
+
+In the Stigg Cloud Console, go to [Settings > Account > Environments](https://app.stigg.io/account/settings).
+
+Copy the   **Client API key** of the relevant environment.
+
+  
+## Initializing the SDK
+
+Initializing client instance with client api key.  
+You can either pass the customer id when initializing the client instance or using `setCustomerId` function as shown below.
+
+JavaScript
+
+`import Stigg from '@stigg/js-client-sdk';
+
+const stiggClient = Stigg.initialize({  
+    apiKey: 'YOUR_CLIENT_API_KEY',
+    customerId: '41XTDbE'
+});
+
+export default stiggClient;
+`
+
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#initialize)
+
+  
+To find out when the client is ready, you can use `waitForInitialization` which return a promise that resolves when the client is ready to use, or rejects when the initialization failed.
+
+Javascript
+
+`try {
+  await stiggClient.waitForInitialization();
+  // initialization succeeded, entitlements values are now available
+} catch (err) {
+  // initialization failed
+}
+`
+
+## Setting the customer context
+
+Set the customer ID of the user that's accessing your app, usually after the customer signs in or restores a session:
+
+JavaScript
+
+`stiggClient.setCustomerId('customer-demo-01');
+`
+
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#setCustomerId)
+
+  
+## Setting the customer resource context
+
+For [Multi-instance products](/docs/multiple-subscriptions), set the customer resource ID of the user that's accessing your app, usually after the customer enters into a resource context:
+
+JavaScript
+
+`stiggClient.setResource('resource-01');
+`
+
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#setResource)
+
+  
+## Getting all of the entitlements of a specific customer
+
+JavaScript
+
+`const entitlements = await stiggClient.getEntitlements();
+
+// all the entitlements the customer is entitled to  
+entitlements.forEach((entitlement) => {  
+  console.log(JSON.stringify(entitlement));  
+});
+`
+
+Result 
+
+JSON
+
+`[
+  {
+    "isFallback": false,
+    "hasAccess": true,
+    "isUnlimited": false,
+    "value": 100,
+    "feature": {
+      "id": "feature-demo-01",
+      "featureType": "Numeric",
+      "meterType": "None",
+      "units": "request",
+      "unitsPlural": "requests",
+      "displayName": "Feature #1",
+      "description": "",
+      "isMetered": false
+    }
+  },
+  {
+    "isFallback": false,
+    "hasAccess": true,
+    "feature": {
+      "id": "feature-demo-02",
+      "featureType": "Boolean",
+      "meterType": "None",
+      "displayName": "Feature #2",
+      "description": "",
+      "isMetered": false
+    }
+  }
+]
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#getEntitlements)
+
+  
+## Getting the entitlement of a customer to a specific feature
+
+#### Checking the entitlement for a boolean feature
+
+JavaScript
+
+`const entitlement = stiggClient.getBooleanEntitlement({  
+  featureId: 'feature-demo-02'  
+});
+
+if (entitlement.hasAccess) {  
+  // customer has access to the feature  
+} else {  
+  // no access, offer an upsell  
+}
+`
+
+Result - has access 
+
+JSON
+
+`{
+  "isFallback": false,
+  "hasAccess": true,
+  "feature": {
+    "id": "feature-demo-02",
+    "featureType": "Boolean",
+    "meterType": "None",
+    "displayName": "Feature #2",
+    "description": "",
+    "isMetered": false
+  }
+}
+`
+
+Result - no access 
+
+JSON
+
+`{
+  "hasAccess": false,
+  "accessDeniedReason": "CustomerNotEntitledForFeature",
+  "isFallback": false
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#getBooleanEntitlement)
+
+  
+#### Checking the entitlement for a numeric configuration feature
+
+JavaScript
+
+`const entitlement = stiggClient.getNumericEntitlement({  
+  featureId: 'feature-demo-01'  
+});
+
+if (entitlement.hasAccess) {  
+  // get the entitlement numeric value that is defined for the feature  
+  console.log(entitlement.value);  
+}
+`
+
+Result - has access 
+
+JSON
+
+`{
+  "isFallback": false,
+  "hasAccess": true,
+  "isUnlimited": false,
+  "value": 100,
+  "feature": {
+    "id": "feature-demo-01",
+    "featureType": "Numeric",
+    "meterType": "None",
+    "units": "request",
+    "unitsPlural": "requests",
+    "displayName": "Feature #1",
+    "description": "",
+    "isMetered": false
+  }
+}
+`
+
+Result - no access 
+
+JSON
+
+`{
+  "hasAccess": false,
+  "accessDeniedReason": "CustomerNotEntitledForFeature",
+  "isFallback": false,
+  "isUnlimited": false
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#getNumericEntitlement)
+
+  
+#### Checking if a customer has access to a metered feature
+
+JavaScript
+
+`const entitlement = stiggClient.getMeteredEntitlement({  
+  featureId: 'feature-demo-03'
+});
+
+if (entitlement.hasAccess) {  
+  // has access and the requested usage is within the allowed quota  
+} else {  
+  // the customer has exceeded his quota for this feature  
+}
+`
+
+Result - has access 
+
+JSON
+
+`{
+  "isFallback": false,
+  "hasAccess": true,
+  "isUnlimited": false,
+  "usageLimit": 2,
+  "currentUsage": 0,
+  "requestedUsage": 0,
+  "resetSettings": {
+    "nextResetDate": "2022-10-01T00:00:00.000Z",
+    "resetPeriod": "Monthly"
+  },
+  "feature": {
+    "id": "feature-demo-03",
+    "featureType": "Numeric",
+    "meterType": "Incremental",
+    "units": "request",
+    "unitsPlural": "requests",
+    "displayName": "Feature #3",
+    "description": "",
+    "isMetered": true
+  }
+}
+`
+
+Result - no access 
+
+JSON
+
+`{
+  "isFallback": false,
+  "hasAccess": true,
+  "isUnlimited": false,
+  "usageLimit": 2,
+  "currentUsage": 0,
+  "requestedUsage": 0,
+  "resetSettings": {
+    "nextResetDate": "2022-10-01T00:00:00.000Z",
+    "resetPeriod": "Monthly"
+  },
+  "feature": {
+    "id": "feature-demo-03",
+    "featureType": "Numeric",
+    "meterType": "Incremental",
+    "units": "request",
+    "unitsPlural": "requests",
+    "displayName": "Feature #3",
+    "description": "",
+    "isMetered": true
+  }
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#getMeteredEntitlement)
+
+  
+#### Proactively checking if a customer will have access to X units of a metered feature
+
+JavaScript
+
+`const requestedUsage = 10;
+
+const entitlement = stiggClient.getMeteredEntitlement({  
+  featureId: 'feature-demo-03',  
+  options: {  
+    requestedUsage
+  }  
+});
+
+if (entitlement.hasAccess) {  
+  // has access and the requested usage is within the allowed quota  
+} else {  
+  // the customer has exceeded his quota for this feature  
+}
+`
+
+Result - has access 
+
+JSON
+
+`{
+  "isFallback": false,
+  "hasAccess": true,
+  "isUnlimited": false,
+  "usageLimit": 2,
+  "currentUsage": 0,
+  "requestedUsage": 10,
+  "resetSettings": {
+    "nextResetDate": "2022-10-01T00:00:00.000Z",
+    "resetPeriod": "Monthly"
+  },
+  "feature": {
+    "id": "feature-demo-03",
+    "featureType": "Numeric",
+    "meterType": "Incremental",
+    "units": "request",
+    "unitsPlural": "requests",
+    "displayName": "Feature #3",
+    "description": "",
+    "isMetered": true
+  }
+}
+`
+
+Result - no access 
+
+JSON
+
+`{
+  "isFallback": false,
+  "hasAccess": true,
+  "isUnlimited": false,
+  "usageLimit": 2,
+  "currentUsage": 0,
+  "requestedUsage": 10,
+  "resetSettings": {
+    "nextResetDate": "2022-10-01T00:00:00.000Z",
+    "resetPeriod": "Monthly"
+  },
+  "feature": {
+    "id": "feature-demo-03",
+    "featureType": "Numeric",
+    "meterType": "Incremental",
+    "units": "request",
+    "unitsPlural": "requests",
+    "displayName": "Feature #3",
+    "description": "",
+    "isMetered": true
+  }
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#getMeteredEntitlement)
+
+  
+## Getting paywall data
+
+Useful for rendering the public pricing page or customer paywall.
+
+JavaScript
+
+`const paywallData = await stiggClient.getPaywall();
+`
+
+Result 
+
+JSON
+
+`{
+  "plans": [
+    {
+      "id": "plan-stigg-starter",
+      "order": 0,
+      "displayName": "Starter",
+      "description": "For getting started",
+      "entitlements": [
+        {
+          "usageLimit": 100,
+          "feature": {
+            "id": "feature-demo-01",
+            "featureType": "Numeric",
+            "description": "",
+            "meterType": "None",
+            "units": "request",
+            "unitsPlural": "requests",
+            "displayName": "Feature #1",
+            "isMetered": false,
+            "metadata": {
+              "key": "value"
+            }
+          },
+          "hasUnlimitedUsage": false,
+          "displayNameOverride": "Awesome feature #1",
+          "hiddenFromWidgets": []
+        },
+        {
+          "usageLimit": 0,
+          "feature": {
+            "id": "feature-demo-02",
+            "featureType": "Boolean",
+            "description": "",
+            "meterType": "None",
+            "displayName": "Feature #2",
+            "isMetered": false
+          },
+          "hasUnlimitedUsage": false,
+          "displayNameOverride": null,
+          "hiddenFromWidgets": ["PAYWALL"]
+        }
+      ],
+      "inheritedEntitlements": [],
+      "pricePoints": [],
+      "pricingType": "FREE",
+      "defaultTrialConfig": null,
+      "compatibleAddons": [],
+      "product": {
+        "id": "product-stigg",
+        "displayName": "Stigg",
+        "description": null,
+        "metadata": null
+      },
+      "metadata": null
+    }
+  ]
+}
+
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#getPaywall)
+
+  
+## Getting customer portal data
+
+Useful for rendering the public pricing page or customer paywall.
+
+JavaScript
+
+`const customerPortalData = await stiggClient.getCustomerPortal();
+`
+
+Result 
+
+JSON
+
+`{
+  "data": {
+    "customerPortal": {
+      "subscriptions": [
+        {
+          "subscriptionId": "subscription-plan-revvenu-basic-ecb700",
+          "planName": "Basic",
+          "pricing": {
+            "unitQuantity": null,
+            "billingPeriod": null,
+            "billingModel": null,
+            "pricingType": "FREE",
+            "usageBasedEstimatedBill": null,
+            "price": null,
+            "feature": null,
+          },
+          "status": "ACTIVE",
+          "trialRemainingDays": null,
+          "billingPeriodRange": {
+            "start": "2022-11-22T08:35:05.000Z",
+            "end": "2022-12-22T08:35:05.000Z",
+          },
+          "totalPrice": null,
+          "addons": [],
+        }
+      ],
+      "entitlements": [
+        {
+          "isGranted": true,
+          "usageLimit": 4,
+          "currentUsage": 44,
+          "hasUnlimitedUsage": false,
+          "nextResetDate": "2022-12-22T00:00:00.000Z",
+          "resetPeriod": "MONTH",
+          "resetPeriodConfiguration": {
+            "monthlyAccordingTo": "SubscriptionStart"
+          },
+          "feature": {
+            "featureType": "NUMBER",
+            "meterType": "Incremental",
+            "featureUnits": "campaign",
+            "featureUnitsPlural": "campaigns",
+            "description": null,
+            "displayName": "Campaigns",
+            "refId": "feature-02-campaigns",
+          },
+        },
+        {
+          "isGranted": true,
+          "usageLimit": 3,
+          "currentUsage": 0,
+          "hasUnlimitedUsage": false,
+          "nextResetDate": null,
+          "resetPeriod": null,
+          "resetPeriodConfiguration": null,
+          "feature": {
+            "featureType": "NUMBER",
+            "meterType": "Fluctuating",
+            "featureUnits": "template",
+            "featureUnitsPlural": "templates",
+            "description": null,
+            "displayName": "Templates",
+            "refId": "feature-01-templates",
+          },
+        }
+      ],
+      "promotionalEntitlements": [],
+      "billingInformation": {
+        "email": "",
+        "name": "Demo 02",
+        "defaultPaymentMethodLast4Digits": "4242",
+        "defaultPaymentMethodId": "pm_1M6s1BAnAO1PFouUrBBdYaVK",
+        "defaultPaymentExpirationMonth": 2,
+        "defaultPaymentExpirationYear": 2026,
+      },
+      "showWatermark": true,
+      "billingPortalUrl": "https://billing.stripe.com/p/session/test_YWNjdF8xS3hETXRBbkFPMVBGb3VVLF9NcVpOcEkwZzVwU05mZnc4dmxJTmNoTXdqOUx1Z2JH0100BnXkQsyV",
+      "canUpgradeSubscription": true,
+    }
+  }
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#getCustomerPortal)
+
+  
+## Getting customer data
+
+Useful for rendering a customer portal.
+
+JavaScript
+
+`const customer = await stiggClient.getCustomer();
+`
+
+Result 
+
+JSON
+
+`{
+  "id": "customer-demo-01",
+  "name": "First customer",
+  "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+  "createdAt": "2022-09-20T08:44:23.311Z",
+  "updatedAt": "2022-09-20T08:44:23.311Z",
+  "hasPaymentMethod": false,
+  "promotionalEntitlements": [],
+  "metadata": {
+    "example": "test"
+  },
+  "experimentInfo": {
+      "name": "should we use freemium?",
+      "id": "should-we-use-freemium",
+      "groupName": "Variant group",
+      "groupType": "VARIANT",
+  }
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#getCustomer)
+
+  
+## Getting customer active subscriptions
+
+Useful for rendering a customer portal.
+
+JavaScript
+
+`const subscriptions = await stiggClient.getActiveSubscriptions({
+  resourceId: 'resource-01',  // optional, pass it to get subscription of specific resource
+});
+`
+
+In addition, there's an option to pass a list of resource Ids
+
+JavaScript
+
+`const subscriptions = await stiggClient.getActiveSubscriptions({
+  customerId: 'customer-demo-01',
+  resourceIds: ['resource-01', 'resource-02', 'resource-03' ],  // optional, pass it to get list of resources
+});
+`
+
+Result 
+
+JSON
+
+`[
+  {
+    "id": "subscription-plan-stigg-pro-28a241",
+    "status": "ACTIVE",
+    "currentBillingPeriodEnd": "2023-09-20T09:00:14.000Z",
+    "plan": {
+      "id": "plan-stigg-pro",
+      "order": 0,
+      "displayName": "Pro",
+      "description": "For teams or individuals who need video capture and collaboration capabilities",
+      "entitlements": [
+        {
+          "usageLimit": 0,
+          "feature": {
+            "id": "feature-demo-01",
+            "featureType": "Boolean",
+            "description": "",
+            "meterType": "None",
+            "displayName": "Feature #1",
+            "isMetered": false
+          },
+          "hasUnlimitedUsage": false
+        }
+      ],
+      "inheritedEntitlements": [
+        {
+          "usageLimit": 100,
+          "feature": {
+            "id": "feature-demo-02",
+            "featureType": "Numeric",
+            "description": "",
+            "meterType": "None",
+            "units": "request",
+            "unitsPlural": "requests",
+            "displayName": "Feature #2",
+            "isMetered": false
+          },
+          "hasUnlimitedUsage": false
+        },
+        {
+          "usageLimit": 0,
+          "feature": {
+            "id": "feature-demo-03",
+            "featureType": "Boolean",
+            "description": "",
+            "meterType": "None",
+            "displayName": "Feature #3",
+            "isMetered": false
+          },
+          "hasUnlimitedUsage": false
+        }
+      ],
+      "pricePoints": [
+        {
+          "pricingModel": "FLAT_FEE",
+          "billingPeriod": "MONTHLY",
+          "amount": 12,
+          "currency": "USD"
+        },
+        {
+          "pricingModel": "FLAT_FEE",
+          "billingPeriod": "ANNUALLY",
+          "amount": 120,
+          "currency": "USD"
+        }
+      ],
+      "compatibleAddons": [],
+      "product": {
+        "id": "product-stigg",
+        "displayName": "Stigg"
+      },
+      "metadata": null
+    },
+    "price": {
+      "pricingModel": "FLAT_FEE",
+      "billingPeriod": "ANNUALLY",
+      "amount": 120,
+      "currency": "USD"
+    },
+    "pricingType": "PAID",
+    "addons": [],
+    "startDate": "2022-09-20T09:00:14.000Z",
+    "metadata": {
+      "lorem": "ipsum"
+    },
+    "experimentInfo": {
+      "name": "should we use freemium?",
+      "id": "should-we-use-freemium",
+      "groupName": "Variant group",
+      "groupType": "VARIANT",
+    },
+    "paymentCollection": "NOT_REQUIRED", // status of the payment collection of the subscription - can be either 'NOT_REQUIRED', 'FAILED', 'ACTION_REQUIRED' or 'PROCESSING'
+    "latestInvoice": {
+      "billingId": "invoice-01", // ID of the invoice of the billing provider
+      "status": "PAID", // can be either 'OPEN', 'CANCELED' or 'PAID'
+      "createdAt": "2023-08-22T11:27:41.000Z",
+      "updatedAt": "2023-08-22T11:27:44.608Z",
+      "requiresAction": false, // indicate of the payment requires action to complete the payment
+      "paymentUrl": "https://...", // payment url that can be sent to the customer to complete the payment
+      "paymentSecret": "secret-01", // secret to be used to initiate next action with billing provider
+      "errorMessage": "", // optinal error message, if the status is FAILED
+    },
+  }
+]
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#getActiveSubscriptions)
+
+  
+## Getting all available coupons
+
+Useful for rendering a paywall or promotions.
+
+JavaScript
+
+`const coupons = await stiggClient.getCoupons();
+`
+
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#getCoupons)
+
+  
+## Estimate subscription cost
+
+You can estimate the subscription cost using the `estimateSubscription` method.  
+This can help the customer to understand the costs before paying.
+
+JavaScript
+
+`// increment usage of a metered feature  
+await stiggClient.estimateSubscription({  
+	customerId: "customer-demo-01",
+  planId: "plan-revvenu-growth",
+  billableFeatures: [{ 						// optional, required for plans with per-unit pricing
+    featureId:'feature-01-templates',
+    quantity: 2
+  }],
+  billingPeriod: "MONTHLY",
+  addons: [{  								// optional
+  	addonId: 'addon-10-campaigns',  
+    quantity: 1  
+  }], 
+  promotionCode: "STIGG50", 	// optional
+  startDate: new Date(),			// optional
+  billingCountryCode: 'US',		// optional, required for price localization, must be in the ISO-3166-1 format
+	billingInformation: {
+      taxPercentage: 17 // optional. taxRate will be created if not exists
+  }
+});
+`
+
+Return fields 
+
+JavaScript
+
+`` {
+  total: 'Total after discounts and taxes.',
+  totalExcludingTax: 'Total including discounts but excluding tax.',
+  subTotal: 'Total before any discount or exclusive tax is applied.',
+  tax: 'Tax amount',
+  taxDetails: {
+    displayName: 'Tax display name.',
+    inclusive: 'Specifies if the tax rate is inclusive or exclusive.',
+    percentage: 'Tax rate percentage out of 100.',
+  },
+  discount: {
+    type: 'Discount type - `PERCENTAGE` / `FIXED`.',
+    value: 'Discount value out of 100.',
+    durationType:
+      'The duration of the discount - `FOREVER` / `REPEATING` / `ONCE`',
+    durationInMonths: 'The duration of the discount in months',
+  },
+  billingPeriodRange: {
+    start: 'Billing period start date',
+    end: 'Billing period end date',
+  },
+  proration: {
+    prorationDate: 'The date when the proration occurred',
+    credit:
+      'The prorated amount of credits to refund the customer in the upcoming invoice',
+    debit:
+      'The prorated amount of debit to charge the customer in the upcoming invoice',
+    netAmount: 'The sum of `debit` and `credit`',
+  },
+  // Not prorated subscription prices
+  subscription: {
+    total: 'Total after discounts and taxes.',
+    totalExcludingTax: 'Total including discounts but excluding tax.',
+    subTotal: 'Total before any discount or exclusive tax is applied.',
+    tax: 'Tax amount',
+  },
+};
+ ``
+
+Result 
+
+JSON
+
+`
+{
+  "total": {
+    "amount": 10,
+    "currency": "USD"
+  },
+  "subTotal": {
+    "amount": 10,
+    "currency": "USD"
+  },
+  "billingPeriodRange": {
+    "start": "2022-10-26T00:00:00.000Z",
+    "end": "2022-11-26T00:00:00.000Z"
+  },
+  "discount": {
+    "type": "PERCENTAGE",
+    "value": 50,
+    "durationType": "REPEATING",
+    "durationInMonths": 3
+  },
+  "proration": {
+    "credit": {
+      "amount": 0,
+      "currency": "USD"
+    },
+    "debit": {
+      "amount": 10,
+      "currency": "USD"
+    },
+    "netAmount": {
+      "amount": 10,
+      "currency": "USD"
+    },
+    "prorationDate": "2022-10-26T00:00:00.000Z"
+  },
+  "subscription": {
+    "total": {
+      "amount": 10,
+      "currency": "USD"
+    },
+    "subTotal": {
+      "amount": 20,
+      "currency": "USD"
+    }
+  }
+}
+
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#estimateSubscription)
+
+  
+You can also estimate the cost of updating an existing subscription using the `updateSubscription` method, which also returns a breakdown of the proration amounts:
+
+Node.js
+
+`await stiggClient.estimateSubscriptionUpdate({  
+  subscriptionId: "subscription-plan-revvenu-growth-da6324",
+  // optional parameters:
+  billableFeatures: [{ 						// optional, required for subscriptions with per-unit pricing
+    featureId:'feature-01-templates',
+    quantity: 2
+  }],
+  promotionCode: "STIGG50",
+  addons: [{  
+    addonId: 'addon-10-campaigns',  
+    quantity: 1  
+  }]
+});
+`
+
+Return fields 
+
+JavaScript
+
+`` {
+  total: 'Total after discounts and taxes.',
+  totalExcludingTax: 'Total including discounts but excluding tax.',
+  subTotal: 'Total before any discount or exclusive tax is applied.',
+  tax: 'Tax amount',
+  taxDetails: {
+    displayName: 'Tax display name.',
+    inclusive: 'Specifies if the tax rate is inclusive or exclusive.',
+    percentage: 'Tax rate percentage out of 100.',
+  },
+  discount: {
+    type: 'Discount type - `PERCENTAGE` / `FIXED`.',
+    value: 'Discount value out of 100.',
+    durationType:
+      'The duration of the discount - `FOREVER` / `REPEATING` / `ONCE`',
+    durationInMonths: 'The duration of the discount in months',
+  },
+  billingPeriodRange: {
+    start: 'Billing period start date',
+    end: 'Billing period end date',
+  },
+  proration: {
+    prorationDate: 'The date when the proration occurred',
+    credit:
+      'The prorated amount of credits to refund the customer in the upcoming invoice',
+    debit:
+      'The prorated amount of debit to charge the customer in the upcoming invoice',
+    netAmount: 'The sum of `debit` and `credit`',
+  },
+  // Not prorated subscription prices
+  subscription: {
+    total: 'Total after discounts and taxes.',
+    totalExcludingTax: 'Total including discounts but excluding tax.',
+    subTotal: 'Total before any discount or exclusive tax is applied.',
+    tax: 'Tax amount',
+  },
+};
+ ``
+
+Result 
+
+JSON
+
+`{
+  "total": {
+    "amount": 2.5,
+    "currency": "USD"
+  },
+  "subTotal": {
+    "amount": 5,
+    "currency": "USD"
+  },
+  "billingPeriodRange": {
+    "start": "2022-10-26T00:00:00.000Z",
+    "end": "2022-11-26T00:00:00.000Z"
+  },
+  "discount": {
+    "type": "PERCENTAGE",
+    "value": 50,
+    "durationType": "REPEATING",
+    "durationInMonths": 3
+  },
+  "proration": {
+    "credit": {
+      "amount": -9.99,
+      "currency": "USD"
+    },
+    "debit": {
+      "amount": 14.99,
+      "currency": "USD"
+    },
+    "netAmount": {
+      "amount": 5,
+      "currency": "USD"
+    },
+    "prorationDate": "2022-10-26T00:00:00.000Z"
+  },
+  "subscription": {
+    "total": {
+      "amount": 2.5,
+      "currency": "USD"
+    },
+    "subTotal": {
+      "amount": 5,
+      "currency": "USD"
+    }
+  }
+}
+`
+
+  
+> ## 📚
+> 
+> [SDK reference ↗️](https://node-sdk-docs.stigg.io/classes/stigg#estimateSubscriptionUpdate)
+
+> ## 🚧
+> 
+> Promo code support
+> 
+> 1. Passing of promo codes requires an integration with a billing solution, such as: [Stripe](stripe).
+> 2. Promo codes should be generated in the integrated billing solution.
+> 3. When providing the optional `promotionCode` parameter, the promo code and associated coupon will validated against the defined restrictions to ensure that they're applicable for the subscription. If validation fails, a [relevant error code](https://node-sdk-docs.stigg.io/enums/errorcode) would be returned; otherwise, the subscription will include the discounted price.
+
+  
+## Handling a successful checkout
+
+When initiating checkout using Stigg, the user is expected to be redirected and land on the `successUrl` destination page in the case of a successful payment. 
+
+Due to the async nature of webhooks from Stripe, the subscription might not be yet provisioned in your Stigg account. To make sure that the new subscription has been activated in this scenario, you can utilize the `waitForCheckoutCompleted` method to have an indication if the checkout is still in progress or not. Once the promise resolves, the subscription has been successfully activated and new entitlements were granted. If there's a timeout or a network error during that time, the promise is rejected with the error.
+
+For example, you can present a loading animation until the promise returned from the method is resolved.
+
+javascript
+
+`` // in the context of the `successUrl` page,  
+// wait for the subscription to become active and entitlements to be updated
+
+async function onPageLoad(){  
+  showLoadingIndicator();
+  
+  try {
+    await stiggClient.waitForCheckoutCompleted();
+  } catch (err) {
+    // an error occurred while waiting for checkout to complete,
+    // can be a network error or a timeout. 
+    // inform the customer to try again or contact support.
+    showErrorMessage();
+  } finally {
+    hideLoadingIndicator();
+  }
+}
+
+window.addEventListener('load', (event) => {  
+  onPageLoad();  
+});
+ ``
+
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#waitForCheckoutCompleted)
+
+## Clearing the customer context
+
+Clear the customer ID of the user that's accessing your app, usually after the customer signs out:
+
+JavaScript
+
+`stiggClient.clearCustomer();
+`
+
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#clearCustomer)
+
+  
+## Clearing the customer resource context
+
+For [Multi-instance products](/docs/multiple-subscriptions), clear the customer ID of the user that's accessing your app, usually after the customer exit the context of specific resource:
+
+JavaScript
+
+`stiggClient.clearResource();
+`
+
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#clearResource)
+
+  
+## Refresh the cache
+
+Stigg's SDK refreshes its cache of customer entitlements and usage data upon initialization (for example: when a page is refreshed), as well as periodically every 30 seconds.
+
+After performing an operation on the backend that can modify the customer entitlements or the usage of a feature (for example: updating subscriptions or reporting usage), it's useful to immediately refresh the cache.
+
+To do so, call the below method:
+
+JavaScript
+
+`await stiggClient.refresh();
+`
+
+> ## 📚
+> 
+> [SDK reference ↗️](https://js-sdk-docs.stigg.io/classes/stigg#refresh)  
+>  
+
+## Full SDK reference
+
+[ ![](/images/6485b4f-codingbrowser_102152.png)  JavaScript SDK reference ](javascript-sdk-reference) 

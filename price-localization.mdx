@@ -1,0 +1,34 @@
+---
+title: "Price localization overview"
+---
+
+## Overview
+
+Price localization allows you to expand to new markets by accommodating your product's pricing to the local willingness to pay. 
+
+Stigg's price localization implementation can also be leveraged to test and gradually roll out pricing changes in specific geographies before applying the change to your main markets. 
+
+Using Stigg's price localization functionality, you can:
+
+1. Offer your products using different price points in different countries, for example: $X USD in the US, $Y USD in Israel.
+2. Offer your product in the local currency per country, decoupled from the current conversion rate, for example: $X USD in the US, ₹Y INR in India.
+3. Display the localized prices to customers on your public pricing page and in-app paywalls.
+4. When Stigg is integrated with a billing solution (such as [Stripe](stripe)) - bill customers in their local currency, including invoicing, payment collection and receipt generation.
+
+Customers in countries for which no localized pricing has been defined will automatically fall back to using the product's default pricing.
+
+Rolling out price localization to your product can be achieved directly from the Stigg Console using no-code after the initial integration with Stigg.
+
+## Prerequisites
+
+[ ![](/images/79ff1a0-Group_14154.png)  Model your pricing in Stigg ](modeling-your-pricing) 
+
+  
+[ ![](/images/ad4e0e2-computer.png)  Integrate Stigg into your codebase ](codebase-integration-overview) 
+
+## See it in action
+
+## Limitations
+
+1. Due to a [limitation in Stripe](https://support.stripe.com/questions/setting-a-customers-default-currency), once a customer has subscribed to a plan in a specific currency all subsequent subscriptions must be created using the same currency. The only current workaround for this is to create a new customer.
+2. Due to the limitation in (1), after a subscription to a localized pricing has been created, the **currency** of the localized price **can't be updated**, and the **entire localized price can't be removed** \- only the value localized price points can be updated. This is intended to ensure that customers are always able to migrate to the latest plan and add-on version.

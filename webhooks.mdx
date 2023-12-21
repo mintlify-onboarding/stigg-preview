@@ -1,0 +1,123 @@
+---
+title: "Webhooks"
+description: "Learn how Stigg can be integrated with additional applications using webhooks"
+---
+
+## Overview
+
+In addition to native connectors to third-party business applications, Stigg can notify **any application** about changes that take place on the Stigg platform by triggering webhook events.
+
+The receiving application will then need to catch the webhook event and process it.
+
+## Viewing the list of webhooks
+
+The list of available webhooks is available under the Settings > Integrations > Webhooks section.
+
+## Adding a new webhook
+
+To add a webhook, click on the "+ New webhook" button from the webhook list screen.
+
+In the opened modal enter the following details:
+
+1. Service name - a human-friendly name of the service that will process the events, for example: Zapier, Segment, etc.
+2. Endpoint URL - the URL of the endpoint that the webhook events should be sent to.
+3. Events to send - the list of events that Stigg will send to this webhook.
+
+Click "Add" to confirm the action.
+
+> ## 📘
+> 
+> Created webhooks are immediately activated; that is, Stigg will start streaming events to them immediately after they're created. To disable sending of events to a specific webhook, see the "[Disabling webhooks](https://stigg.readme.io/docs/webhooks#disabling-webhooks)" section.
+
+## Viewing webhook details
+
+To view the details of specific webhook, click on the relevant row in the webhook list screen.
+
+> ## 📘
+> 
+> Stigg will include a webhook secret in the header of sent events. Use this value to validate that requests to the defined endpoint URL originate from Stigg.
+
+## Sending test events
+
+In order to test the webhook integration, it's possible to trigger a test event.
+
+To do so, click on the dotted menu icon of the relevant event, select the "Send test event" action.
+
+Click on "Send test event" to confirm the action.
+
+In the opened modal it's possible to see the request body and response from the configured endpoint.
+
+![](/images/7ad4d73-Screenshot_2023-08-08_at_22.11.35.png) 
+
+## Verifying webhook secret
+
+To verify that the event was sent by Stigg you can validate the secret in the header.
+
+Each webhook event you receive contains the webhook secret in the header
+
+![](/images/7304fde-Screen_Shot_2022-10-13_at_11.23.33.png)
+
+In order to verify that the event was sent by Stigg simply make sure that the webhook secret you receive in the header matches the webhook secret from the webhook details page:
+
+![](/images/89e7930-Screen_Shot_2022-10-13_at_11.29.20.png)
+
+> ## 📘
+> 
+> Support for webhook validation using HMAC signatures is in our roadmap.
+
+## Editing webhooks
+
+### Editing the webhook details
+
+To edit the webhook's endpoint URL and description:
+
+1. Click on the dotted menu icon of the relevant row.
+2. Select the "Edit" action.
+3. Apply the desired changes.
+4. Click on "Save changes".
+  
+### Editing the list of sent events
+
+To edit the list of events that are sent to the endpoint:
+
+1. Click on the "Edit" button under the "Webhook events" section.
+2. Add or remove events under the "Events to send" section.
+3. Click on "Save changes".
+
+It's also possible to remove a specific event from the list of sent events by clicking on the dotted menu icon of the relevant event, selecting the "Remove" action, and confirming the action.
+
+## Disabling webhooks
+
+To stop sending events to a specific webhook, while still keeping the webhook configuration, set the toggle that appears under the webhook details section to "Disabled".
+
+Confirm the action in the opened modal.
+
+> ## 📘
+> 
+> Any events that take place on the Stigg platform will not be send to disabled webhooks. It's also not possible to replay missed events after the webhook is activated again.
+
+Once you're ready to start sending events again to the webhook, set the toggle that appears under the webhook details section to "Active".
+
+## Deleting webhooks
+
+To delete a configured webhook:
+
+1. Click on the dotted menu icon of the webhook details section.
+2. Select the "Delete" action.
+3. Confirm the action in the opened modal.
+
+## Webhook behaviors
+
+### Event order
+
+Stigg does not guarantee delivery of events in the order in which they’re reported. Your endpoint shouldn’t expect delivery of these events in a specific order, and needs to handle their delivery accordingly.
+
+When additional data is required, you can leverage the [Stigg API and SDKs](/docs/backend-integration) to fetch it.
+
+### Retry
+
+Webhook events are retried for 3 consecutive times immediately without backoff, and then there is a retry attempt every 30 seconds for up to 3 times. 
+
+Webhook events are stored in the Stigg backend and can be resent upon request.
+
+Stigg regularly monitors webhook delivery failures and will actively reach to you in case there are failures. A self-served log of webhook events is on our roadmap.

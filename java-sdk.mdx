@@ -1,0 +1,2412 @@
+---
+title: "Java SDK"
+description: "How to install and use the Stigg Java SDK on the server-side"
+---
+
+> ## 📘
+> 
+> Stigg Java SDK is a thin wrapper around the [GraphQL API](graphql-api) and does not support caching, polling or streaming of customer entitlements.
+
+## Overview
+
+This library provides a Java client to interact with [Stigg's GraphQL API](/docs/graphql-api) based on API operations that are in use by the [Stigg's Node.js SDK](/docs/nodejs-sdk). 
+
+Using [Apollo Kotlin](https://www.apollographql.com/docs/kotlin/) to generate Java classes for GraphQL types, and utilizes the [okhttp](https://square.github.io/okhttp/) as default HTTP client. The responses are being automatically converted into native Java classes.
+
+## Installing the SDK
+
+The first step is to add the SDK as a dependency in your Java application :
+
+GradleMaven
+
+`
+dependencies {
+  implementation 'io.stigg:stigg-api-client:+'
+  implementation 'com.apollographql.apollo3:apollo-runtime:3.8.2'
+  implementation 'com.apollographql.apollo3:apollo-api-jvm:3.8.2'
+  implementation 'com.apollographql.apollo3:apollo-adapters-jvm:3.8.2'
+}
+
+repositories {
+  mavenCentral()
+}
+`
+
+`<dependencies>
+	<dependency>
+		<groupId>io.stigg</groupId>
+		<artifactId>stigg-api-client</artifactId>
+		<version>LATEST</version>
+	</dependency>
+	<dependency>
+		<groupId>com.apollographql.apollo3</groupId>
+		<artifactId>apollo-runtime</artifactId>
+		<version>3.8.2</version>
+	</dependency>
+	<dependency>
+		<groupId>com.apollographql.apollo3</groupId>
+		<artifactId>apollo-api-jvm</artifactId>
+		<version>3.8.2</version>
+	</dependency>
+	<dependency>
+		<groupId>com.apollographql.apollo3</groupId>
+		<artifactId>apollo-adapters-jvm</artifactId>
+		<version>3.8.2</version>
+	</dependency>
+</dependencies>
+`
+
+> ## 📘
+> 
+> It's recommended to hard code the `stigg-api-client` version according to the latest version available [here](https://central.sonatype.com/artifact/io.stigg/stigg-api-client)
+
+## Retrieving the server API Key
+
+In the Stigg Cloud Console, go to [Settings > Account > Environments](https://app.stigg.io/account/settings).
+
+Copy the   **Server API key** of the relevant environment.
+
+## Initializing the SDK
+
+Import the Stigg client and initialize it with the API key.
+
+Synchronous client:
+
+Java
+
+`import io.stigg.api.client.Stigg;
+
+class App {
+    public static void main(String[] ...args) {
+        var stigg = Stigg.createClient("<SERVER-API-KEY>");
+    }
+}
+`
+
+## Provisioning customers
+
+When a new customer is provisioned within your application (for example: as part of your registration or onboarding process), you should also provision them in Stigg.
+
+The customer's billing information can also be passed to Stigg when a customer is created or updated. When Stigg is integrated with additional service, this information will be propagated to the active integrations. The billing information is not persisted on Stigg's servers.
+
+You can optionally pass `subscriptionParams` to create subscription for that customer using a single operation. Doing so, will allow Stigg admins to override the requested subscription with no-code from the Stigg Console using the [product's Customer Journey configuration](products#defining-the-customer-journey).
+
+#### Query
+
+Java
+
+`var resp = stigg.mutation(
+  ProvisionCustomerMutation.builder()
+  .input(ProvisionCustomerInput.builder()
+         // all fields are optional
+         .customerId("customer-81726628184")
+         .name("Acme")
+         .email("[[email protected]](/cdn-cgi/l/email-protection)")
+         .billingInformation(CustomerBillingInfo.builder()
+                             .billingAddress(Address.builder()
+                                             .country("US")
+                                             .city("New York")
+                                             .state("NY")
+                                             .addressLine1("123 Main Street")
+                                             .addressLine2("Apt. 1")
+                                             .phoneNumber("+1 212-499-5321")
+                                             .postalCode("10164")
+                                             .build())
+                             .build())
+         .additionalMetaData(new HashMap<>() {{
+           put("key", "value");
+         }})
+         .subscriptionParams(ProvisionCustomerSubscriptionInput.builder()
+                             .planId("plan-revvenu-basic")
+                             .build())
+         .build())
+  .build()
+);
+`
+
+Response JSON 
+
+JSON
+
+`{
+  "provisionCustomer": {
+    "customer": {
+      "__typename": "Customer",
+      "slimCustomerFragment": {
+        "id": "4168b1ed-56de-41fe-9382-4d9eaf45e161",
+        "name": "Acme",
+        "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+        "createdAt": "2023-11-20T22:39:19.840Z",
+        "updatedAt": "2023-11-20T22:39:19.840Z",
+        "refId": "customer-5162641",
+        "customerId": "customer-5162641",
+        "billingId": null,
+        "additionalMetaData": {
+          "key": "value"
+        }
+      }
+    },
+    "subscriptionDecisionStrategy": {
+      "rawValue": "REQUESTED_PLAN"
+    },
+    "subscription": {
+      "__typename": "CustomerSubscription",
+      "slimSubscriptionFragment": {
+        "id": "e09b03a6-d0ec-4d6b-b184-1b897981283e",
+        "refId": "subscription-plan-revvenu-basic-tctmtyrvfv",
+        "status": {
+          "rawValue": "ACTIVE"
+        },
+        "additionalMetaData": null,
+        "billingId": null,
+        "billingLinkUrl": null,
+        "effectiveEndDate": null,
+        "currentBillingPeriodEnd": "2023-12-20T22:39:19.893Z",
+        "pricingType": {
+          "rawValue": "FREE"
+        },
+        "latestInvoice": null,
+        "paymentCollection": {
+          "rawValue": "NOT_REQUIRED"
+        },
+        "billingSyncError": null,
+        "resource": null,
+        "experimentInfo": null,
+        "prices": [],
+        "totalPrice": null,
+        "plan": {
+          "id": "bad48997-2aec-4f01-bfa5-534e80826c0e",
+          "refId": "plan-revvenu-basic"
+        },
+        "addons": [],
+        "customer": {
+          "id": "4168b1ed-56de-41fe-9382-4d9eaf45e161",
+          "refId": "customer-5162641"
+        }
+      }
+    }
+  }
+}
+`
+
+## Updating customers
+
+Customer information can also be updated whenever you like assuming it already exists, for example: In order to update the customer's email, you only need to send the new email value without the rest of the customer.  
+Due to the fact that the customer's billing information is not persisted on Stigg's servers, in order to update it, the entire billing information object must be passed each time.
+
+#### Query
+
+Java
+
+`var resp = stigg.mutation(
+  UpdateCustomerMutation.builder()
+  .input(UpdateCustomerInput.builder()
+         .customerId("customer-demo-01")
+         .name("Acme")
+         .email("[[email protected]](/cdn-cgi/l/email-protection)")
+         .additionalMetaData(new HashMap<>() {{
+           put("key", "value");
+         }})
+         .billingInformation(CustomerBillingInfo.builder()
+                             .language("en")
+                             .timezone("America/New_York")
+                             .currency(Currency.USD)
+                             .taxIds(List.of(
+                               TaxExempt.builder()
+                               .type("vat")
+                               .value("123456789")
+                               .build()
+                             ))
+                             .build())
+         .build())
+  .build()
+);
+
+`
+
+Response JSON 
+
+JSON
+
+`{
+  "updateCustomer": {
+    "__typename": "Customer",
+    "slimCustomerFragment": {
+      "id": "a7b2a41b-1f2c-40ab-b639-ef345e5adf17",
+      "name": "Acme",
+      "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+      "createdAt": "2023-11-21T14:14:50.386Z",
+      "updatedAt": "2023-11-21T14:30:07.487Z",
+      "refId": "customer-demo-01",
+      "customerId": "customer-demo-01",
+      "billingId": null,
+      "additionalMetaData": {
+        "key": "value"
+      }
+    }
+  }
+}
+`
+
+## Getting customer data
+
+#### Query
+
+Java
+
+`var resp = stigg.query(
+  GetCustomerByIdQuery.builder()
+  .input(GetCustomerByRefIdInput.builder().customerId("customer-demo-01").build())
+  .build()
+);
+`
+
+Response JSON 
+
+JSON
+
+`{
+  "getCustomerByRefId": {
+    "__typename": "Customer",
+    "customerWithSubscriptionsFragment": {
+      "__typename": "Customer",
+      "subscriptions": [
+        {
+          "__typename": "CustomerSubscription",
+          "subscriptionFragment": {
+            "id": "ed2696e4-e840-47b8-af7b-a0babbf1a464",
+            "startDate": "2023-10-21T13:14:45.992Z",
+            "endDate": null,
+            "trialEndDate": null,
+            "cancellationDate": null,
+            "effectiveEndDate": null,
+            "status": {
+              "rawValue": "ACTIVE"
+            },
+            "refId": "subscription-plan-revvenu-basic-g6d4kugtyp",
+            "currentBillingPeriodEnd": "2023-12-21T13:14:45.992Z",
+            "additionalMetaData": null,
+            "billingId": null,
+            "billingLinkUrl": null,
+            "latestInvoice": null,
+            "paymentCollection": {
+              "rawValue": "NOT_REQUIRED"
+            },
+            "billingSyncError": null,
+            "resource": null,
+            "experimentInfo": null,
+            "prices": [],
+            "totalPrice": null,
+            "pricingType": {
+              "rawValue": "FREE"
+            },
+            "plan": {
+              "__typename": "Plan",
+              "planFragment": {
+                "id": "05a09259-dcb8-47ca-a447-571a2835e694",
+                "refId": "plan-revvenu-basic",
+                "displayName": "Basic",
+                "description": null,
+                "billingId": "prod_P30kaef2AIphhb",
+                "versionNumber": 1,
+                "additionalMetaData": null,
+                "product": {
+                  "__typename": "Product",
+                  "productFragment": {
+                    "refId": "product-revvenu",
+                    "displayName": "Revvenu",
+                    "description": null,
+                    "additionalMetaData": {
+                      "recommendedPlan": "plan-revvenu-essentials"
+                    },
+                    "productSettings": {
+                      "downgradePlan": null
+                    }
+                  }
+                },
+                "basePlan": null,
+                "entitlements": [
+                  {
+                    "__typename": "PackageEntitlement",
+                    "packageEntitlementFragment": {
+                      "usageLimit": 3,
+                      "hasUnlimitedUsage": null,
+                      "featureId": "109e38e3-fa95-40d2-94a7-730b2bce0e87",
+                      "resetPeriod": null,
+                      "hiddenFromWidgets": [],
+                      "isCustom": null,
+                      "displayNameOverride": null,
+                      "feature": {
+                        "featureType": {
+                          "rawValue": "NUMBER"
+                        },
+                        "meterType": {
+                          "rawValue": "Fluctuating"
+                        },
+                        "featureUnits": "template",
+                        "featureUnitsPlural": "templates",
+                        "displayName": "Templates",
+                        "description": null,
+                        "refId": "feature-01-templates",
+                        "additionalMetaData": null
+                      }
+                    }
+                  },
+                  {
+                    "__typename": "PackageEntitlement",
+                    "packageEntitlementFragment": {
+                      "usageLimit": 4,
+                      "hasUnlimitedUsage": null,
+                      "featureId": "cce3f1fe-494e-472a-919d-5135bb932349",
+                      "resetPeriod": {
+                        "rawValue": "MONTH"
+                      },
+                      "hiddenFromWidgets": [],
+                      "isCustom": null,
+                      "displayNameOverride": null,
+                      "feature": {
+                        "featureType": {
+                          "rawValue": "NUMBER"
+                        },
+                        "meterType": {
+                          "rawValue": "Incremental"
+                        },
+                        "featureUnits": "campaign",
+                        "featureUnitsPlural": "campaigns",
+                        "displayName": "Campaigns",
+                        "description": null,
+                        "refId": "feature-02-campaigns",
+                        "additionalMetaData": null
+                      }
+                    }
+                  },
+                  {
+                    "__typename": "PackageEntitlement",
+                    "packageEntitlementFragment": {
+                      "usageLimit": 1000,
+                      "hasUnlimitedUsage": null,
+                      "featureId": "c8947bb3-c480-46a9-bdb3-9babe145921b",
+                      "resetPeriod": {
+                        "rawValue": "MONTH"
+                      },
+                      "hiddenFromWidgets": [],
+                      "isCustom": null,
+                      "displayNameOverride": null,
+                      "feature": {
+                        "featureType": {
+                          "rawValue": "NUMBER"
+                        },
+                        "meterType": {
+                          "rawValue": "Incremental"
+                        },
+                        "featureUnits": "active user",
+                        "featureUnitsPlural": "active users",
+                        "displayName": "Active users",
+                        "description": null,
+                        "refId": "feature-07-active-users",
+                        "additionalMetaData": null
+                      }
+                    }
+                  },
+                  {
+                    "__typename": "PackageEntitlement",
+                    "packageEntitlementFragment": {
+                      "usageLimit": 5,
+                      "hasUnlimitedUsage": null,
+                      "featureId": "8743a7be-3778-4b33-9036-dd1f9d7fff08",
+                      "resetPeriod": null,
+                      "hiddenFromWidgets": [],
+                      "isCustom": null,
+                      "displayNameOverride": "5MB file size limit",
+                      "feature": {
+                        "featureType": {
+                          "rawValue": "NUMBER"
+                        },
+                        "meterType": {
+                          "rawValue": "None"
+                        },
+                        "featureUnits": "MB",
+                        "featureUnitsPlural": "MB",
+                        "displayName": "Max file size",
+                        "description": null,
+                        "refId": "feature-06-max-file-size",
+                        "additionalMetaData": null
+                      }
+                    }
+                  }
+                ],
+                "inheritedEntitlements": [],
+                "compatibleAddons": [],
+                "prices": [],
+                "pricingType": {
+                  "rawValue": "FREE"
+                },
+                "defaultTrialConfig": null
+              }
+            },
+            "addons": [],
+            "scheduledUpdates": [],
+            "futureUpdates": []
+          }
+        }
+      ],
+      "customerFragment": {
+        "__typename": "Customer",
+        "hasPaymentMethod": false,
+        "hasActiveSubscription": true,
+        "defaultPaymentExpirationMonth": null,
+        "defaultPaymentExpirationYear": null,
+        "defaultPaymentMethodLast4Digits": null,
+        "trialedPlans": [],
+        "experimentInfo": null,
+        "coupon": null,
+        "eligibleForTrial": [],
+        "promotionalEntitlements": [
+          {
+            "__typename": "PromotionalEntitlement",
+            "promotionalEntitlementFragment": {
+              "status": {
+                "rawValue": "Active"
+              },
+              "usageLimit": null,
+              "featureId": "56141e76-9a3f-4d16-b76f-e30228f98a22",
+              "hasUnlimitedUsage": null,
+              "resetPeriod": null,
+              "endDate": null,
+              "isVisible": true,
+              "feature": {
+                "featureType": {
+                  "rawValue": "BOOLEAN"
+                },
+                "meterType": {
+                  "rawValue": "None"
+                },
+                "featureUnits": null,
+                "featureUnitsPlural": null,
+                "displayName": "Custom domain",
+                "description": null,
+                "refId": "feature-03-custom-domain",
+                "additionalMetaData": null
+              }
+            }
+          }
+        ],
+        "slimCustomerFragment": {
+          "id": "a7b2a41b-1f2c-40ab-b639-ef345e5adf17",
+          "name": "Acme",
+          "email": "[[email protected]](/cdn-cgi/l/email-protection)",
+          "createdAt": "2023-11-21T14:14:50.386Z",
+          "updatedAt": "2023-11-21T16:14:35.415Z",
+          "refId": "customer-demo-01",
+          "customerId": "customer-demo-01",
+          "billingId": null,
+          "additionalMetaData": {
+            "key": "value"
+          }
+        }
+      }
+    }
+  }
+}
+`
+
+## Getting customer active subscriptions
+
+#### Query
+
+Groovy
+
+`var resp = stigg.query(
+  GetActiveSubscriptionsQuery.builder()
+  .input(GetActiveSubscriptionsInput.builder()
+         .customerId("customer-demo-01")
+         .resourceId("site-1") // optional resource ID
+         .build())
+  .build()
+);
+`
+
+Response JSON 
+
+JSON
+
+`{
+  "getActiveSubscriptions": [
+    {
+      "__typename": "CustomerSubscription",
+      "subscriptionFragment": {
+        "id": "b8b48c70-df8a-460c-b5f9-2276a5854a03",
+        "startDate": "2023-11-21T16:26:11.000Z",
+        "endDate": null,
+        "trialEndDate": null,
+        "cancellationDate": null,
+        "effectiveEndDate": null,
+        "status": {
+          "rawValue": "ACTIVE"
+        },
+        "refId": "subscription-plan-revvenu-essentials-cd0ba9",
+        "currentBillingPeriodEnd": "2023-12-21T16:26:30.000Z",
+        "additionalMetaData": null,
+        "billingId": "sub_1OEwmQAnAO1PFouUVaDluuRj",
+        "billingLinkUrl": "https://dashboard.stripe.com/test/subscriptions/sub_1OEwmQAnAO1PFouUVaDluuRj",
+        "latestInvoice": {
+          "__typename": "SubscriptionInvoice",
+          "subscriptionInvoiceFragment": {
+            "billingId": "in_1OEwmQAnAO1PFouU8W9U6ldu",
+            "status": {
+              "rawValue": "PAID"
+            },
+            "createdAt": "2023-11-21T16:26:30.000Z",
+            "updatedAt": "2023-11-21T16:26:32.842Z",
+            "requiresAction": false,
+            "paymentUrl": "https://invoice.stripe.com/i/acct_1KxDMtAnAO1PFouU/test_YWNjdF8xS3hETXRBbkFPMVBGb3VVLF9QMzJzcDRKTGxJcGNucWhZOEJCd2ZheG9SZk5TOEdJLDkxMTI0Nzkz0200ZnGaOwnQ?s=ap",
+            "paymentSecret": "pi_3OEwmRAnAO1PFouU1Zg54ALZ_secret_28nQjBxmQnzVg0ISlvBC2eQJR",
+            "errorMessage": null
+          }
+        },
+        "paymentCollection": {
+          "rawValue": "NOT_REQUIRED"
+        },
+        "billingSyncError": null,
+        "resource": null,
+        "experimentInfo": null,
+        "prices": [
+          {
+            "usageLimit": 7,
+            "price": {
+              "__typename": "Price",
+              "priceFragment": {
+                "billingModel": {
+                  "rawValue": "PER_UNIT"
+                },
+                "billingPeriod": {
+                  "rawValue": "MONTHLY"
+                },
+                "billingId": "price_1OEuj0AnAO1PFouUPwz1QA7U",
+                "minUnitQuantity": 5,
+                "maxUnitQuantity": null,
+                "billingCountryCode": null,
+                "price": {
+                  "amount": 6,
+                  "currency": {
+                    "rawValue": "USD"
+                  }
+                },
+                "tiersMode": null,
+                "tiers": null,
+                "feature": {
+                  "refId": "feature-01-templates",
+                  "featureUnits": "template",
+                  "featureUnitsPlural": "templates",
+                  "displayName": "Templates",
+                  "description": null
+                }
+              }
+            }
+          }
+        ],
+        "totalPrice": {
+          "__typename": "CustomerSubscriptionTotalPrice",
+          "totalPriceFragment": {
+            "subTotal": {
+              "amount": 52,
+              "currency": {
+                "rawValue": "USD"
+              }
+            },
+            "total": {
+              "amount": 52,
+              "currency": {
+                "rawValue": "USD"
+              }
+            }
+          }
+        },
+        "pricingType": {
+          "rawValue": "PAID"
+        },
+        "plan": {
+          "__typename": "Plan",
+          "planFragment": {
+            "id": "7a3979c1-c553-4338-a5b3-c7523bec288f",
+            "refId": "plan-revvenu-essentials",
+            "displayName": "Essentials",
+            "description": null,
+            "billingId": "prod_P30kP9lB01YaiE",
+            "versionNumber": 1,
+            "additionalMetaData": null,
+            "product": {
+              "__typename": "Product",
+              "productFragment": {
+                "refId": "product-revvenu",
+                "displayName": "Revvenu",
+                "description": null,
+                "additionalMetaData": {
+                  "recommendedPlan": "plan-revvenu-essentials"
+                },
+                "productSettings": {
+                  "downgradePlan": null
+                }
+              }
+            },
+            "basePlan": {
+              "refId": "plan-revvenu-basic",
+              "displayName": "Basic"
+            },
+            "entitlements": [
+              {
+                "__typename": "PackageEntitlement",
+                "packageEntitlementFragment": {
+                  "usageLimit": 12,
+                  "hasUnlimitedUsage": null,
+                  "featureId": "cce3f1fe-494e-472a-919d-5135bb932349",
+                  "resetPeriod": {
+                    "rawValue": "MONTH"
+                  },
+                  "hiddenFromWidgets": [],
+                  "isCustom": null,
+                  "displayNameOverride": null,
+                  "feature": {
+                    "featureType": {
+                      "rawValue": "NUMBER"
+                    },
+                    "meterType": {
+                      "rawValue": "Incremental"
+                    },
+                    "featureUnits": "campaign",
+                    "featureUnitsPlural": "campaigns",
+                    "displayName": "Campaigns",
+                    "description": null,
+                    "refId": "feature-02-campaigns",
+                    "additionalMetaData": null
+                  }
+                }
+              },
+              {
+                "__typename": "PackageEntitlement",
+                "packageEntitlementFragment": {
+                  "usageLimit": 25000,
+                  "hasUnlimitedUsage": null,
+                  "featureId": "c8947bb3-c480-46a9-bdb3-9babe145921b",
+                  "resetPeriod": {
+                    "rawValue": "MONTH"
+                  },
+                  "hiddenFromWidgets": [],
+                  "isCustom": null,
+                  "displayNameOverride": null,
+                  "feature": {
+                    "featureType": {
+                      "rawValue": "NUMBER"
+                    },
+                    "meterType": {
+                      "rawValue": "Incremental"
+                    },
+                    "featureUnits": "active user",
+                    "featureUnitsPlural": "active users",
+                    "displayName": "Active users",
+                    "description": null,
+                    "refId": "feature-07-active-users",
+                    "additionalMetaData": null
+                  }
+                }
+              },
+              {
+                "__typename": "PackageEntitlement",
+                "packageEntitlementFragment": {
+                  "usageLimit": 100,
+                  "hasUnlimitedUsage": null,
+                  "featureId": "8743a7be-3778-4b33-9036-dd1f9d7fff08",
+                  "resetPeriod": null,
+                  "hiddenFromWidgets": [],
+                  "isCustom": null,
+                  "displayNameOverride": "100MB file size limit",
+                  "feature": {
+                    "featureType": {
+                      "rawValue": "NUMBER"
+                    },
+                    "meterType": {
+                      "rawValue": "None"
+                    },
+                    "featureUnits": "MB",
+                    "featureUnitsPlural": "MB",
+                    "displayName": "Max file size",
+                    "description": null,
+                    "refId": "feature-06-max-file-size",
+                    "additionalMetaData": null
+                  }
+                }
+              },
+              {
+                "__typename": "PackageEntitlement",
+                "packageEntitlementFragment": {
+                  "usageLimit": null,
+                  "hasUnlimitedUsage": null,
+                  "featureId": "0937bf25-2fec-457b-a1f5-bd470396a100",
+                  "resetPeriod": null,
+                  "hiddenFromWidgets": [],
+                  "isCustom": null,
+                  "displayNameOverride": null,
+                  "feature": {
+                    "featureType": {
+                      "rawValue": "BOOLEAN"
+                    },
+                    "meterType": {
+                      "rawValue": "None"
+                    },
+                    "featureUnits": null,
+                    "featureUnitsPlural": null,
+                    "displayName": "Analytics",
+                    "description": null,
+                    "refId": "feature-04-analytics",
+                    "additionalMetaData": null
+                  }
+                }
+              }
+            ],
+            "inheritedEntitlements": [],
+            "compatibleAddons": [
+              {
+                "__typename": "Addon",
+                "addonFragment": {
+                  "id": "59b81b8b-7bff-4b00-9ede-c5c9b9544500",
+                  "refId": "addon-10-campaigns",
+                  "billingId": "prod_P30kizGUa6097e",
+                  "displayName": "10 campaigns",
+                  "description": "Additional quota of 10 campaigns",
+                  "additionalMetaData": null,
+                  "entitlements": [
+                    {
+                      "__typename": "PackageEntitlement",
+                      "packageEntitlementFragment": {
+                        "usageLimit": 10,
+                        "hasUnlimitedUsage": null,
+                        "featureId": "cce3f1fe-494e-472a-919d-5135bb932349",
+                        "resetPeriod": {
+                          "rawValue": "MONTH"
+                        },
+                        "hiddenFromWidgets": [],
+                        "isCustom": null,
+                        "displayNameOverride": null,
+                        "feature": {
+                          "featureType": {
+                            "rawValue": "NUMBER"
+                          },
+                          "meterType": {
+                            "rawValue": "Incremental"
+                          },
+                          "featureUnits": "campaign",
+                          "featureUnitsPlural": "campaigns",
+                          "displayName": "Campaigns",
+                          "description": null,
+                          "refId": "feature-02-campaigns",
+                          "additionalMetaData": null
+                        }
+                      }
+                    }
+                  ],
+                  "prices": [
+                    {
+                      "__typename": "Price",
+                      "priceFragment": {
+                        "billingModel": {
+                          "rawValue": "FLAT_FEE"
+                        },
+                        "billingPeriod": {
+                          "rawValue": "MONTHLY"
+                        },
+                        "billingId": "price_1OEuizAnAO1PFouUJwetn2ZQ",
+                        "minUnitQuantity": null,
+                        "maxUnitQuantity": null,
+                        "billingCountryCode": null,
+                        "price": {
+                          "amount": 5,
+                          "currency": {
+                            "rawValue": "USD"
+                          }
+                        },
+                        "tiersMode": null,
+                        "tiers": null,
+                        "feature": null
+                      }
+                    },
+                    {
+                      "__typename": "Price",
+                      "priceFragment": {
+                        "billingModel": {
+                          "rawValue": "FLAT_FEE"
+                        },
+                        "billingPeriod": {
+                          "rawValue": "ANNUALLY"
+                        },
+                        "billingId": "price_1OEuizAnAO1PFouUulgWldtN",
+                        "minUnitQuantity": null,
+                        "maxUnitQuantity": null,
+                        "billingCountryCode": null,
+                        "price": {
+                          "amount": 54,
+                          "currency": {
+                            "rawValue": "USD"
+                          }
+                        },
+                        "tiersMode": null,
+                        "tiers": null,
+                        "feature": null
+                      }
+                    }
+                  ],
+                  "pricingType": {
+                    "rawValue": "PAID"
+                  }
+                }
+              }
+            ],
+            "prices": [
+              {
+                "__typename": "Price",
+                "priceFragment": {
+                  "billingModel": {
+                    "rawValue": "PER_UNIT"
+                  },
+                  "billingPeriod": {
+                    "rawValue": "ANNUALLY"
+                  },
+                  "billingId": "price_1OEuj0AnAO1PFouUlmmaUgsh",
+                  "minUnitQuantity": 5,
+                  "maxUnitQuantity": null,
+                  "billingCountryCode": null,
+                  "price": {
+                    "amount": 60,
+                    "currency": {
+                      "rawValue": "USD"
+                    }
+                  },
+                  "tiersMode": null,
+                  "tiers": null,
+                  "feature": {
+                    "refId": "feature-01-templates",
+                    "featureUnits": "template",
+                    "featureUnitsPlural": "templates",
+                    "displayName": "Templates",
+                    "description": null
+                  }
+                }
+              },
+              {
+                "__typename": "Price",
+                "priceFragment": {
+                  "billingModel": {
+                    "rawValue": "PER_UNIT"
+                  },
+                  "billingPeriod": {
+                    "rawValue": "MONTHLY"
+                  },
+                  "billingId": "price_1OEuj0AnAO1PFouUPwz1QA7U",
+                  "minUnitQuantity": 5,
+                  "maxUnitQuantity": null,
+                  "billingCountryCode": null,
+                  "price": {
+                    "amount": 6,
+                    "currency": {
+                      "rawValue": "USD"
+                    }
+                  },
+                  "tiersMode": null,
+                  "tiers": null,
+                  "feature": {
+                    "refId": "feature-01-templates",
+                    "featureUnits": "template",
+                    "featureUnitsPlural": "templates",
+                    "displayName": "Templates",
+                    "description": null
+                  }
+                }
+              }
+            ],
+            "pricingType": {
+              "rawValue": "PAID"
+            },
+            "defaultTrialConfig": null
+          }
+        },
+        "addons": [
+          {
+            "id": "0a86b7b0-b85f-479f-abf9-e7e1167c251d",
+            "quantity": 2,
+            "addon": {
+              "__typename": "Addon",
+              "addonFragment": {
+                "id": "59b81b8b-7bff-4b00-9ede-c5c9b9544500",
+                "refId": "addon-10-campaigns",
+                "billingId": "prod_P30kizGUa6097e",
+                "displayName": "10 campaigns",
+                "description": "Additional quota of 10 campaigns",
+                "additionalMetaData": null,
+                "entitlements": [
+                  {
+                    "__typename": "PackageEntitlement",
+                    "packageEntitlementFragment": {
+                      "usageLimit": 10,
+                      "hasUnlimitedUsage": null,
+                      "featureId": "cce3f1fe-494e-472a-919d-5135bb932349",
+                      "resetPeriod": {
+                        "rawValue": "MONTH"
+                      },
+                      "hiddenFromWidgets": [],
+                      "isCustom": null,
+                      "displayNameOverride": null,
+                      "feature": {
+                        "featureType": {
+                          "rawValue": "NUMBER"
+                        },
+                        "meterType": {
+                          "rawValue": "Incremental"
+                        },
+                        "featureUnits": "campaign",
+                        "featureUnitsPlural": "campaigns",
+                        "displayName": "Campaigns",
+                        "description": null,
+                        "refId": "feature-02-campaigns",
+                        "additionalMetaData": null
+                      }
+                    }
+                  }
+                ],
+                "prices": [
+                  {
+                    "__typename": "Price",
+                    "priceFragment": {
+                      "billingModel": {
+                        "rawValue": "FLAT_FEE"
+                      },
+                      "billingPeriod": {
+                        "rawValue": "MONTHLY"
+                      },
+                      "billingId": "price_1OEuizAnAO1PFouUJwetn2ZQ",
+                      "minUnitQuantity": null,
+                      "maxUnitQuantity": null,
+                      "billingCountryCode": null,
+                      "price": {
+                        "amount": 5,
+                        "currency": {
+                          "rawValue": "USD"
+                        }
+                      },
+                      "tiersMode": null,
+                      "tiers": null,
+                      "feature": null
+                    }
+                  },
+                  {
+                    "__typename": "Price",
+                    "priceFragment": {
+                      "billingModel": {
+                        "rawValue": "FLAT_FEE"
+                      },
+                      "billingPeriod": {
+                        "rawValue": "ANNUALLY"
+                      },
+                      "billingId": "price_1OEuizAnAO1PFouUulgWldtN",
+                      "minUnitQuantity": null,
+                      "maxUnitQuantity": null,
+                      "billingCountryCode": null,
+                      "price": {
+                        "amount": 54,
+                        "currency": {
+                          "rawValue": "USD"
+                        }
+                      },
+                      "tiersMode": null,
+                      "tiers": null,
+                      "feature": null
+                    }
+                  }
+                ],
+                "pricingType": {
+                  "rawValue": "PAID"
+                }
+              }
+            }
+          }
+        ],
+        "scheduledUpdates": [],
+        "futureUpdates": []
+      }
+    }
+  ]
+}
+`
+
+## Provision subscriptions
+
+When a customer subscribes to a new plan (for example: during an upgrade from a free plan to a paid plan, or downgrade from a higher tier to a lower tier), a subscription needs to be created in Stigg. 
+
+When provisioning of a paid subscription is attempted, Stigg is integrated with a billing solution and payment details have not been previously provided by the customer, Stigg will auto-magically redirect customers to a the billing solution's checkout page. After the customer enters the required payment details in the presented checkout page, the relevant subscription will be created in both Stigg and the billing solution.
+
+When no payment is required or when Stigg is not integrated with a billing solution, the subscription will be immediately created in Stigg.
+
+When a customer subscribes to a new plan (free, paid, trial, etc.), provision a subscription in Stigg. The provision result can be a successfully created subscription, or a redirect link to stripe checkout in case payment is needed. 
+
+Java
+
+`var resp = stigg.mutation(
+  ProvisionSubscriptionMutation.builder()
+  .input(ProvisionSubscriptionInput.builder()
+         .customerId("customer-demo-01")
+         .planId("plan-revvenu-basic")
+         // optional, required for multiple subscription for same product:
+         .resourceId("site-1")
+         // optional, required for paid plans:
+         .billingPeriod(BillingPeriod.MONTHLY)
+         // optional, required for plans with per-unit pricing with charges:
+         .billableFeatures(List.of(
+           BillableFeatureInput.builder()
+           .featureId("feature-01-templates")
+           .quantity(2.0)
+           .build()
+         ))
+         // optional:
+         .addons(List.of(
+           SubscriptionAddonInput.builder()
+           .addonId("addon-extra-stuff")
+           .quantity(5)
+           .build()
+         ))
+         // optional, required for price localization, must be in the ISO-3166-1 format:
+         .billingCountryCode("DK")
+         // optional, but will throw if missing and no customer payment method is available:
+         .checkoutOptions(
+           CheckoutOptions.builder()
+           .successUrl("https://your-success-url.com")
+           .cancelUrl("https://your-cancel-url.com")
+           .allowPromoCodes(true)
+           .collectBillingAddress(true)
+           .collectPhoneNumber(true)
+           .build()
+         )
+         .additionalMetaData(new HashMap<>() {{
+           put("key", "value");
+         }})
+         .build())
+  .build()
+);
+
+`
+
+Response - Success 
+
+JSON
+
+`{
+  "provisionSubscription": {
+    "checkoutUrl": null,
+    "status": {
+      "rawValue": "SUCCESS"
+    },
+    "subscription": {
+      "__typename": "CustomerSubscription",
+      "slimSubscriptionFragment": {
+        "id": "bad12052-32f1-4590-9230-911298c2d21b",
+        "refId": "subscription-plan-revvenu-essentials-bum2flivze",
+        "status": {
+          "rawValue": "ACTIVE"
+        },
+        "additionalMetaData": {
+          "key": "value"
+        },
+        "billingId": "sub_1OEwmQAnAO1PFouUVaDluuRj",
+        "billingLinkUrl": "https://dashboard.stripe.com/test/subscriptions/sub_1OEwmQAnAO1PFouUVaDluuRj",
+        "effectiveEndDate": null,
+        "currentBillingPeriodEnd": "2023-12-21T16:26:30.000Z",
+        "pricingType": {
+          "rawValue": "PAID"
+        },
+        "latestInvoice": {
+          "__typename": "SubscriptionInvoice",
+          "subscriptionInvoiceFragment": {
+            "billingId": "in_1OExBFAnAO1PFouUfLM3dpL9",
+            "status": {
+              "rawValue": "PAID"
+            },
+            "createdAt": "2023-11-21T16:52:09.000Z",
+            "updatedAt": "2023-11-21T16:52:58.491Z",
+            "requiresAction": false,
+            "paymentUrl": "https://invoice.stripe.com/i/acct_1KxDMtAnAO1PFouU/test_YWNjdF8xS3hETXRBbkFPMVBGb3VVLF9QMzNIamZCSm5IVEJ1TkhDVFNCa2kzcVRnZXllVlpNLDkxMTI2Mzc40200A5QhGfKJ?s=ap",
+            "paymentSecret": null,
+            "errorMessage": null
+          }
+        },
+        "paymentCollection": {
+          "rawValue": "NOT_REQUIRED"
+        },
+        "billingSyncError": null,
+        "resource": null,
+        "experimentInfo": null,
+        "prices": [
+          {
+            "usageLimit": 5,
+            "price": {
+              "__typename": "Price",
+              "priceFragment": {
+                "billingModel": {
+                  "rawValue": "PER_UNIT"
+                },
+                "billingPeriod": {
+                  "rawValue": "MONTHLY"
+                },
+                "billingId": "price_1OEuj0AnAO1PFouUPwz1QA7U",
+                "minUnitQuantity": 5,
+                "maxUnitQuantity": null,
+                "billingCountryCode": null,
+                "price": {
+                  "amount": 6,
+                  "currency": {
+                    "rawValue": "USD"
+                  }
+                },
+                "tiersMode": null,
+                "tiers": null,
+                "feature": {
+                  "refId": "feature-01-templates",
+                  "featureUnits": "template",
+                  "featureUnitsPlural": "templates",
+                  "displayName": "Templates",
+                  "description": null
+                }
+              }
+            }
+          }
+        ],
+        "totalPrice": {
+          "__typename": "CustomerSubscriptionTotalPrice",
+          "totalPriceFragment": {
+            "subTotal": {
+              "amount": 30,
+              "currency": {
+                "rawValue": "USD"
+              }
+            },
+            "total": {
+              "amount": 30,
+              "currency": {
+                "rawValue": "USD"
+              }
+            }
+          }
+        },
+        "plan": {
+          "id": "7a3979c1-c553-4338-a5b3-c7523bec288f",
+          "refId": "plan-revvenu-essentials"
+        },
+        "addons": [],
+        "customer": {
+          "id": "a7b2a41b-1f2c-40ab-b639-ef345e5adf17",
+          "refId": "customer-demo-01"
+        }
+      }
+    }
+  }
+}
+`
+
+Response - Action required (3DS) 
+
+JSON
+
+`{
+  "provision_subscription": {
+    "subscription": {
+      "paymentCollection": { 
+        "rawValue": "ACTION_REQUIRED" 
+      },
+      "latestInvoice": {
+        "paymentUrl": "https...",
+        "paymentSecret": "secret",
+      }
+    }
+  }
+}
+`
+
+Response - Payment failed 
+
+JSON
+
+`{
+  "provisionSubscription": {
+    "subscription": {
+      "paymentCollection": {
+        "rawValue": "FAILED"
+      },      
+      "latestInvoice": {
+        "paymentUrl": "https...",
+        "errorMessage": "no sufficient funds"
+      }
+    }
+  }
+}
+`
+
+Response - Checkout 
+
+JSON
+
+`{
+  "provisionSubscription": {
+    "checkoutUrl": "https://checkout.stripe.com/c/pay/cs_test_b1PKYNIzXFR3uejdj59M0BghDF4mNtL2MoHf6vipEpREAJPQ7zhR6rlJQG#fid2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ3Zxd2x1YERmZmpwa3EnPydkZmZxWjROfUFIcURrREo0VUNqcFAnKSdkdWxOYHwnPyd1blpxYHZxWjA0TnZpVjZCX11oMk9QUzxWcEpPRzN8cTZQXDZSSDRwcGRpQ3BiZ0w8NDY9PFZiX2REa0tHZzJDdXBHTD1caEN%2FQ3doS21Abn00REhDUH12cW50fW9rcHJ0NTVwVTxpdEFsMicpJ2N3amhWYHdzYHcnP3F3cGApJ2lkfGpwcVF8dWAnPydocGlxbFpscWBoJyknYGtkZ2lgVWlkZmBtamlhYHd2Jz9xd3BgeCUl",
+    "status": {
+      "rawValue": "PAYMENT_REQUIRED"
+    },
+    "subscription": null
+  }
+}
+`
+
+  
+> ## 🚧
+> 
+> 1. A customer can have both a non-trial (free or paid) subscription and trial subscription to different plans of the same product in parallel - this logic allows customers to trial a higher tier plan, while still paying for an existing plan.
+> 2. When the customer has a trial subscription for plan X of product A and a new subscription is created for the same plan, the new subscription will be created as as non-trial (paid) subscription - this logic follows an upgrade flow of a trial subscription to a paid subscription of a specific plan.
+> 3. Except in the above mentioned cases, when a customer has an active subscription for product X, and another subscription for the same product is created with start date S, the existing subscription will automatically be cancelled and the new subscription will start on start date S.
+> 4. It's also possible to explicitly skip the trial period of the selected plan by providing the `skipTrial: true` parameter to the `provisionSubscription()` method.
+
+## Updating subscriptions
+
+Updating an existing subscription, this can be used to update the feature quantity that the customer is subscribed for or the add-ons.
+
+#### Query
+
+Java
+
+`var resp = stigg.mutation(
+  UpdateSubscriptionMutation.builder()
+  .input(
+    UpdateSubscriptionInput.builder()
+    .subscriptionId("subscription-plan-revvenu-essentials-bum2flivze")
+    .billableFeatures(List.of(
+      BillableFeatureInput.builder()
+      .featureId("feature-01-templates")
+      .quantity(5.0)
+      .build()
+    ))
+    .build()
+  )
+  .build()
+);
+`
+
+Response JSON 
+
+JSON
+
+`{
+  "updateSubscription": {
+    "__typename": "CustomerSubscription",
+    "slimSubscriptionFragment": {
+      "id": "bad12052-32f1-4590-9230-911298c2d21b",
+      "refId": "subscription-plan-revvenu-essentials-bum2flivze",
+      "status": {
+        "rawValue": "ACTIVE"
+      },
+      "additionalMetaData": {
+        "key": "value"
+      },
+      "billingId": "sub_1OEwmQAnAO1PFouUVaDluuRj",
+      "billingLinkUrl": "https://dashboard.stripe.com/test/subscriptions/sub_1OEwmQAnAO1PFouUVaDluuRj",
+      "effectiveEndDate": null,
+      "currentBillingPeriodEnd": "2023-12-21T16:26:30.000Z",
+      "pricingType": {
+        "rawValue": "PAID"
+      },
+      "latestInvoice": {
+        "__typename": "SubscriptionInvoice",
+        "subscriptionInvoiceFragment": {
+          "billingId": "in_1OExBFAnAO1PFouUfLM3dpL9",
+          "status": {
+            "rawValue": "PAID"
+          },
+          "createdAt": "2023-11-21T16:52:09.000Z",
+          "updatedAt": "2023-11-21T16:52:59.336Z",
+          "requiresAction": false,
+          "paymentUrl": "https://invoice.stripe.com/i/acct_1KxDMtAnAO1PFouU/test_YWNjdF8xS3hETXRBbkFPMVBGb3VVLF9QMzNIamZCSm5IVEJ1TkhDVFNCa2kzcVRnZXllVlpNLDkxMTI2Mzc50200GdQT8sqx?s=ap",
+          "paymentSecret": null,
+          "errorMessage": null
+        }
+      },
+      "paymentCollection": {
+        "rawValue": "NOT_REQUIRED"
+      },
+      "billingSyncError": null,
+      "resource": null,
+      "experimentInfo": null,
+      "prices": [
+        {
+          "usageLimit": 5,
+          "price": {
+            "__typename": "Price",
+            "priceFragment": {
+              "billingModel": {
+                "rawValue": "PER_UNIT"
+              },
+              "billingPeriod": {
+                "rawValue": "MONTHLY"
+              },
+              "billingId": "price_1OEuj0AnAO1PFouUPwz1QA7U",
+              "minUnitQuantity": 5,
+              "maxUnitQuantity": null,
+              "billingCountryCode": null,
+              "price": {
+                "amount": 6,
+                "currency": {
+                  "rawValue": "USD"
+                }
+              },
+              "tiersMode": null,
+              "tiers": null,
+              "feature": {
+                "refId": "feature-01-templates",
+                "featureUnits": "template",
+                "featureUnitsPlural": "templates",
+                "displayName": "Templates",
+                "description": null
+              }
+            }
+          }
+        }
+      ],
+      "totalPrice": {
+        "__typename": "CustomerSubscriptionTotalPrice",
+        "totalPriceFragment": {
+          "subTotal": {
+            "amount": 30,
+            "currency": {
+              "rawValue": "USD"
+            }
+          },
+          "total": {
+            "amount": 30,
+            "currency": {
+              "rawValue": "USD"
+            }
+          }
+        }
+      },
+      "plan": {
+        "id": "7a3979c1-c553-4338-a5b3-c7523bec288f",
+        "refId": "plan-revvenu-essentials"
+      },
+      "addons": [],
+      "customer": {
+        "id": "a7b2a41b-1f2c-40ab-b639-ef345e5adf17",
+        "refId": "customer-demo-01"
+      }
+    }
+  }
+}
+`
+
+## Cancel subscription
+
+#### Query
+
+Java
+
+`var resp =
+  stigg.mutation(
+    CancelSubscriptionMutation.builder()
+    .input(
+      SubscriptionCancellationInput.builder()
+      .subscriptionRefId("subscription-plan-revvenu-essentials-bum2flivze")
+      // optional:
+      .subscriptionCancellationAction(SubscriptionCancellationAction.DEFAULT)
+      // optional:
+      .subscriptionCancellationTime(SubscriptionCancellationTime.END_OF_BILLING_PERIOD)
+      .build())
+    .build());
+`
+
+Response JSON 
+
+JSON
+
+`{
+    "cancel_subscription": {
+        "id": "subscription-plan-revvenu-growth-589879",
+        "status": "CANCELED",
+        "metadata": null,
+        "billing_id": "sub_1LxD4TE1gVT2zwZVSav7tZvC",
+        "billing_link_url": "https:\/\/dashboard.stripe.com\/test\/subscriptions\/sub_1LxD4TE1gVT2zwZVSav7tZvC",
+        "effective_end_date": "2022-10-30T23:54:38.582Z",
+        "current_billing_period_end": "2022-11-26T17:07:17.000Z",
+        "pricing_type": "PAID",
+        "prices": [
+            {
+                "usage_limit": 2,
+                "price": {
+                    "__typename": "Price",
+                    "billing_model": "PER_UNIT",
+                    "billing_period": "MONTHLY",
+                    "price": {
+                        "amount": 1,
+                        "currency": "USD"
+                    },
+                    "feature": {
+                        "__typename": "Feature",
+                        "id": "feature-01-templates",
+                        "feature_type": "NUMBER",
+                        "meter_type": "Fluctuating",
+                        "feature_units": "template",
+                        "feature_units_plural": "templates",
+                        "display_name": "Templates",
+                        "description": null
+                    }
+                }
+            }
+        ],
+        "total_price": {
+            "sub_total": {
+                "amount": 17,
+                "currency": "USD"
+            },
+            "total": {
+                "amount": 17,
+                "currency": "USD"
+            }
+        },
+        "plan": {
+            "id": "plan-revvenu-growth"
+        },
+        "addons": [
+            {
+                "quantity": 3,
+                "addon": {
+                    "id": "addon-10-campaigns"
+                }
+            }
+        ],
+        "customer": {
+            "id": "customer-demo-01"
+        }
+    }
+}
+`
+
+> ## 🚧
+> 
+> Subscription cancellation will take place according to the defined product behavior.
+
+## Getting the entitlement of a customer for a specific feature
+
+Used to check if the customer has access to a feature, the usage limit, and the current usage.
+
+#### Query
+
+Java
+
+`var resp =
+  stigg.query(
+    GetEntitlementQuery.builder()
+    .query(FetchEntitlementQuery.builder()
+           .customerId("customer-demo-01")
+           .featureId("feature-01-templates")
+           .options(EntitlementOptions.builder()
+                    .requestedUsage(10.0)
+                    .build())
+           .resourceId("site-1") // optional resource ID
+           .build())
+    .build()
+  );
+`
+
+Response JSON 
+
+JSON
+
+`{
+  "entitlement": {
+    "__typename": "Entitlement",
+    "entitlementFragment": {
+      "isGranted": false,
+      "accessDeniedReason": {
+        "rawValue": "RequestedUsageExceedingLimit"
+      },
+      "customerId": null,
+      "resourceId": null,
+      "usageLimit": 5,
+      "hasUnlimitedUsage": false,
+      "currentUsage": 3,
+      "requestedUsage": 10,
+      "entitlementUpdatedAt": null,
+      "usageUpdatedAt": null,
+      "nextResetDate": 4127191200,
+      "resetPeriod": null,
+      "resetPeriodConfiguration": null,
+      "feature": {
+        "__typename": "EntitlementFeature",
+        "featureFragment": {
+          "featureType": {
+            "rawValue": "NUMBER"
+          },
+          "meterType": {
+            "rawValue": "Fluctuating"
+          },
+          "featureUnits": "template",
+          "featureUnitsPlural": "templates",
+          "description": null,
+          "displayName": "Templates",
+          "refId": "feature-01-templates"
+        }
+      }
+    }
+  }
+}
+`
+
+## Getting all of the entitlements of a customer
+
+Used to check to what features the customer has access to, the usage limit , and the current usage of each entitlement.
+
+#### Query
+
+Java
+
+`var resp =
+stigg.query(
+  GetEntitlementsQuery.builder()
+  .query(
+    FetchEntitlementsQuery.builder()
+    .customerId("customer-demo-01")
+    .resourceId("site-1") // optional resource ID
+    .build())
+  .build());
+`
+
+Response JSON 
+
+JSON
+
+`{
+  "entitlements": [
+    {
+      "__typename": "Entitlement",
+      "entitlementFragment": {
+        "isGranted": true,
+        "accessDeniedReason": null,
+        "customerId": null,
+        "resourceId": null,
+        "usageLimit": null,
+        "hasUnlimitedUsage": false,
+        "currentUsage": null,
+        "requestedUsage": null,
+        "entitlementUpdatedAt": null,
+        "usageUpdatedAt": null,
+        "nextResetDate": null,
+        "resetPeriod": null,
+        "resetPeriodConfiguration": null,
+        "feature": {
+          "__typename": "EntitlementFeature",
+          "featureFragment": {
+            "featureType": {
+              "rawValue": "BOOLEAN"
+            },
+            "meterType": {
+              "rawValue": "None"
+            },
+            "featureUnits": null,
+            "featureUnitsPlural": null,
+            "description": null,
+            "displayName": "Analytics",
+            "refId": "feature-04-analytics"
+          }
+        }
+      }
+    },
+    {
+      "__typename": "Entitlement",
+      "entitlementFragment": {
+        "isGranted": true,
+        "accessDeniedReason": null,
+        "customerId": null,
+        "resourceId": null,
+        "usageLimit": 100,
+        "hasUnlimitedUsage": false,
+        "currentUsage": null,
+        "requestedUsage": null,
+        "entitlementUpdatedAt": null,
+        "usageUpdatedAt": null,
+        "nextResetDate": null,
+        "resetPeriod": null,
+        "resetPeriodConfiguration": null,
+        "feature": {
+          "__typename": "EntitlementFeature",
+          "featureFragment": {
+            "featureType": {
+              "rawValue": "NUMBER"
+            },
+            "meterType": {
+              "rawValue": "None"
+            },
+            "featureUnits": "MB",
+            "featureUnitsPlural": "MB",
+            "description": null,
+            "displayName": "Max file size",
+            "refId": "feature-06-max-file-size"
+          }
+        }
+      }
+    },
+    {
+      "__typename": "Entitlement",
+      "entitlementFragment": {
+        "isGranted": true,
+        "accessDeniedReason": null,
+        "customerId": null,
+        "resourceId": null,
+        "usageLimit": 25000,
+        "hasUnlimitedUsage": false,
+        "currentUsage": 0,
+        "requestedUsage": null,
+        "entitlementUpdatedAt": null,
+        "usageUpdatedAt": 1700595037.13,
+        "nextResetDate": 1703116800,
+        "resetPeriod": {
+          "rawValue": "MONTH"
+        },
+        "resetPeriodConfiguration": {
+          "__typename": "MonthlyResetPeriodConfig",
+          "resetPeriodConfigurationFragment": {
+            "__typename": "MonthlyResetPeriodConfig",
+            "onMonthlyResetPeriodConfig": {
+              "monthlyAccordingTo": {
+                "rawValue": "SubscriptionStart"
+              }
+            },
+            "onWeeklyResetPeriodConfig": null
+          }
+        },
+        "feature": {
+          "__typename": "EntitlementFeature",
+          "featureFragment": {
+            "featureType": {
+              "rawValue": "NUMBER"
+            },
+            "meterType": {
+              "rawValue": "Incremental"
+            },
+            "featureUnits": "active user",
+            "featureUnitsPlural": "active users",
+            "description": null,
+            "displayName": "Active users",
+            "refId": "feature-07-active-users"
+          }
+        }
+      }
+    },
+    {
+      "__typename": "Entitlement",
+      "entitlementFragment": {
+        "isGranted": true,
+        "accessDeniedReason": null,
+        "customerId": null,
+        "resourceId": null,
+        "usageLimit": 12,
+        "hasUnlimitedUsage": false,
+        "currentUsage": 0,
+        "requestedUsage": null,
+        "entitlementUpdatedAt": null,
+        "usageUpdatedAt": 1700595037.13,
+        "nextResetDate": 1703116800,
+        "resetPeriod": {
+          "rawValue": "MONTH"
+        },
+        "resetPeriodConfiguration": {
+          "__typename": "MonthlyResetPeriodConfig",
+          "resetPeriodConfigurationFragment": {
+            "__typename": "MonthlyResetPeriodConfig",
+            "onMonthlyResetPeriodConfig": {
+              "monthlyAccordingTo": {
+                "rawValue": "SubscriptionStart"
+              }
+            },
+            "onWeeklyResetPeriodConfig": null
+          }
+        },
+        "feature": {
+          "__typename": "EntitlementFeature",
+          "featureFragment": {
+            "featureType": {
+              "rawValue": "NUMBER"
+            },
+            "meterType": {
+              "rawValue": "Incremental"
+            },
+            "featureUnits": "campaign",
+            "featureUnitsPlural": "campaigns",
+            "description": null,
+            "displayName": "Campaigns",
+            "refId": "feature-02-campaigns"
+          }
+        }
+      }
+    },
+    {
+      "__typename": "Entitlement",
+      "entitlementFragment": {
+        "isGranted": true,
+        "accessDeniedReason": null,
+        "customerId": null,
+        "resourceId": null,
+        "usageLimit": 5,
+        "hasUnlimitedUsage": false,
+        "currentUsage": 3,
+        "requestedUsage": null,
+        "entitlementUpdatedAt": null,
+        "usageUpdatedAt": 1700594586.26,
+        "nextResetDate": null,
+        "resetPeriod": null,
+        "resetPeriodConfiguration": null,
+        "feature": {
+          "__typename": "EntitlementFeature",
+          "featureFragment": {
+            "featureType": {
+              "rawValue": "NUMBER"
+            },
+            "meterType": {
+              "rawValue": "Fluctuating"
+            },
+            "featureUnits": "template",
+            "featureUnitsPlural": "templates",
+            "description": null,
+            "displayName": "Templates",
+            "refId": "feature-01-templates"
+          }
+        }
+      }
+    },
+    {
+      "__typename": "Entitlement",
+      "entitlementFragment": {
+        "isGranted": true,
+        "accessDeniedReason": null,
+        "customerId": null,
+        "resourceId": null,
+        "usageLimit": null,
+        "hasUnlimitedUsage": false,
+        "currentUsage": null,
+        "requestedUsage": null,
+        "entitlementUpdatedAt": null,
+        "usageUpdatedAt": null,
+        "nextResetDate": null,
+        "resetPeriod": null,
+        "resetPeriodConfiguration": null,
+        "feature": {
+          "__typename": "EntitlementFeature",
+          "featureFragment": {
+            "featureType": {
+              "rawValue": "BOOLEAN"
+            },
+            "meterType": {
+              "rawValue": "None"
+            },
+            "featureUnits": null,
+            "featureUnitsPlural": null,
+            "description": null,
+            "displayName": "Custom domain",
+            "refId": "feature-03-custom-domain"
+          }
+        }
+      }
+    }
+  ]
+}
+`
+
+## Reporting usage measurements to Stigg
+
+The Stigg SDK allows you to report usage measurements for [metered features](features#overview). The reported usage will be used to track, limit and bill the customer's usage of metered features.
+
+Stigg supports metering of usage from the following data sources:
+
+1. [Calculated usage](#calculated-usage) \- usage that has been aggregated and calculated by **your application**. This type is useful for features, such as: seats.
+2. [Raw events](#raw-events) \- raw events from your application, which **Stigg** filters and aggregates aggregate to calculate customer usage. This type is useful for features, such as: monthly active users (MAUs).
+
+More details about Stigg's metering and aggregation capabilities can be found here:
+
+[ ![](/images/865027c-1085657.png)  Stigg's metering and aggregation capabilities Getting usage data into Stigg ](metering-overview) 
+
+> ## 🚧
+> 
+> 1. Reporting of measurements to Stigg should be done only after the relevant resources have been provisioned in your application.
+> 2. To ensure that the provisioned resources are aligned with the measurements that are reported to Stigg, ensure that customers are not allowed to allocate new resources until an acknowledgement about the processed measurement is received from the Stigg backend.
+
+> ## 📘
+> 
+> Validating that a measurement was successfully reported to Stigg is also possible in the [customer details section](customers#viewing-customers-entitlement-usage) of the relevant customer in the Stigg Cloud Console.
+
+### Calculated usage
+
+#### Query
+
+Java
+
+`var resp =
+  stigg.mutation(
+    ReportUsageMutation.builder()
+    .input(
+      UsageMeasurementCreateInput.builder()
+      .customerId("customer-demo-01")
+      .featureId("feature-01-templates")
+      .value(1.0)
+      .resourceId("site-1") // optional resource ID
+      .build())
+    .build());
+`
+
+By default, the value reported should represent the **change** in usage of the feature, for example user added 2 more seats then the report usage call should have the value of 2.
+
+In some cases, it's more useful to set the usage to some value instead of reporting the change value, it's possible by passing the `updateBehavior` parameter:
+
+Java
+
+`var resp =
+  stigg.mutation(
+    ReportUsageMutation.builder()
+    .input(
+      UsageMeasurementCreateInput.builder()
+      .customerId("customer-demo-01")
+      .featureId("feature-02-campaigns")
+      .value(3.0)
+      .updateBehavior(UsageUpdateBehavior.SET)
+      .build())
+    .build());
+`
+
+Response 
+
+JSON
+
+`{
+  "createUsageMeasurement": {
+    "id": "5fc41989-e624-4240-a482-c588b4255791",
+    "currentUsage": 3,
+    "nextResetDate": 1703116800,
+    "timestamp": 1700595372.708
+  }
+}
+`
+
+  
+### Raw events
+
+Java
+
+`var resp =
+  stigg.mutation(
+    ReportEventMutation.builder()
+    .input(
+      UsageEventsReportInput.builder()
+      .usageEvents(List.of(
+        UsageEventReportInput.builder()
+        .customerId("customer-demo-01")
+        .eventName("user_login")
+        .idempotencyKey("227c1b73-883a-457b-b715-6ba5a2c69ce4")
+        .timestamp(Instant.now())
+        .dimensions(new HashMap<>() {{
+          put("user_id", "user-01");
+          put("ip", "127.0.0.1");
+        }})
+        .resourceId("site-1") // optional resource ID
+        .build()
+      ))
+      .build())
+    .build());
+`
+
+It's also possible to send a batch of events in one invocation. To do so, simply pass an array of events to the `reportEvent` method.
+
+  
+## Getting available coupons
+
+#### Query
+
+Java
+
+`var resp = stigg.query(GetCouponsQuery.builder().build());
+`
+
+Response 
+
+JSON
+
+`{
+  "coupons": {
+    "edges": [
+      {
+        "node": {
+          "__typename": "Coupon",
+          "couponFragment": {
+            "id": "8fe11e1f-7dc2-4a82-b357-c1c3dc738660",
+            "discountValue": 20,
+            "type": {
+              "rawValue": "PERCENTAGE"
+            },
+            "additionalMetaData": null,
+            "refId": "coupon-vip",
+            "name": "VIP",
+            "description": null,
+            "createdAt": 1700576088.148,
+            "updatedAt": 1700576091.342,
+            "billingId": "9zQ41isX",
+            "billingLinkUrl": "https://dashboard.stripe.com/test/coupons/9zQ41isX",
+            "status": {
+              "rawValue": "ACTIVE"
+            },
+            "syncStates": [
+              {
+                "vendorIdentifier": {
+                  "rawValue": "STRIPE"
+                },
+                "status": {
+                  "rawValue": "SUCCESS"
+                }
+              }
+            ],
+            "customers": []
+          }
+        }
+      }
+    ]
+  }
+}
+`
+
+## Granting promotional entitlements
+
+You can grant [promotional entitlements](customers#managing-customers-promotional-entitlements) for customers using the `grant_promotional_entitlements` method.
+
+#### Query
+
+Java
+
+`var resp =
+  stigg.mutation(
+    GrantPromotionalEntitlementsMutation.builder()
+    .input(
+      GrantPromotionalEntitlementsInput.builder()
+      .customerId("customer-demo-01")
+      .promotionalEntitlements(
+        List.of(
+          GrantPromotionalEntitlementInput.builder()
+          .featureId("feature-04-analytics")
+          .period(PromotionalEntitlementPeriod.ONE_MONTH)
+          .build(),
+          GrantPromotionalEntitlementInput.builder()
+          .featureId("feature-02-campaigns")
+          .period(PromotionalEntitlementPeriod.CUSTOM)
+          .customEndDate(Instant.now().atZone(ZoneId.of("UTC")).plusDays(30).toInstant())
+          .usageLimit(100.0)
+          .build()
+        )
+      )
+      .build())
+    .build()
+  );
+`
+
+Result 
+
+JSON
+
+`{
+  "grantPromotionalEntitlements": [
+    {
+      "__typename": "PromotionalEntitlement",
+      "promotionalEntitlementFragment": {
+        "status": {
+          "rawValue": "Active"
+        },
+        "usageLimit": null,
+        "featureId": "0937bf25-2fec-457b-a1f5-bd470396a100",
+        "hasUnlimitedUsage": null,
+        "resetPeriod": null,
+        "endDate": 1703188217.659,
+        "isVisible": true,
+        "feature": {
+          "featureType": {
+            "rawValue": "BOOLEAN"
+          },
+          "meterType": {
+            "rawValue": "None"
+          },
+          "featureUnits": null,
+          "featureUnitsPlural": null,
+          "displayName": "Analytics",
+          "description": null,
+          "refId": "feature-04-analytics",
+          "additionalMetaData": null
+        }
+      }
+    },
+    {
+      "__typename": "PromotionalEntitlement",
+      "promotionalEntitlementFragment": {
+        "status": {
+          "rawValue": "Active"
+        },
+        "usageLimit": 100,
+        "featureId": "cce3f1fe-494e-472a-919d-5135bb932349",
+        "hasUnlimitedUsage": null,
+        "resetPeriod": null,
+        "endDate": 1703188216.028,
+        "isVisible": true,
+        "feature": {
+          "featureType": {
+            "rawValue": "NUMBER"
+          },
+          "meterType": {
+            "rawValue": "Incremental"
+          },
+          "featureUnits": "campaign",
+          "featureUnitsPlural": "campaigns",
+          "displayName": "Campaigns",
+          "description": null,
+          "refId": "feature-02-campaigns",
+          "additionalMetaData": null
+        }
+      }
+    }
+  ]
+}
+`
+
+  
+## Revoking promotional entitlements
+
+You can revoke [promotional entitlements](customers#managing-customers-promotional-entitlements) from customer using the `revoke_promotional_entitlements` method.
+
+#### Query
+
+Java
+
+`var resp =
+  stigg.mutation(
+    RevokePromotionalEntitlementMutation.builder()
+    .input(
+      RevokePromotionalEntitlementInput.builder()
+      .featureId("feature-04-analytics")
+      .customerId("customer-demo-01")
+      .build()
+    )
+    .build());
+`
+
+Result 
+
+JSON
+
+`{
+  "revokePromotionalEntitlement": {
+    "id": "f77c7c8c-098b-42f2-a82b-134f69241e2d"
+  }
+}
+`
+
+  
+## Estimate subscription cost
+
+You can estimate the subscription cost using the `estimateSubscription` method.  
+This can help the customer to understand the costs before paying.
+
+#### Query
+
+Java
+
+`var resp =
+  stigg.mutation(
+    EstimateSubscriptionMutation.builder()
+    .input(
+      EstimateSubscriptionInput.builder()
+      .customerId("customer-demo-01")
+      .billingPeriod(BillingPeriod.MONTHLY)
+      .planId("plan-revvenu-essentials")
+      .billableFeatures(
+        List.of(
+          BillableFeatureInput.builder()
+          .featureId("feature-01-templates")
+          .quantity(5.0)
+          .build()))
+      .addons(
+        List.of(
+          SubscriptionAddonInput.builder()
+          .addonId("addon-10-campaigns")
+          .quantity(5)
+          .build()))
+      .billingCountryCode("DK")
+      .resourceId("site-1") // optional resource ID
+      .build())
+    .build());
+`
+
+Result 
+
+JSON
+
+`{
+  "estimateSubscription": {
+    "__typename": "SubscriptionPreview",
+    "subscriptionPreviewFragment": {
+      "subTotal": {
+        "amount": 24.88,
+        "currency": {
+          "rawValue": "USD"
+        }
+      },
+      "totalExcludingTax": {
+        "amount": 24.88,
+        "currency": {
+          "rawValue": "USD"
+        }
+      },
+      "total": {
+        "amount": 2.89,
+        "currency": {
+          "rawValue": "USD"
+        }
+      },
+      "discountAmount": null,
+      "taxDetails": null,
+      "tax": {
+        "amount": 0,
+        "currency": {
+          "rawValue": "USD"
+        }
+      },
+      "billingPeriodRange": {
+        "start": 1700596892.977,
+        "end": 1703188892.977
+      },
+      "discount": null,
+      "subscription": {
+        "subTotal": {
+          "amount": 55,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "totalExcludingTax": {
+          "amount": 55,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "total": {
+          "amount": 55,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "tax": {
+          "amount": 0,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "discountAmount": null,
+        "taxDetails": null,
+        "discount": null
+      },
+      "proration": {
+        "prorationDate": 1700596893,
+        "credit": {
+          "amount": 0,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "debit": {
+          "amount": 24.88,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "netAmount": {
+          "amount": 24.88,
+          "currency": {
+            "rawValue": "USD"
+          }
+        }
+      },
+      "isPlanDowngrade": null,
+      "hasScheduledUpdates": null,
+      "credits": {
+        "initial": {
+          "amount": 21.99,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "used": {
+          "amount": 21.99,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "remaining": {
+          "amount": 0,
+          "currency": {
+            "rawValue": "USD"
+          }
+        }
+      }
+    }
+  }
+}
+`
+
+  
+You can also estimate the cost of updating an existing subscription using the `updateSubscription` method, which also returns a breakdown of the proration amounts:
+
+#### Query
+
+Java
+
+`var resp =
+  stigg.mutation(
+    EstimateSubscriptionUpdateMutation.builder()
+    .input(
+      EstimateSubscriptionUpdateInput.builder()
+      .subscriptionId("subscription-plan-revvenu-essentials-bum2flivze")
+      .billableFeatures(
+        List.of(
+          BillableFeatureInput.builder()
+          .featureId("feature-01-templates")
+          .quantity(5.0)
+          .build())
+      )
+      .addons(
+        List.of(
+          SubscriptionAddonInput.builder()
+          .addonId("addon-10-campaigns")
+          .quantity(5)
+          .build())
+      )
+      .build())
+    .build());
+`
+
+Result 
+
+JSON
+
+`{
+  "estimateSubscriptionUpdate": {
+    "__typename": "SubscriptionPreview",
+    "subscriptionPreviewFragment": {
+      "subTotal": {
+        "amount": 24.87,
+        "currency": {
+          "rawValue": "USD"
+        }
+      },
+      "totalExcludingTax": {
+        "amount": 24.87,
+        "currency": {
+          "rawValue": "USD"
+        }
+      },
+      "total": {
+        "amount": 2.8800000000000026,
+        "currency": {
+          "rawValue": "USD"
+        }
+      },
+      "discountAmount": null,
+      "taxDetails": null,
+      "tax": {
+        "amount": 0,
+        "currency": {
+          "rawValue": "USD"
+        }
+      },
+      "billingPeriodRange": {
+        "start": 1700583990,
+        "end": 1703175990
+      },
+      "discount": null,
+      "subscription": {
+        "subTotal": {
+          "amount": 55,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "totalExcludingTax": {
+          "amount": 55,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "total": {
+          "amount": 55,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "tax": {
+          "amount": 0,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "discountAmount": null,
+        "taxDetails": null,
+        "discount": null
+      },
+      "proration": {
+        "prorationDate": 1700597071,
+        "credit": {
+          "amount": 0,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "debit": {
+          "amount": 24.87,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "netAmount": {
+          "amount": 24.87,
+          "currency": {
+            "rawValue": "USD"
+          }
+        }
+      },
+      "isPlanDowngrade": null,
+      "hasScheduledUpdates": null,
+      "credits": {
+        "initial": {
+          "amount": 21.99,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "used": {
+          "amount": 21.99,
+          "currency": {
+            "rawValue": "USD"
+          }
+        },
+        "remaining": {
+          "amount": 0,
+          "currency": {
+            "rawValue": "USD"
+          }
+        }
+      }
+    }
+  }
+}
+`
+
+  

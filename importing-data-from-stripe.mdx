@@ -1,0 +1,26 @@
+---
+title: "Importing data from Stripe"
+description: "Manage your Stripe data on Stigg to get the full experience, all in one place"
+---
+
+Stigg's native integration with Stripe streamlines various processes, providing an automated and efficient experience without having to switch constantly between the platforms. More information about the integration can be found [here](/docs/stripe).
+
+As part of this integration, you may want to import data from Stripe to integrate and manage it solely on Stigg. The entities that can be imported are (1) Products and/or (2) Customers and Subscriptions. You can click "Skip step" under Products if you are interested in importing only clients and subscription.
+
+Here's how you can do this with simply 3 steps:
+
+1. Under Integrations > Apps > Stripe, click "Import data from Stripe":
+
+![](/images/f6d67b0-image.png)
+
+1. Select the Products you'd like to import on Task 1 and click "Import", or click "Skip task" to import customers and subscriptions:
+![](/images/9d39aab-image.png) 
+1. Select the Customers and Subscriptions you'd like to import on Task 2 and click "Import".
+![](/images/db1e203-image.png) 
+
+Once done, the imported entities with be managed on Stigg and any changes made will be reflected in the corresponding Stripe account.
+
+> ## 📘
+> * Currently, only plans with one billable metric can be imported, for example flat fee, in-advance commitment with one metric, pay-as-you-go.
+> 
+> * Note that the imported entities will be identified_by their Stripe ID_. Importing customers and subscriptions using a different ID can be achieved using our [CLI tool](/docs/bulk-import-of-existing-customers-and-subscriptions-into-stigg#import-using-our-cli-tool).

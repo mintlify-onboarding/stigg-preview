@@ -1,0 +1,111 @@
+---
+title: "No-code configuration in the Stigg Console"
+---
+
+## Overview
+
+Rolling out price localization to your product can be achieved directly from the Stigg Console using no-code after the initial integration with Stigg.
+
+## Adding localized prices to plans and add-ons
+
+To add price localization to plans and add-ons, open the relevant plan or add-on.
+
+Edit the plan or add-on.
+
+Navigate to the "Price" section.
+
+Click on the "Edit" button.
+
+Scroll down to the "Price localization" section.
+
+Enable price localization.
+
+Select the relevant country that you'd like to apply price localization in.
+
+Select the currency that should be used for pricing in that country.
+
+Set the prices in that currency.
+
+Click "Add".
+
+Click on "+ Add localized price" to add prices for additional countries.
+
+Click "Save changes".
+
+Publish the plan or add-on version.
+
+![](/images/82176af-Screenshot_2023-07-20_at_14.28.15.png) 
+
+### Plans with compatible add-ons
+
+In order to rollout price localization for plans with compatible add-on, first add and publish the localized prices for the add-on, and only then rollout the localized prices for the plan.
+
+  
+## Visibility for localized prices
+
+### At the plan and add-on level
+
+When price localization is defined for the plan or add-on, localized prices will appear under their "Price" section. Use the "Price localization" drop-down to view the price in each country.
+
+![](/images/9d5049d-Screenshot_2023-07-20_at_14.29.58.png) 
+
+### At the product level
+
+When price localization is defined for the product, under the "Product details" screen use the drop-down menu on the right to toggle between the default price and the different localized prices:
+
+![](/images/e4e4f0e-Screenshot_2023-03-30_at_0.00.56.png)
+
+### In the widget designer
+
+When price localization is defined for the product, when previewing **your data** under the "Pricing table" widget use the drop-down menu on the right to toggle between the default price and the different localized prices:
+
+![](/images/71d836d-Screenshot_2023-03-30_at_0.03.39.png)
+
+### At the customer level
+
+After a customer has a subscription to a paid plan, the currency that they can be billed in will appear in the "Customer details" screen under the "Payment details" section:
+
+![](/images/d4a8644-Screenshot_2023-03-29_at_23.56.04.png)
+
+When a customer has a subscription to a localized price, a flag that indicates which localized price was used will appear next to the subscription price in the "Customer details" screen under the "Subscription" list:
+
+![](/images/c24d459-Screenshot_2023-03-29_at_23.56.42.png)
+
+### At the subscription level
+
+When the price of the subscription represents a localized price, a flag that indicates which localized price was used will appear next to the subscription price:
+
+![](/images/63ae2ad-Screenshot_2023-03-29_at_23.57.43.png)
+
+  
+## Creating and updating subscriptions
+
+When a customer has never subscribed to a paid subscription, in the "Create subscription" screen after a paid plan is selected you can select the relevant price localization pricing:
+
+![](/images/072d072-Screenshot_2023-07-20_at_14.33.44.png) 
+
+When a customer had a previous subscription, due to [Stripe's limitation](https://support.stripe.com/questions/setting-a-customers-default-currency), it's only possible to select a price localization configuration with the same currency as the one of the currently active subscription:
+
+![](/images/ef84d44-Screenshot_2023-07-20_at_14.37.11.png)   
+
+## Removing localized prices
+
+Localized prices of plans can be removed only if no subscription was created using these prices.
+
+To remove a localized price, edit the plan or add-on.
+
+Navigate to the "Pricing" section.
+
+Click on the "Edit" button.
+
+Scroll down to the "Price localization" section.
+
+Click on the trash icon that appears in the row of the localized price that you'd like to remove.
+
+Click "Save changes".
+
+Publish the plan or add-on version.
+
+### Plans with compatible add-ons
+
+In order to remove price localization from add-ons that are compatible with plans, first remove the localized price from the plan and publish the changes, and only then rollout the localized prices for the add-on.

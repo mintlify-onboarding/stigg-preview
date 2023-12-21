@@ -1,0 +1,80 @@
+---
+title: "Vue.js"
+---
+
+## Overview
+
+Stigg's Vue SDK is a Javascript library for embedding self-service components in Vue 3 apps.  
+It is based on [React SDK](react-sdk) components under the hood.
+
+  
+## Installing the SDK
+
+Install the `@stigg/vue-sdk` package in your project using one of the below method:
+
+#### From npm:
+
+Shell
+
+`npm install @stigg/vue-sdk
+`
+
+#### From yarn:
+
+Shell
+
+`yarn add @stigg/vue-sdk
+`
+
+  
+## Retrieving the client API key
+
+In the Stigg Cloud Console, go to [Settings > Account > Environments](https://app.stigg.io/account/settings).
+
+Copy the   **Client API key** of the relevant environment.
+
+  
+## Getting started
+
+Import the library's CSS styles:
+
+TypeScript
+
+`import '@stigg/vue-sdk/dist/style.css';
+`
+
+Configure the SDK by wrapping your application in `StiggProvider`:
+
+Vue
+
+`<script setup lang="ts">
+import { StiggProvider, StiggProviderProps } from '@stigg/vue-sdk';
+
+const stiggProvider: StiggProviderProps = {
+   apiKey: "<STIGG_CLIENT_API_KEY>",
+};
+
+</script>
+
+<template>
+   <StiggProvider v-bind="stiggProvider">
+      <NestedComponents />
+   </StiggProvider>
+</template>
+`
+
+  
+## Rendering widgets
+
+[ ![](/images/9ee9b64-Group_17013.png)  Pricing table Allow customers to select the plan that that they'd like to subscribe to from your public pricing page or in-app paywall ](pricing-tables) 
+
+  
+[ ![](/images/9a0f073-Group_16979_1.png)  Customer portal Introduce self-service and drive in-app expansions using only a few lines of codes ](customer-portal) 
+
+  
+[ ![](/images/43ba9d9-Group_17044.png)  Checkout Easily accept payments without ever worrying about changes to your pricing model or migration to another billing provider ](checkout) 
+
+  
+## Example project
+
+[ ![](/images/a01818b-GitHub-Mark.png)  vue-react-sdk GitHub ](https://github.com/stiggio/vue-react-sdk) 

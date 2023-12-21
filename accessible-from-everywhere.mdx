@@ -1,0 +1,11 @@
+---
+title: "Accessible from anywhere"
+---
+
+Stigg's API is globally scalable and highly available by leveraging a content delivery network (CDN), where our code is executed at a location (regional edge) closest to the user. This means our services are accessible from anywhere in the world without compromising performance and latency. Due to the nature of this function-as-a-service (FaaS) architecture, our API can handle a large volume of concurrent requests by automatically scaling up and allocating new functions as much as needed.
+
+![Leveraging the CDN for improved performance and latency](/images/445d806-image.png)
+
+Leveraging the CDN for improved performance and latency
+
+When accessing entitlement, usage, and catalog data through our API, the reads are performed on pre-calculated data that is stored in a distributed cache and is automatically replicated across multiple regions. It allows us to achieve lightning-fast read response times and improves our APIs overall availability. The cache is kept up-to-date by recalculating the data on every customer subscription update and catalog modification.

@@ -1,0 +1,204 @@
+---
+title: "Bulk import of existing customers and subscriptions"
+description: "Import your existing customer base to Stigg using a dedicated tool or via our API"
+---
+
+## Import using our CLI tool
+
+### Usage
+
+#### Prerequisites
+
+* [NodeJS](https://nodejs.org/en/download/) must be installed
+
+#### Preparing the input JSON files
+
+The CLI support import data of customers, subscriptions and feature usage into Stigg.
+
+#### Import customers
+
+Create a file `customers.json` that contains all the customers.
+
+The file should be in the following schema:
+
+JSON
+
+`{
+  "customers": [
+    {
+      "customerId": "lorem-ipsum",
+      "email": "[[email protected]](/cdn-cgi/l/email-protection)", // optional
+      "name": "Lorem-ipsum", // optional
+      "billingId": "cus_MvdQq1bVD1BQHe", // optional - if the customer already exists in the billing solution
+      "paymentMethodId": "pm_1N04AHEdaKWoSZ0OgP78RflV", // required for paid customers
+      "metadata": { // optional - set metadata for the customer
+        "isTest": "true"
+      }
+    },
+    // ...
+  ],
+}
+`
+
+#### Import subscriptions
+
+Create a file `subscriptions.json` that contains all the subscriptions.
+
+The file should be in the following schema:
+
+JSON
+
+`"subscriptions": [
+    {
+      "customerId": "lorem-ipsum",
+      "planId": "plan-local-env-p-1",
+      "resourceId": "site-1", // optional - required for multiple subscriptions product
+      "billingPeriod": "MONTHLY", // optional - required for paid plan
+      "unitQuantity": 5, // optional - required for per-unit paid plan
+      "startDate": "2022-01-01T00:00:00.000Z", // optional - used for backdating
+      "metadata": { // optional - set metadata for the subscription
+        "isTest": "true"
+      }
+    },
+    // ...
+  ],
+`
+
+#### Import feature usage
+
+Create a file `usage.json` that contains all the features usage.
+
+The file should be in the following schema:
+
+JSON
+
+`  "usages": [
+    {
+      "customerId": "lorem-ipsum",
+      "resourceId": "site-1", // optional - required for multiple subscriptions product
+      "featureId": "feature-seats",
+      "usage": 5
+    },
+    // ...
+  ]
+`
+
+### Initiating the bulk import process
+
+Obtain a Server API key from the [Stigg Console](https://app.stigg.io/account/settings).
+
+Export it as environment variable: 
+
+Shell
+
+`export STIGG_SERVER_API_KEY='<SERVER-API-KEY>'
+`
+
+Initiate the bulk import process (you can either import all at once or do it separately):
+
+Shell
+
+`npx @stigg/bulk-import --customers-file customers.json --subscriptions-file subscriptions.json --usage-file usage.json
+`
+
+During the import process there will be a progress bar.
+
+When the import process is complete a summary will be displayed.
+
+## Import using the API
+
+You can also use our API to bulk import subscriptions and customers programmatically:
+
+### Import customers
+
+#### Query
+
+GraphQL
+
+`mutation CustomerBulkImport($input: ImportCustomerBulk!) {
+  importCustomersBulk(input: $input) {  
+    customers {
+      {
+        customerId
+        email
+        name
+        billingId
+        paymentMethodId
+        additionalMetaData
+        }
+      }
+    }
+  }
+`
+
+#### Variables
+
+JSON
+
+`{
+  "input": {
+    "customers": {
+      {
+        "customerId": "lorem-ipsum",
+        "email": "[[email protected]](/cdn-cgi/l/email-protection)", // optional
+        "name": "Lorem-ipsum", // optional
+        "billingId": "cus_MvdQq1bVD1BQHe", // optional
+        "paymentMethodId": "pm_1N04AHEdaKWoSZ0OgP78RflV", // optional
+        "additionalMetaData": {
+          "isTest": "true" // optional
+        }
+      }
+    }
+  }
+}
+`
+
+### Import subscriptions
+
+#### Query
+
+GraphQL
+
+`mutation SubscriptionBulkImport($input: ImportSubscriptionsBulk!) {
+  importSubscriptionsBulk(input: $input) {  
+  subscriptions {
+    {
+      customerId
+      planId
+      resourceId
+      billingPeriod
+      unitQuantity
+      startDate
+      additionalMetaData
+        }
+      }
+    }
+  }
+`
+
+#### Variables
+
+JSON
+
+`{
+  "input": {
+  "subscriptions": {
+    {
+      "customerId": "lorem-ipsum",
+      "planId": "plan-local-env-p-1",
+      "resourceId": "site-1", // optional
+      "billingPeriod": "MONTHLY", // optional
+      "unitQuantity": 5, // optional
+      "startDate": "2022-01-01T00:00:00.000Z", // optional
+      "additionalMetaData": {
+        "isTest": "true" // optional
+        }
+      }
+    }
+  }
+}
+`
+
+> ## 📘
+> 
+> This functionality is also accessible via the Node.js SDK using the [ImportCustomerBulk](https://node-sdk-docs.stigg.io/#ImportCustomerBulk) and [ImportSubscriptionBulk](https://node-sdk-docs.stigg.io/#ImportSubscriptionBulk) methods.

@@ -1,0 +1,47 @@
+---
+title: "Rendering a checkout experience"
+---
+
+## Overview
+
+In this quick start guide we'll demonstrate how to create a checkout experience using Stigg's embeddable widgets.
+
+The Stigg checkout widget allows you to easily accept payments without ever worrying about changes to your pricing model or migration to another billing provider.
+
+![](/images/b2ec9cb-Screenshot_2023-09-12_at_3.49.55.png)   
+
+## Before we begin
+
+In order to complete this guide in your application code, please make sure that you have:
+
+* [Modeled your pricing in Stigg](modeling-your-pricing)
+* [Installed the Stigg React client SDK](react-sdk#installing-the-sdk)
+* [A Stigg **client** API key](javascript-sdk#retrieving-the-client-api-key)
+  
+## Initializing the React SDK
+
+The first step is to initialize Stigg's React SDK with the client API key by wrapping your application with StiggProvider component.
+
+React
+
+`import React from 'react';
+import ReactDOM from 'react-dom';
+import { StiggProvider } from '@stigg/react-sdk';
+import App from './App';
+
+ReactDOM.render(
+  <StiggProvider apiKey="YOUR_CLIENT_API_KEY">
+    <App />
+  </StiggProvider>,
+  document.getElementById('app'),
+);
+`
+
+  
+## Rendering the checkout experience
+
+[ ![](/images/9f55ab1-codingbrowser_102152.png)  Rendering a checkout session Checkout widget ](checkout#rendering-a-checkout-session) 
+
+## Additional resources
+
+[ ![](/images/43ba9d9-Group_17044.png)  Checkout Easily accept payments without ever worrying about changes to your pricing model or migration to another billing provider ](checkout) 

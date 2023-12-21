@@ -1,0 +1,87 @@
+---
+title: "Domain model"
+description: "Familiarize yourself with entities of the Stigg platform"
+---
+
+## Account
+
+Represents an account of a Stigg customer.
+
+## Environment
+
+Represents a Stigg customer environment that’s integrated with the Stigg platform. Stigg customers can integrate multiple environments belonging to the same [account](#account) with the Stigg platform. An example use-case can be separate environments for development, test, staging, and production.
+
+## User
+
+Represents a user in the account that uses the Stigg platform, either via the Stigg Management Console. Example users can be: product managers, developers, customer success managers, etc. Currently, all users have access to all [environments](#environment).
+
+## Feature
+
+Represents configurable functionality in the product that can be monetized. Features are environment-specific. Stigg supports 3 types of features:
+
+1. **Boolean features** \- represent functionality that customers can either have access to or not.
+2. **Configuration features** \- represent functionality that can be configured, for example: the number of days for data retention.
+3. **Metered features** \- represent functionality with varying usage that needs to be tracked, for example: number of seats, number of API calls made, etc.
+  
+### Metered Feature
+
+Represents a feature that requires tracking of its usage. 
+
+  
+### Unmetered Feature
+
+Represents a feature that can be defined with specific values, and doesn’t require tracking of its usage. Such features are helpful in defining boolean functionality (whether users have access or not), and features with a constant configuration (for example: 30-day log retention period).
+
+## Entitlement
+
+In software, an entitlement refers to the right to use services, products, or in our case: _application features_. Entitlements can provide fine-grained controls over how an individual or organization can use software.
+
+In Stigg, entitlements represent a combination of a [feature](#feature) and its configuration. The result is functionality that each customer is entitled to.
+
+Stigg supports 2 types of entitlements: [metered](#metered-entitlement) and [unmetered](#unmetered-entitlement) entitlements.
+
+  
+### Metered Entitlement
+
+Represents a **configuration** of a [metered feature](#metered-feature). When a **limit** is defined in a metered entitlement, access to product functionality is denied if usage exceeds the allowed limit.
+
+Stigg can optionally automatically reset the measured usage every predefined period (monthly, weekly, daily, or hourly). This can be useful for representing features, such as the number of API calls per month.
+
+  
+### Unmetered Entitlement
+
+Represents a **configuration** of an [unmetered feature](#unmetered-feature).
+
+## Product
+
+Represents a product or product-line that a Stigg customer offers to its customers.
+
+## Package
+
+Represents a billable functionality of **a specific** [product](#product). Each package has its own pricing. Stigg currently supports 2 types of packages: [plans](#plan) and [add-ons](#add-on).
+
+  
+### Plan
+
+Represents functionality of a product that [customers](#customer) are charged for during a pre-defined time period. The functionality included in each plan is defined by [entitlements](#entitlement) that are associated with the specific plan. Plans can depend on one another, for example: when a customer purchases the “enterprise” plan, they also get the content of a “pro” plan and the “free” plan.
+
+  
+### Add-on
+
+Represents separately billable functionality that extends the functionality of specific [plans](https://stigg.readme.io/docs/glossary#plan). Add-ons are dependent on the life-cycle of the plan they extend; that is, when a subscription expires, customers also lose access to the plan’s add-ons. The functionality that’s included with each add-on is defined by [entitlements](https://stigg.readme.io/docs/glossary#entitlement).
+
+## Customer
+
+Represents a customer of a Stigg customer. Access to products and their functionality is defined according to customers’ [subscriptions](#subscription).
+
+## Subscription
+
+Represents a combination of the **functionality** that a specific [customer](#customer) has access to and its **limitations**, the **time period** that customers have access to it, and **how much** they’re paying for it.
+
+Subscriptions are composed of plans, add-ons.
+
+The usage of the subscription’s [metered entitlements](#metered-entitlement) is tracked using a [measurement](#usage-measurement).
+
+## Usage measurement
+
+Represents usage of a [metered feature](#metered-feature) by a [customer](#customer) as part of their [subscription](#subscription).

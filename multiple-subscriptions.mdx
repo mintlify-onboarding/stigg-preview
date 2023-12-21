@@ -1,0 +1,333 @@
+---
+title: "Multiple subscriptions for the same product"
+---
+
+## Overview
+
+When customers can provision multiple instances of your product, it's possible to monetize each instance separately. 
+
+Common use cases include products that represent a website (i.e. [Wix](https://www.wix.com/upgrade/website), [HotJar](https://www.hotjar.com/choose-your-plan)) or an application. Each website or application can have a subscription to a different tier while allowing the customer to pay for all of their subscriptions using the same payment method.
+
+Different sub-accounts and user roles can also be monetized using a similar method.
+
+Luckily, Stigg gives you the flexibility to implement this pricing model. 
+
+![](/images/67563a5-image.png)
+
+  
+## Implementing the pricing model using Stigg
+
+### Product configuration
+
+When a new product is [created](products#creating-products) or its details are [edited](products#editing-product-details), set the product's subscription type **multiple active subscriptions**.
+
+![](/images/f8e885a-small-Screenshot_2023-05-04_at_13.15.01.png)
+
+> ## 🚧
+> 
+> The subscription type can’t be changed after a subscription to the product is provisioned.
+
+### Resource ID
+
+Due to the fact that multiple "instances" of the product can be created, Stigg needs to know what instance a subscription should apply to, entitlements needs to be checked for, and widgets rendered for.
+
+This is achieved by passing a **resource ID**, which represents the ID of the entity that the subscription applies to (for example: website ID, app ID, etc.) to Stigg. 
+
+The resource ID needs to be provided during subscription provisioning and update, entitlement checks and widget rendering. 
+
+![](/images/8f18665-image.png)
+
+![](/images/2259864-small-Screenshot_2023-05-04_at_13.31.56.png)
+
+  
+### Provisioning subscriptions
+
+In order to grant a product instance access to gated functionality and bill for it, provision a subscription for that instance in Stigg.
+
+This can be achieved programmatically by leveraging Stigg's backend SDKs, or directly from the Stigg Console. In either cases, ensure to pass the [resource ID](#resource-id) parameter to associate the provisioned subscription with the relevant product instance.
+
+#### Prerequisites
+
+A customer that all provisioned subscription will be associated with must existing in Stigg, see:
+
+[ ![](/images/a2e4ee2-couple.png)  Creating a new customer Managing customers & subscriptions ](customers#creating-a-new-customer) 
+
+  
+[ ![](/images/d96f126-Node.js_logo.svg)  Provisioning customers Node.js SDK ](nodejs-sdk#provisioning-customers) 
+
+  
+#### Provisioning subscriptions using the Stigg backend SDKs
+
+ Pass the [resource ID](#resource-id) parameter to provision a subscription for the relevant product instance.
+
+Node.js
+
+`const subscription = await stiggClient.provisionSubscription({  
+  customerId: 'customer-demo-01',  
+  resourceId: 'resource-01',
+  planId: 'plan-basic',  
+  // rest parameters
+});
+`
+
+For more details and additional frameworks, see:
+
+[ ![](/images/ad4e0e2-computer.png)  Backend integration Codebase integration ](backend-integration) 
+
+  
+#### Provisioning subscriptions using the Stigg Console
+
+To provision a new subscription, click on the "+ Add" button under the Subscriptions section of the customer details screen of the relevant customer.
+
+Provide a [resource ID](#resource-id) to provision a subscription for the relevant product instance.
+
+![](/images/dfeabd0-small-Screenshot_2023-05-04_at_13.30.41.png)
+
+  
+### Reporting feature usage
+
+Whenever a certain feature is consumed by a product instance, report this usage to Stigg. The reported usage will be used to track, limit and bill the customer's usage of metered features. Pass the [resource ID](#resource-id) parameter to associate the reported usage with the relevant product instance.
+
+Node.js
+
+`await stiggClient.reportUsage({  
+  customerId: 'customer-test-id',
+  resourceId: 'resource-01',
+  featureId: 'feature-seats',  
+  value: 10,
+});
+`
+
+For more details and additional frameworks, see:
+
+[ ![](/images/ad4e0e2-computer.png)  Backend integration Codebase integration ](backend-integration) 
+
+  
+### Enforcing feature access
+
+Stigg offers an API, as well as backend and frontend SDKs for enforcing customer access to features according to their entitlement for those features.
+
+#### Backend enforcement
+
+Node.js
+
+`const requestedUsage = 10;
+
+const entitlement = await stiggClient.getMeteredEntitlement({  
+  customerId: 'customer-demo-01',  
+  resourceId: 'resource-01',
+  featureId: 'feature-demo-03',  
+  options: {  
+    requestedUsage
+  }  
+});
+
+if (entitlement.hasAccess) {  
+  // has access and the requested usage is within the allowed quota  
+} else {  
+  // the customer has exceeded his quota for this feature  
+}
+`
+
+For more details and additional frameworks, see:
+
+[ ![](/images/ad4e0e2-computer.png)  Backend integration Codebase integration ](backend-integration) 
+
+  
+#### Frontend enforcement
+
+In order to check the entitlements of a specific product instance in the frontend, after[ initializing the Stigg frontend SDK](javascript-sdk#initializing-the-sdk), set the context of the product instance by passing its ID as the [resource ID](#resource-id) to the SDK.
+
+ReactJavaScript
+
+`import { useStiggContext } from '@stigg/react-sdk';
+
+function Component() {
+  const { stigg } = useStiggContext();
+  const resourceId = 'resource-01';
+
+  useEffect(() => {
+    stigg.setResource(resourceId);
+    return () => stigg.clearResource(); // automatically reset the context once the component is removed
+  }, [stigg, resourceId]);
+}
+`
+
+`// set the current product instance context
+stiggClient.setResource('resource-01');
+
+// reset the context when no longer in a product instance context
+stigg.clearResource();
+`
+
+Pass the [resource ID](#resource-id) parameter to check the entitlement for the relevant product instance.
+
+TypeScript
+
+`const requestedUsage = 10;
+
+const entitlement = stiggClient.getMeteredEntitlement({  
+  featureId: 'feature-demo-01',
+  resourceId: 'resource-01',
+  options: {  
+    requestedUsage
+  }
+});
+
+if (entitlement.hasAccess) {  
+  // has access and the requested usage is within the allowed quota  
+} else {  
+  // the customer has exceeded his quota for this feature  
+}
+`
+
+> ## ❗️
+> 
+> At any give time it's only possible to check the entitlements of the product instance that was set as the current context. 
+> 
+> Attempting to check an entitlement of a difference product instance (by passing a different [resource ID](#resource-id) than that of the one that was set as the current context) will return [fallback value](local-caching-and-fallback-strategy#fallback-strategy) of the feature. If no fallback value was set, access to the feature will be defined.
+> 
+> Therefore, setting the correct [resource ID](#resource-id) as the current context is crucial.
+
+For more details and additional frameworks, see:
+
+[ ![](/images/ad4e0e2-computer.png)  Frontend integration Codebase integration ](frontend-integration) 
+
+  
+### Providing visibility for the current active subscription
+
+Stigg allows you to fetch to the current active subscription of a specific product instance. 
+
+Doing so can be leveraged to provide your customers with visibility for the currently active subscription for the specific product instance.
+
+To fetch the active subscriptions of a specific product instance, leverage the `getActiveSubscription` method and pass its ID as the [resource ID](#resource-id) to the SDK.
+
+#### Backend
+
+Node.js
+
+`const subscriptions = await stiggClient.getActiveSubscriptions({  
+  customerId: 'customer-demo-01',
+  resourceId: 'resource-01',
+});
+`
+
+#### Frontend
+
+Node.js
+
+`const subscriptions = await stiggClient.getActiveSubscriptions({  
+  resourceId: 'resource-01',
+});
+`
+
+#### Additional frameworks
+
+[ ![](/images/ad4e0e2-computer.png)  Integrating Stigg into your codebase ](backend-integration) 
+
+  
+### Offering an in-app upgrade experience
+
+When customer attempt to access a gated feature, it's useful to allow them to resolve the issue within the context of their action by offering them the ability to upgrade to a paid plan. 
+
+The in-app upgrade experience can be fully self-served, as well as one that requires an interaction with a sales representative.
+
+Stigg offers embeddable widgets that can be used offer customers with an in-app upgrade experience.
+
+#### In-app paywall
+
+Stigg's [in-app paywall widget](pricing-table) allows customers to select what plan they'd like to upgrade to.
+
+![](/images/991e3c8-Screenshot_2023-01-22_at_15.18.04.png)
+
+Pass the [resource ID](#resource-id) parameter to render a paywall for the current product instance.
+
+React
+
+`<Paywall  
+  highlightedPlanId='plan-id'
+  resourceId='resource-01'
+  onPlanSelected={({ plan, customer }) => {  
+    // Handle customer intention to subscribe to plan  
+  }}  
+/>
+`
+
+#### In-app customer portal
+
+Stigg's [customer portal widget](customer-portal) can be used to communicate to customers what plan they're currently on, what features they're entitled for, how much they've consumed of them, and the ability to manage their subscription.
+
+The Stigg customer portal widget provide such visibility **separately for each product instance**, while allow customers to leverage the same payment method in order to pay for all of the subscriptions.
+
+![](/images/215e47c-small-Screenshot_2023-05-04_at_14.21.02.png)
+
+Pass the [resource ID](#resource-id) parameter to render a customer portal for the current product instance.
+
+> ## 🚧
+> 
+> Ensure that the resource ID is passed both to the `CustomerPortal` **and** `Paywall` components.
+
+React
+
+`<CustomerPortal
+  resourceId='resource-01'
+  paywallComponent={
+    <Paywall
+  	  resourceId='resource-01'
+    	// rest of paywall parameters
+    />
+  }
+  // rest of customer portal parameters
+/>
+`
+
+#### Checkout
+
+Stigg's [checkout widget](checkout) allows you to easily accept payments without ever worrying about changes to your pricing model or migration to another billing provider.
+
+Pass the [resource ID](#resource-id) parameter to render a checkout experience for the current product instance.
+
+React
+
+`<Checkout
+        planId={'<TARGET_PLAN_ID>'}
+				resourceId='resource-01'
+        onCheckoutCompleted={({ success, error }) => {
+          // TODO: handle checkout completion
+        }}
+      />
+`
+
+#### Customization
+
+Stigg's widgets can be [fully customized](react-sdk#customization-options) to align with your app's styling.
+
+#### Additional frameworks
+
+For more details about Stigg's widgets and additional frameworks, see:
+
+[ ![](/images/ad4e0e2-computer.png)  Frontend integration Codebase integration ](codebase-integration-overview) 
+
+  
+### Billing your customers
+
+Stigg can be integrated with billing solutions (such as [Stripe](stripe)) to bill customers for their subscriptions. 
+
+When such an integration is in place the same payment method can be used to pay for all of the subscription; however, each subscription will be billed according to its own billing period, and will generate a separate invoice.
+
+  
+## Combination with single instance products
+
+In addition to multi-instance products, Stigg allows you to define products that customers will have a single active subscription for at a certain point in time.
+
+Leveraging a combination of a single instance product with a multi-instance product, allows you to implement an account + sub-account and platform + app instance monetization models. An example of such a model can be seen at [Webflow](https://webflow.com/pricing).
+
+![](/images/75a1213-image.png)
+
+To do so, create another product, but this type set its subscription type to "single active subscription".
+
+When a customer is subscribed to both a single and multi-instance product, and both products grant access to the same entitlement, the customer will have access to the maximum entitlement value amongst the different products.
+
+For more details see:
+
+[ ![](/images/8170225-small-3616786.png)  How are customer entitlements calculated in Stigg? ](entitlement-calculation-in-stigg) 

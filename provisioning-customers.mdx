@@ -1,0 +1,76 @@
+---
+title: "Provisioning customers"
+---
+
+## Overview
+
+In this quick start guide we'll demonstrate how to provision customers in Stigg.
+
+**Customers** in Stigg should be provisioned when a customer is created in your application, for example: as part of your registration or onboarding process.
+
+  
+## Before we begin
+
+In order to complete this guide in your application code, please make sure that you have:
+
+* [Modeled your pricing in Stigg](modeling-your-pricing)
+* [Installed the Stigg Node.js server SDK](nodejs-sdk#initializing-the-sdk)
+* [A Stigg **server** API key](nodejs-sdk#retrieving-the-server-api-key)
+  
+## Initializing the server SDK
+
+The first step is to initialize Stigg's server SDK with the server API key of the environment that's integrated with Stigg:
+
+TypeScript
+
+`import Stigg from '@stigg/node-server-sdk';
+
+const stiggClient = await Stigg.initialize({ apiKey: 'YOUR_SERVER_API_KEY' });
+
+export default stiggClient;
+`
+
+> ## 🚧
+> 
+> The Stigg SDK instance has an internal cache and supports retries for certain API calls on network errors. In general, you should initialize it once per process (for example: using a singleton design-pattern) and use the same instance throughout the codebase.
+
+  
+## Provision a customer
+
+When a new customer is provisioned within your application (for example: as part of your registration or onboarding process), you should also provision them in Stigg. 
+
+You can optionally pass `subscriptionParams` to create subscription for that customer using a single operation. Doing so, will allow Stigg admins to override the requested subscription with no-code from the Stigg Console using the [product's Customer Journey configuration](products#defining-the-customer-journey).
+
+TypeScript
+
+`const customer = await stiggClient.provisionCustomer({ 
+    customerId: 'test-customer-id',
+    name: 'My very first customer',
+    email: '[[email protected]](/cdn-cgi/l/email-protection)',
+    subscriptionParams: {
+      planId: 'plan-basic'
+    }
+});
+`
+
+### Excluding customers from experiment
+
+When running experiments, in some cases we would want to exclude customer from participating in the experiment. For example if we have a marketing campaign for new users that creates new subscriptions to specific plans. We will need to use the `excludeFromExperiment` flag. In case the flag is provided, customer will have the subscription according to the customer journey.
+
+TypeScript
+
+`const customer = await stiggClient.provisionCustomer({ 
+    customerId: 'test-customer-id',
+    name: 'My very first customer',
+    email: '[[email protected]](/cdn-cgi/l/email-protection)',
+ 	  excludeFromExperiment: true,
+    subscriptionParams: {
+      planId: 'plan-basic'
+    }
+});
+`
+
+  
+## Additional resources
+
+[ ![](/images/f5ade1e-iconfinder-valueserver-4417114_116617.png)  Stigg's backend integration ](backend-integration) 

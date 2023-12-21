@@ -1,0 +1,177 @@
+---
+title: "Sidecar"
+---
+
+Sidecar is a tiny service that runs alongside your main application, acting as a proxy between the host and the Stigg API. The service provices low latency entitlement checks, handles caching and subscribes to real-time entitlements and usage data updates.
+
+The benefits of deploying the Sidecar service:
+
+* Less CPU consumption and memory footprint for the host application when compared to embedding the SDK directly
+* Language neutral API defined in Protocol Buffers accessible over gRPC
+* Support for in-memory cache or external cache (like Redis) for entitlements and usage data
+* Scaled together with the main application, or independently if deployed as a standalone service
+* Synergy with [persistent-cache-service](https://gallery.ecr.aws/p2i1w6c0/persistent-cache-service)
+
+> ## 📘
+> 
+> Sidecar SDK
+> 
+> Read about sending requests to the Sidecar service in the [Sidecar SDK](/docs/sidecar-sdk) page.
+
+### Overview
+
+The sidecar service can be deployed together with the host application/service by utilizing the sidecar pattern - meaning each application has a sidecar container next to it which it can send requests to.  
+Alternatively it can be deployed as a standalone service which can be accessed remotely over an exposed port. 
+
+The service can be scaled horizontally to support a higher volume of requests, but keep in mind that if in-memory cache is used, there will be a higher ratio of cache misses. In case of a cache miss, the service will fetch the data over the network directly from API, and update the cache to serve future requests.
+
+The sidecar is not intended to be exposed to the internet or to be accessed from a browser.
+
+![](/images/a7335ba-image.png) 
+
+Sidecar service can be deployed in the same network namespace (or same K8 Pod), as the main application.  
+Once entitlement data is fetched from the Stigg API, it is persisted in the local or external cache.
+
+Local cache invalidation is handled by the Sidecar service. If using an external cache, an instance of the [persistent-cache-service](https://gallery.ecr.aws/p2i1w6c0/persistent-cache-service) must be deployed as well to handle cache updates, as illustrated below:
+
+![](/images/99583c3-image.png) 
+
+### Running the service
+
+#### Prerequisites
+
+* Docker
+* Redis instance, if a persistent cache is in use
+
+#### Usage
+
+Login to AWS ECR:
+
+Shell
+
+`aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/stigg
+`
+
+Run the service:
+
+Shell
+
+`docker run -it -p 8443:8443 \ 
+  -e SERVER_API_KEY="<SERVER_API_KEY>" \
+  public.ecr.aws/stigg/sidecar:latest
+`
+
+Available options:
+
+| Environment Variable       | Type         | Default                                                                                                         | Description                                                             |
+| -------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| SERVER\_API\_KEY           | **String\*** | Environment Server API key                                                                                      |                                                                         |
+| API\_URL                   | String       | [https://api.stigg.io](https://api.stigg.io)                                                                    | Stigg API address URL                                                   |
+| EDGE\_ENABLED              | Boolean      | TRUE                                                                                                            | Enables Edge API                                                        |
+| EDGE\_API\_URL             | String       | [https://edge.api.stigg.io](https://edge.api.stigg.io)                                                          | Edge API URL                                                            |
+| WS\_ENABLED                | Boolean      | TRUE                                                                                                            | Enables WebSockets API                                                  |
+| WS\_URL                    | String       | wss://api.stigg.io                                                                                              | WebSockets API URL                                                      |
+| REDIS\_ENVIRONMENT\_PREFIX | String       | Identifier of the environment, used to prefix the keys in Redis. If provided, Redis will be as the cache layer. |                                                                         |
+| REDIS\_HOST                | String       | localhost                                                                                                       | Redis host                                                              |
+| REDIS\_PORT                | Number       | 6379                                                                                                            | Redis port                                                              |
+| REDIS\_DB                  | Number       | 0                                                                                                               | Redis DB identifier                                                     |
+| REDIS\_USERNAME            | String       | Redis username                                                                                                  |                                                                         |
+| REDIS\_PASSWORD            | String       | Redis password                                                                                                  |                                                                         |
+| REDIS\_KEYS\_TTL\_IN\_SECS | Number       | 604,800(7 days)                                                                                                 | Time period for Redis to keep the data before eviction, in milliseconds |
+| ENTITLEMENTS\_FALLBACK     | String       | Fallback entitlements in a JSON string format                                                                   |                                                                         |
+| PORT                       | Number       | 8433                                                                                                            | Service port                                                            |
+
+\*Required fields
+
+### Health
+
+The service exposes two endpoints accessible via HTTP:
+
+#### `GET /livez`
+
+Returns `200` if the service is alive.
+
+Healthy response: `{"status":"UP"}`
+
+#### `GET /readyz`
+
+Returns `200` if the service is ready.
+
+Healthy response: `{"status":"UP"}`
+
+### Usage with Sidecar SDK
+
+To interact with a running Sidecar service, you can pass the remote sidecar host and post parameters:
+
+Python
+
+`
+import os
+from stigg_sdk import Stigg, ApiConfig
+
+stigg = Stigg(
+    ApiConfig(
+        api_key='<SERVER_API_KEY>',
+    ),
+    # set remote sidecar host and port:
+    remote_sidecar_host='localhost',
+    remote_sidecar_port=8443
+)
+`
+
+Once configured, the Sidecar SDK will **not** launch a sidecar service as a sub-process, and send requests to the remote address instead.
+
+### Persistent cache
+
+In order for the cached data to survive service restarted, or shared across multiple instances of the Sidecar service, you can use Redis as the cache layer by providing the `REDIS_*` environment variables:
+
+Shell
+
+`docker run -it -p 8443:8443 \
+    -e SERVER_API_KEY="<SERVER_API_KEY>" \
+    -e REDIS_ENVIRONMENT_PREFIX="production" \
+    -e REDIS_HOST="localhost" \
+    public.ecr.aws/stigg/sidecar:latest
+`
+
+> ## 📘
+> 
+> To keep the cache up-to-date, you will also need to run a [persistent cache service](persistent-caching) in a separate process.
+
+### Global fallback strategy
+
+[Global fallback strategy](/docs/local-caching-and-fallback-strategy#global-fallback-configuration) can be set by providing the Sidecar service with the `ENTITLEMENTS_FALLBACK` environment variable. It expects a value in a JSON object in a string format.
+
+For example, the following global fallback configuration JSON structure:
+
+JSON
+
+`{
+  'feature-01-templates': {
+    hasAccess: true,
+    usageLimit: 1000,
+  },
+  'feature-02-campaigns': {
+    hasAccess: true,
+    isUnlimited: true
+  }
+}
+`
+
+Can be formatted using `JSON.stringify` and then set as value of `ENTITLEMENTS_FALLBACK` when running the container:
+
+Shell
+
+`docker run -it -p 8443:8443 \ 
+  -e SERVER_API_KEY="<SERVER_API_KEY>" \
+  -e ENTITLEMENTS_FALLBACK='{"feature-01-templates":{"hasAccess":true,"usageLimit":1000},"feature-02-campaigns":{"hasAccess":true,"isUnlimited":true}}' \
+  public.ecr.aws/stigg/sidecar:latest
+`
+
+### Sidecar service API
+
+> ## 📘
+> 
+> Sidecar SDK
+> 
+> Read about sending requests to the Sidecar service in the [Sidecar SDK](/docs/sidecar-sdk) page.

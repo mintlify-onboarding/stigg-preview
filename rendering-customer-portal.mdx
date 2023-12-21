@@ -1,0 +1,55 @@
+---
+title: "Rendering a customer portal"
+---
+
+## Overview
+
+In this quick start guide we'll demonstrate how to create a customer portal using Stigg's embeddable widgets.
+
+Stigg's customer portal widget allows you to introduce self-service and drive in-app expansions using only a few lines of codes.
+
+The customer portal:
+
+1. Provides customers with visibility to their current subscription details - subscribed plan, purchased add-ons, granted promotional entitlements.
+2. Provides customers with visibility to the usage of their subscription's features.
+3. Allows customers to upgrade and downgrade their subscription in a self-served manner - when you update your pricing model in Stigg, customers will auto-magically be able to upgrade or downgrade their subscription according to the updated pricing model 😎.
+4. Allows customers to view their billing and payment information - when Stigg is integrated with a billing solution (such as Stripe), customers can also update this information and view previous invoices directly from the billing solution's billing portal.
+
+![](/images/55ae4d3-Frame_18882.png)
+
+  
+## Before we begin
+
+In order to complete this guide in your application code, please make sure that you have:
+
+* [Modeled your pricing in Stigg](modeling-your-pricing)
+* [Installed the Stigg React client SDK](react-sdk#installing-the-sdk)
+* [A Stigg **client** API key](javascript-sdk#retrieving-the-client-api-key)
+  
+## Initializing the React SDK
+
+The first step is to initialize Stigg's React SDK with the client API key by wrapping your application with StiggProvider component.
+
+React
+
+`import React from 'react';
+import ReactDOM from 'react-dom';
+import { StiggProvider } from '@stigg/react-sdk';
+import App from './App';
+
+ReactDOM.render(
+  <StiggProvider apiKey="YOUR_CLIENT_API_KEY">
+    <App />
+  </StiggProvider>,
+  document.getElementById('app'),
+);
+`
+
+  
+## Rendering the customer portal
+
+[ ![](/images/9f55ab1-codingbrowser_102152.png)  Rendering a customer portal Customer portal widget ](customer-portal#rendering-a-customer-portal) 
+
+## Additional resources
+
+[ ![](/images/9a0f073-Group_16979_1.png)  Customer portal widget Introduce self-service and drive in-app expansions using only a few lines of codes ](customer-portal) 

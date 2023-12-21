@@ -1,0 +1,70 @@
+{
+    "$schema": "https://mintlify.com/schema.json",
+    "name": "Stigg",
+    "logo": {
+      "dark": "/logo/dark.svg",
+      "light": "/logo/light.svg"
+    },
+    "favicon": "/favicon.svg",
+    "colors": {
+      "primary": "#317DED",
+      "light": "#A9C1FF",
+      "dark": "#6892FF"
+    },
+    "topbarLinks": [
+      {
+        "name": "Log In",
+        "url": "https://app.stigg.io/"
+      }
+    ],
+    "topbarCtaButton": {
+      "name": "Sign Up",
+      "url": "https://app.stigg.io/signup"
+    },
+    "tabs": [
+      {
+        "name": "Changelog",
+        "url": "https://changelog.stigg.io/"
+      }
+    ],
+    "navigation": [
+        {
+            "group": "Getting Started",
+            "pages": [
+              "welcome-to-stigg",
+              "get-started-in-minutes"
+            ]
+          },
+          {
+            "group": "",
+            "pages": [
+              {
+                "group": "Modeling your pricing",
+                "pages": [
+                  "modeling-your-pricing",
+                  "features",
+                  "products",
+                  "plans",
+                  "add-ons",
+                  "coupons"
+                ]
+              },
+              {
+                "group": "Use-case specific guides",
+                "pages": [
+                  "use-case-specific-guides",
+                  "free-trials",
+                  "freemium",
+                  "multiple-subscriptions"
+                ]
+              }
+            ]
+          }
+    ],
+    "footerSocials": {
+      "web": "https://www.stigg.io/",
+      "twitter": "https://twitter.com/GetStigg/",
+      "linkedin": "https://www.linkedin.com/company/getstigg/"
+    }
+  }
+  

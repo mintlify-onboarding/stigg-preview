@@ -1,0 +1,61 @@
+---
+title: "Gating access to features"
+---
+
+## Overview
+
+In this quick start guide we'll demonstrate how to gate access to features.
+
+The functionality that’s included in each plan is defined by a combination of features and their configuration, referred to in Stigg as **entitlements**.
+
+  
+## Before we begin
+
+In order to complete this guide in your application code, please make sure that you have:
+
+* [Modeled your pricing in Stigg](modeling-your-pricing)
+* [Installed the Stigg JavaScript client SDK](javascript-sdk#installing-the-sdk)
+* [A Stigg **client** API key](javascript-sdk#retrieving-the-client-api-key)
+  
+## Initializing the client SDK
+
+The first step is to initialize Stigg's client SDK with the client API key of the environment that's integrated with Stigg, and the ID of the relevant customer.
+
+The customer ID can usually be retrieved after a customer signs-in or restores their session.
+
+TypeScript
+
+`import Stigg from '@stigg/js-client-sdk';
+
+const stiggClient = await Stigg.initialize({ 
+    apiKey: 'YOUR_CLIENT_API_KEY',
+    customerId: "customer-test-id"
+});
+
+export default stiggClient; 
+`
+
+  
+## Checking whether the customer can access the feature
+
+Checking whether the customer has access to the feature, is achieved in 2 steps:
+
+1. Retrieve the customer's entitlement for the feature using the feature ID that's defined in Stigg.  
+TypeScript  
+`const entitlement = stiggClient.getMeteredEntitlement({  
+    featureId: "feature-birds",  
+    options: { requestedUsage: 3 }  
+});  
+`  
+> ## 📘  
+> This example demonstrates a customer's attempt to use 3 birds of their quota at once.
+2. Use the result to check whether they have access to this functionality.  
+TypeScript  
+`if (entitlement.hasAccess) {  
+    console.log("The customer can access the feature!");  
+}  
+`
+  
+## Additional resources
+
+[ ![](/images/3682af4-Stiggs_Frontend_integration.png)  Stigg's frontend integration ](frontend-integration) 

@@ -1,0 +1,127 @@
+---
+title: "Stripe"
+description: "Learn about Stigg's integration with Stripe Billing"
+---
+
+## Overview
+
+[Stripe](https://stripe.com/billing) is the fastest way for your business to bill customers with subscriptions or invoices, and accept recurring payments globally.
+
+Stigg's native integration with Stripe enables:
+
+1. Automatic propagation of changes from the Stigg platform to Stripe, including: changes to the product catalog (product, plans and add-ons, coupons), customers, subscriptions and their usage.
+2. Automatic propagation of changes from Stripe to Stigg, including: subscription cancellations in Stigg when they're cancelled in Stripe.
+3. Ability to leverage Stripe's hosted checkout page for customer checkout process, without needing to perform any additional integration with Stripe.
+4. Ability to leverage Stripe's hosted billing portal to allow customers to update their billing details and payment method, as well as view past invoices, without needing to perform any additional integration with Stripe.
+
+## Entity mapping
+
+Stigg entities are mapped to Stripe entities as follows:
+
+| Stigg Entity | Stripe Entity | Stripe Entity Name Format                                                                                                                                                                                                                                                                                                                                                                                     | Notes                                                                                                                                                                            |
+| ------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Feature      | N/A           |                                                                                                                                                                                                                                                                                                                                                                                                               |                                                                                                                                                                                  |
+| Product      | N/A           |                                                                                                                                                                                                                                                                                                                                                                                                               |                                                                                                                                                                                  |
+| Plan         | Product       | Planfor example: Acme Basic Plan                                                                                                                                                                                                                                                                                                                                                                              | Every published plan is mapped to a dedicated Stripe product. Plan prices are versioned - when the price changes, a new price is created and the previous price is archived.     |
+| Add-on       | Product       | Add-onfor example: Acme 10 Seats Add-on                                                                                                                                                                                                                                                                                                                                                                       | Every published add-on is mapped to a dedicated Stripe product. Add-on prices are versioned - when the price changes, a new price is created and the previous price is archived. |
+| Coupon       | Coupon        | When a coupon is archived in Stigg, it's deleted in Stripe; therefore, the coupon cannot be applied to new customers. Existing customers that the coupon is applied to are not affected.                                                                                                                                                                                                                      |                                                                                                                                                                                  |
+| Customer     | Customer      | By default, the customer name and email in Stigg are synced to Stripe - the name is used as the customer name and description, and the email as the billing email address. It's also possible to report a different customer name to Stripe, which is useful for generating invoices with the full company name (i.e. customer name in Stigg is "Acme", and the customer name in Stripe will be "Acme Ltd."). |                                                                                                                                                                                  |
+| Subscription | Subscription  | The subscription will include line items for each of the charges that are defined in the plan's pricing. When provisioning subscriptions with add-ons, each add-on will also be reflected as a separate line item.Due to a [limitation in Stripe](https://stripe.com/docs/api/subscriptions/create), each customer can have at most 500 active subscriptions.                                                 |                                                                                                                                                                                  |
+
+  
+![](/images/827187a-import-overview.80b68e64.png)
+
+  
+### Entities that are not synced to Stripe
+
+| Entity                                                                | Not synced to Stripe when...           |
+| --------------------------------------------------------------------- | -------------------------------------- |
+| Customer                                                              | Customer doesn't have any subscription |
+| Customer only has subscriptions to free plans                         |                                        |
+| Customer only has trial subscriptions                                 |                                        |
+| Customer only has subscriptions to plans with a custom price          |                                        |
+| Customer's billing information is not sent to Stigg                   |                                        |
+| Customer doesn't have a payment method define in the billing solution |                                        |
+| Syncing of customers is disabled in the environment                   |                                        |
+| Subscription                                                          | Subscription is for a free plan        |
+| Subscription is for a trial plan                                      |                                        |
+| Subscription is for a plan with a custom price                        |                                        |
+| Syncing of subscriptions is disabled in the environment               |                                        |
+
+  
+### Syncing customer usage to Stripe
+
+When customers are subscribed to plans with usage-based pricing, the customer usage that's reported to Stigg is synced to Stripe **every hour**.
+
+## Setting up the integration
+
+In the [Stigg app](https://app.stigg.io), under the **Settings > Integrations > Apps** section, select the Stripe connector.
+
+If you're setting up the integration for development or testing purposes, toggle "Use Stripe test account" on.
+
+Click "Connect with Stripe".
+
+You'll be redirected to Stripe in order to complete the integration process.
+
+In the opened screen click "Connect", and follow the instructions.
+
+![](/images/772d3cc-Screen_Shot_2022-03-31_at_18.12.03.png)
+
+Once all of the integration steps on the Stripe side are completed, you'll be redirected back to Stigg.
+
+> ## 📘
+> 
+> Make sure to use the correct Stripe account when setting up the integration
+
+## Indication for synced entities
+
+Entities that are synced from Stigg to Stripe have a clickable "billing ID" property with a Stripe logo next to it and indication of their sync status (successful, failed, [will not be synced](#entities-that-are-not-synced-to-stripe)).
+
+![](/images/f53b101-Screenshot_2023-09-12_at_2.58.14.png) 
+
+## Accessing Stripe entities from Stigg
+
+In the Stigg app, clicking on the link of the "billing ID" property will open the relevant entity in Stripe.
+
+![](/images/2bbfb29-Screenshot_2023-09-12_at_2.58.14.png) 
+
+## Accessing Stigg entities from Stripe
+
+In Stripe, under the "Metadata" section of the relevant entity, click on the link that appears under the "stiggEntityUrl" field.
+
+![](/images/2ddc6ca-image.png)
+
+## Integration with Stripe's Billing Portal
+
+When Stigg is integrated with Stripe and using [Stigg's Customer Portal widget](react-sdk#rendering-a-customer-portal), customers can update their billing information and view previous invoices directly from [Stripe's Billing Portal](https://stripe.com/docs/customer-management/get-started) (when it's enabled).
+
+To ensure that the functionality of Stigg's Customer Portal doesn't collide with that of Stripe's Billing Portal, it's recommended to [configure Stripe's Billing Portal](https://dashboard.stripe.com/settings/billing/portal) as follows:
+
+1. Launch customer portal with a link - **enabled**
+2. Invoices  
+   1. Invoice history - **enabled**
+3. Customer information - **enabled**  
+   1. Email address - **unchecked**  
+   2. Billing address - **checked**  
+   3. Phone number - **checked**
+4. Payment methods  
+   1. Payment method - **enabled**
+5. Subscriptions  
+   1. Cancel subscriptions - **disabled**  
+   2. Pause subscriptions - **disabled**  
+   3. Switch plans - **disabled**  
+   4. Update quantities - **disabled**
+
+## Integration with Stripe Tax
+
+Stigg can be integrated with [Stripe](https://stripe.com/tax) Tax to automatically calculate customer tax rates during checkout sessions, provisioning and updating of subscriptions.
+
+Before the integration can be enabled, please make sure to [set up Stripe Tax](https://stripe.com/docs/tax/set-up).
+
+To enable the integration, please contact Stigg Support.
+
+## Removing the integration
+
+To remove the integration, click on the dotted menu icon and select the "Remove" action.
+
+Confirm the action by clicking on the "Remove" button in the opened modal.

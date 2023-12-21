@@ -1,0 +1,36 @@
+---
+title: "Overview"
+---
+
+The Stigg platform offers native high throughput usage metering and aggregation capabilities that can be leveraged as the source of truth for measuring customer usage. 
+
+Measuring customer usage accurately is critical when implementing usage-based and hybrid pricing models.
+
+![](/images/907452d-image.png)
+
+Stigg processes changes to customer usage in real-time and allows the following:
+
+1. Visibility to customer's current usage
+2. Access enforcement according to the defining pricing model
+3. Billing according to reported usage
+4. Customer notifications about changes to their usage, for example: limit is about to be exceeded
+5. Notifications to internal stakeholders (i.e. sales and CS reps) about changes to customer usage
+6. Triggering of additional actions in applications that are integrated with Stigg
+
+## Supported usage sources
+
+Stigg supports metering of usage from the following data sources:
+
+1. [Calculated usage](reporting-calculated-usage) \- usage that has been aggregated and calculated by **your application**. This type is useful for features, such as: seats.
+2. [Raw events](reporting-raw-events) \- raw events from your application, which **Stigg** filters and aggregates aggregate to calculate customer usage. This type is useful for features, such as: monthly active users (MAUs).
+
+The following table summarizes the differences between the two data source types:
+
+| Calculated usage                            | Raw events                                                                                        |                                                                                                                                         | Supports custom dimensions | ❌ | ✅ |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | - | - |
+| Aggregated by                               | Your application                                                                                  | Stigg                                                                                                                                   |                            |   |   |
+| Supported aggregation methods               | Custom                                                                                            | Count  Count unique  Sum  Max  Min  Average                                                                                             |                            |   |   |
+| Limit enforcement                           | Immediate                                                                                         | Near real-time (up to 10 seconds)                                                                                                       |                            |   |   |
+| Ability to bill according to reported usage | ✅                                                                                                 | ✅                                                                                                                                       |                            |   |   |
+| Use when                                    | Usage calculation is simple  Low throughput of usage changes  Limit enforcement must be immediate | Calculation is complex and/or distributed  High throughput of usage changes  Limit enforcement is not required or can be near real-time |                            |   |   |
+| Example use-cases                           | Seats                                                                                             | Monthly active users (MAU), bandwidth, used storage                                                                                     |                            |   |   |

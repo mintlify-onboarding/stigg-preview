@@ -1,0 +1,137 @@
+---
+title: "Integration when using Stripe Elements for checkout"
+---
+
+## Overview
+
+Stigg allows to implement custom checkout experiences using [Stripe Elements](https://stripe.com/docs/payments/elements), while delegating the subscription lifecycle management to Stigg.
+
+Doing so while require the following process:
+
+1. Collection of the payment method using Stripe Elements
+2. Updating the customer in Stigg using the Stigg server SDKs
+3. Provisioning our updating the subscription in Stigg using the Stigg server SDKs
+
+Stigg will then auto-magically create and update the customer and subscription objects in Stripe 🧙🪄
+
+  
+## Before we begin
+
+In order to complete this guide in your application code, please make sure that you have:
+
+* Access to a Stripe account
+* A Stigg environment that's [integrated with Stripe](stripe)
+* [Modeled your pricing in Stigg](modeling-your-pricing)
+* Know how to [provision customers in Stigg](provisioning-customers)
+* Know how to [update subscriptions in Stigg](subscriptions#updating-subscriptions)
+  
+## How it works
+
+It's typical to build the checkout form using [Stripe.js](https://stripe.com/docs/payments/elements) elements and leverage the [Setup Intents API](https://stripe.com/docs/payments/setup-intents) to confirm the payment method and save it for future use.
+
+If you need help in setting this up, you can refer to [this article](https://stripe.com/docs/payments/save-and-reuse) to learn how setup intents work.
+
+In case you have a different setup in place, let us know and we'll assist you with the integration to suit your needs.
+
+Once your checkout form is built, the journey of the customer should look similar to this one:
+
+### Provision a new subscription
+
+![](/images/28aa79e-swimlanes-d9baf22fa0428b9a8b9fb6a22bd03b7b.png) 
+
+### Update an existing subscription
+
+![](/images/be8169b-swimlanes-81aac088b59b72108f59f59419f0eb3c.png)
+
+## Provisioning a customer
+
+When a new user sign up to your application, provision a customer in Stigg to represent an individual or an organization:
+
+TypeScript
+
+`await stiggClient.provisionCustomer({ 
+  customerId: 'CUSTOMER-ID', 
+  subscriptionParams: null,
+  ... 
+});
+`
+
+## Rendering the paywall
+
+To render a paywall inside your application, you can use Stigg's embeddable widget or render your own pricing plans component based on the data fetched from Stigg:
+
+[ ![](/images/9f55ab1-codingbrowser_102152.png)  Rendering in-app paywalls Pricing table widget ](pricing-table#rendering-pricing-tables#in-app-paywalls) 
+
+## Adding a payment method to the customer in Stripe
+
+When a user selects a plan, present the custom checkout form to add the new payment method. 
+
+According to [official Stripe documentation](https://stripe.com/docs/payments/save-and-reuse), you should create the `SetupIntent` for the customer on your backend, and then propagate the returned intent `client_secret` to the frontend.
+
+It can then be used to initialize the `stripe.elements` form in a secured manner.
+
+![Creating a SetupIntent](/images/175faa0-image.png)
+
+Creating a SetupIntent
+
+![Exposing the SetupIntent to the client](/images/9f21b14-image_2.png)
+
+Exposing the SetupIntent to the client
+
+![Provide the `client_secret` to `stripe.elements()` options](/images/e032309-image_3.png)
+
+Provide the `client_secret` to `stripe.elements()` options
+
+The checkout form should handle the validation of the card prior creating subscription in Stigg, and once its valid you will get a `payment_method` id on the return value. 
+
+You can attach the newly created payment method to a customer in Stigg using by passing the returned `payment_method` ID to the `updateCustomer` method.
+
+TypeScript
+
+`await stiggClient.updateCustomer({
+    customerId: 'CUSTOMER-ID',
+    billingInfo: { paymentMethodId: 'PAYMENT-METHOD-ID'}
+})
+`
+
+## Provisioning a subscription
+
+After attaching the payment method to the customer, provision a subscription in Stigg:
+
+TypeScript
+
+`const subscription = await stiggClient.provisionSubscription({
+    customerId: 'CUSTOMER-ID',
+    planId: 'PLAN-ID',
+    ...
+})
+`
+
+At this point, Stigg will attempt to create a subscription in Stripe and use the default payment method to be charged for the generated invoice in the case of a paid plan.
+
+### Handling successful payments
+
+Once the payment is successful, the subscription will become active in Stigg and the customer will be granted access to the associated entitlements. 
+
+On the front-end, you should call the `refresh` function to re-fetch the current customer data and the new entitlements.
+
+TypeScript
+
+`await stiggClient.refresh();
+`
+
+Stigg will update the server SDKs in real-time by pushing the updates over a web-socket connection.
+
+You can also optionally subscribe to to the `entitlements.updated` [webhook](webhooks) event to update third-party applications.
+
+### Handling failed payments
+
+If the payment was not successful or requires additional steps (for example: when 3DS confirmation is required), the `provisionSubscription` method will return an [appropriate response](nodejs-sdk#provisioning-subscriptions).
+
+> ## 🚧
+> 
+> Stripe creates a time frame (default of 24 hours) for the outstanding invoice to be settled. If the invoice is not settled within that time frame, the subscription is canceled both in Stripe and Stigg.
+
+### Handling failure of recurring payments
+
+You can notify customers about failed payments by listening to Stigg's `customer.payment_failed` [webhook](webhooks). The customer should be instructed to replace the payment method with a different one and to try again.

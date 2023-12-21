@@ -1,0 +1,252 @@
+---
+title: "AWS Marketplace (beta)"
+---
+
+## Overview
+
+AWS Marketplace is a curated digital catalog that customers can use to find, buy, deploy, and manage third-party software to build solutions and run their businesses. When customers subscribe to products via the AWS Marketplace, AWS handles billing and payments, and charges appear on customers' AWS bill.
+
+Stigg's native integration with the AWS Marketplace allows you to leverage the same entitlement management and metering infrastructure for access enforcement and usage reporting regardless of where your product is listed (on your public website or the AWS Marketplace) or how your customers are billed (via AWS or other billing solution).
+
+![](/images/a16161e-image.png)
+
+> ## 📘
+> 
+> Stigg's integration with the AWS Marketplace is currently available in beta for select customers. To access it, please contact [Stigg Support](/cdn-cgi/l/email-protection#0a797f7a7a65787e4a797e636d6d246365).
+
+## Entity mapping
+
+| Stigg Entity | AWS Marketplace Entity | Notes                                                                                                                                        |
+| ------------ | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Feature      | N/A                    |                                                                                                                                              |
+| Product      | Product                |                                                                                                                                              |
+| Plan         | Dimension              | Since pricing is defined on the AWS Marketplace, plans that are imported to Stigg will be defined with [custom pricing](plans#custom-plans). |
+| Customer     | Customer               | Mapping between customers on the Stigg platform and in AWS is achieved using the AWS ID.                                                     |
+| Subscription | Subscription           |                                                                                                                                              |
+
+> ## 🚧
+> 
+> Stigg's beta integration with the AWS Marketplace currently only supports AWS products with a [SaaS contract](https://docs.aws.amazon.com/marketplace/latest/userguide/saas-contracts.html) pricing model where the customer can choose one tier from multiple tiers offered.
+
+## Prerequisites
+
+Before you get started, pleas make sure that the following prerequisites are met:
+
+* You're [registered as an AWS Marketplace seller](https://docs.aws.amazon.com/marketplace/latest/userguide/saas-getting-started.html)
+* You've [created a SaaS product on the AWS Marketplace](https://docs.aws.amazon.com/marketplace/latest/userguide/saas-getting-started.html) (steps 1-4)
+
+## Setting up the integration
+
+### Granting Stigg access to your AWS Marketplace listing
+
+As part of the integration process, Stigg will import your listing in the AWS Marketplace and create the relevant entities in your Stigg environment. To do so, Stigg must be granted access to your listing in the AWS Marketplace.
+
+#### In Stigg
+
+In the [Stigg app](https://app.stigg.io), navigate to the AWS Integration page under Apps > Integrations.
+
+Copy the AWS Marketplace role configuration.
+
+#### In AWS
+
+##### Create an AWS Marketplace access policy
+
+In AWS Identity Access Management (IAM) [create a new policy](https://console.aws.amazon.com/iam/home#/policies).
+
+Under the Policy Editor section, select "JSON".
+
+![](/images/af70287-Screenshot_2023-11-25_at_19.24.19.png) 
+
+Paste the the below configuration:
+
+AWS IAM Policy
+
+`{
+  "Version": "2012-10-17",
+  "Statement": [
+      {
+          "Action": [
+              "aws-marketplace:BatchMeterUsage",
+              "aws-marketplace:GetEntitlements",
+              "aws-marketplace:ListEntities",
+              "aws-marketplace:DescribeEntity"
+          ],
+          "Effect": "Allow",
+          "Resource": "*"
+      }
+  ]
+}
+`
+
+Click "Next".
+
+Enter the policy name, for example `StiggAWSMarketplaceAccess`.
+
+Click "Create Policy".
+
+  
+##### Create the Stigg AWS Marketplace role
+
+In AWS Identity Access Management (IAM) create a [new role](https://console.aws.amazon.com/iam/home#/roles).
+
+In the shown wizard, select "Custom trust policy".
+
+![](/images/3647bf1-Screenshot_2023-11-25_at_19.27.39.png) 
+
+Paste the role configuration that was copied from the Stigg app.
+
+![](/images/93bb529-Screenshot_2023-11-26_at_14.01.21.png) 
+
+Click "Next".
+
+Select the policy that you created in the previous step.
+
+Click "Next".
+
+![](/images/067a18b-Screenshot_2023-11-25_at_19.29.01.png) 
+
+Enter the role name, for example `StiggAWSMarketplaceRole`.
+
+Click "Create role".
+
+Open the created role and copy its ARN.
+
+![](/images/41d5860-Screenshot_2023-11-25_at_19_30_14.png)   
+
+#### In Stigg
+
+In the [Stigg app](https://app.stigg.io), navigate to the AWS Integration page under Apps > Integrations.
+
+Enter the ARN from the previous step.
+
+Click "Connect".
+
+![](/images/8d13b1e-Screenshot_2023-11-25_at_19.46.36.png)   
+
+### Notifying Stigg on subscription creation and updates
+
+In this step we'll be configuring AWS to notify Stigg upon creation of new subscriptions, upgrade, downgrades and cancelations.
+
+#### In Stigg
+
+In the [Stigg app](https://app.stigg.io), navigate to the AWS Integration page under Apps > Integrations.
+
+Copy the URL of the notification endpoint.
+
+![](/images/b2a7c84-Screenshot_2023-11-26_at_16.13.21.png)   
+
+#### In AWS
+
+In the Amazon Marketplace Management Portal, select the product that you'd like import into Stigg.
+
+Copy the SNS topics of the metering and entitlement services:
+
+![](/images/d283848-Screenshot_2023-11-26_at_16.10.00.png) 
+
+In AWS Simple Notification Service (SNS) [create a new subscription](https://console.aws.amazon.com/sns/v3/home#/subscriptions).
+
+Enter the following details:
+
+1. ARN topic - paste the ARN of the metering service SNS topic.
+2. Protocol - HTTPS
+3. Endpoint - paste the URL that you copied from the Stigg app.
+
+Click "Create subscription".
+
+Repeat the process with the ARN of the entitlement service SNS topic.
+
+Repeat the steps in AWS for additional products that you'd like to import into Stigg.
+
+  
+### Importing products into Stigg
+
+In the [Stigg app](https://app.stigg.io), under the AWS Integration page click on the "Import listing" tile.
+
+![](/images/b208dee-Screenshot_2023-11-25_at_20.05.57.png) 
+
+In the opened screen, select the product that you'd like to import.
+
+![](/images/5e63a89-Screenshot_2023-11-26_at_14.14.49.png) 
+
+Map each of the product's dimensions in the AWS Marketplace to a plan in the Stigg platform.
+
+![](/images/8256171-Screenshot_2023-11-26_at_14.20.48.png) 
+
+Click "Import".
+
+Once the import process completes, you'll be redirected to the imported product.
+
+Each of the imported plans is created with [custom pricing](plans#custom-plans).
+
+![](/images/c31d8da-Screenshot_2023-11-26_at_14.23.32.png) 
+
+You can now [assign features to plans](plans#assigning-features-to-plans) by defining their entitlement.
+
+Conclude the import process by [publishing each of the imported plans](plans#publishing-plans). Doing so will allow your customers to subscribe to them.
+
+  
+### Provisioning AWS Marketplace customers in Stigg
+
+When customers subscribe to your products in the AWS Marketplace for the first time, they'll be redirected to your application where they can register for your service or login to their existing account.
+
+As part of this redirect action, AWS will include the context of AWS Marketplace customer.
+
+In order to grant customers access to products that are listed on the AWS Marketplace, the context of the AWS Marketplace customer ID must be passed to Stigg.
+
+#### In AWS
+
+Configure AWS to redirect to your application when customers subscribes to your product from the AWS Marketplace.
+
+[ ![](/images/5af8d41-2560px-Amazon_Web_Services_Logo.svg.png)  Update the SaaS URL fulfillment option AWS Marketplace seller guide ](https://docs.aws.amazon.com/marketplace/latest/userguide/saas-product-settings.html#update-fulfillment-options) 
+
+#### In your application
+
+Resolve the `CustomerIdentifier`, `CustomerAWSAccountId` from the redirect request made from AWS Marketplace.
+
+If needed, store the customer information in your application.
+
+Pass the `CustomerIdentifier` to Stigg:
+
+1. If the customer doesn't exist in your application, leverage the Stigg API and SDKs to provision it in Stigg. Make sure to pass the resolved `CustomerIdentifier` as the customer's `awsId` field.
+2. If the customer already exists in your application, leverage the Stigg API and SDKs to update its AWS ID with the `CustomerIdentifier`.
+
+[ ![](/images/5af8d41-2560px-Amazon_Web_Services_Logo.svg.png)  ResolveCustomer API reference AWS Marketplace metering service ](https://docs.aws.amazon.com/marketplacemetering/latest/APIReference/API%5FResolveCustomer.html) 
+
+  
+[ ![](/images/5af8d41-2560px-Amazon_Web_Services_Logo.svg.png)  ResolveCustomer code example AWS Marketplace seller guide ](https://docs.aws.amazon.com/marketplace/latest/userguide/saas-code-examples.html#saas-resolvecustomer-example) 
+
+  
+[ ![](/images/f5ade1e-iconfinder-valueserver-4417114_116617.png)  Stigg's backend integration ](backend-integration) 
+
+> ## 📘
+> 
+> There's no need to explicitly provision subscriptions to AWS products using the Stigg API and SDKs:
+> 
+> 1. When an AWS Marketplace context is provided to Stigg, Stigg will automatically fetch their relevant subscription from AWS.
+> 2. When a subscription is updated or canceled, Stigg will automatically process [notifications about these events from AWS](#notifying-stigg-on-subscription-creation-and-updates).
+
+> ## 🚧
+> 
+> Since the subscription flow for products listed on the AWS Marketplace is initiated by AWS Marketplace, it's **not** possible to provision subscriptions to these products [using the Stigg app UI](subscriptions#provisioning-subscriptions).
+
+  
+## Indication for synced entities
+
+Entities that are synced form the AWS Marketplace to Stigg will be marked with an AWS logo, and include an "AWS ID" property, for example:
+
+![](/images/3d32062-Plan_info_3.png)   
+
+## Applying pricing changes
+
+When your product is published on the AWS Marketplace, the AWS Marketplace serves as the source of truth for its price configuration; therefore all changes to plan pricing take place there. Changes to the level of access (entitlements) that customers have in each plan will be done using Stigg.
+
+When adding a new product dimension that represents a plan in the AWS Marketplace or editing an existing one, you will need to re-sync your listing into Stigg. Products and dimensions that have already been synced to Stigg will have a proper indication.
+
+When removing a product dimension in the AWS Marketplace, you can simply archive the plan that's mapped to that dimension from the Stigg app.
+
+  
+## Removing the integration
+
+To remove the integration, click on the dotted menu icon and select the "Remove" action.
+
+Confirm the action by clicking on the "Remove" button in the opened modal.
