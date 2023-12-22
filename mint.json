@@ -64,15 +64,6 @@
                   "add-ons",
                   "coupons"
                 ]
-              },
-              {
-                "group": "Use-case specific guides",
-                "pages": [
-                  "use-case-specific-guides",
-                  "free-trials",
-                  "freemium",
-                  "multiple-subscriptions"
-                ]
               }
             ]
           }
