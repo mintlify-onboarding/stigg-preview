@@ -7,9 +7,13 @@
     },
     "favicon": "/favicon.svg",
     "colors": {
-      "primary": "#317DED",
+      "primary": "#3481e8",
       "light": "#A9C1FF",
-      "dark": "#6892FF"
+      "dark": "#3481e8",
+      "anchors": {
+        "from": "#3481e8",
+        "to": "#69be9c"
+      }
     },
     "topbarLinks": [
       {
@@ -25,6 +29,18 @@
       {
         "name": "Changelog",
         "url": "https://changelog.stigg.io/"
+      }
+    ],
+    "anchors": [
+      {
+        "name": "Get API Key",
+        "icon": "square-terminal",
+        "url": "https://www.stigg.io/stigg-for-developers"
+      },
+      {
+        "name": "Blog",
+        "icon": "newspaper",
+        "url": "https://www.stigg.io/blog"
       }
     ],
     "navigation": [

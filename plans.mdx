@@ -1,10 +1,9 @@
 ---
 title: "Plans"
+description: "Plans represent the functionality of a product that customers are billed for during a pre-defined time period (for example: monthly or annually)."
 ---
 
 ## Overview
-
-Plans represent the functionality of a product that customers are billed for during a pre-defined time period (for example: monthly or annually).
 
 Stigg's allows product manager and growth team members to manage plans, their content, price and trial configuration without requiring additional engineering changes.
 
@@ -22,9 +21,7 @@ To view the list of plans of a specific product:
 2. Scroll down to the **Pricing > Plans** section of the selected product.
 ![](/images/d5a2893-Screenshot_2023-07-20_at_9.58.34.png) 
 
-> ## 📘
-> 
-> Also see the product's "[Modeling your pricing](products#modeling-your-pricing)" section.
+<Note>Also see the product's "[Modeling your pricing](products#modeling-your-pricing)" section.</Note>
 
   
 Viewing a flat list of all of the plans of all of the products is possible by selecting the Plans sub-section of the Product Catalog from the left navigation pane.
@@ -42,19 +39,18 @@ Enter the below details in the opened modal:
 3. Description (optional) - the plan's description.
 4. Customer visibility - determines whether customers will see the plan in pricing tables that are rendered using Stigg SDKs, and would be able to subscribe to them in a self-served manner.
 
-> ## 📘
-> 
-> The values that are entered in the "Name" and "Description" fields will be leveraged by Stigg to render the customer-facing pricing tables and customer portal; therefore, it’s recommended to use customer-friendly texts.
+<Note>The values that are entered in the "Name" and "Description" fields will be leveraged by Stigg to render the customer-facing pricing tables and customer portal; therefore, it’s recommended to use customer-friendly texts.</Note>
 
 Confirm the action by clicking on the "Create" button.
 
-> ## 🚧
-> 
-> New plans are created as drafts. 
-> 
-> Plans must be published in order to be visible to customers and create subscriptions for them.
-> 
-> Before publishing a plan, make sure to define the plan's [pricing](plans#defining-the-plans-price) and their [entitlements](plans#assigning-features-to-plans).
+<Warning>
+
+**New plans are created as drafts. **
+
+Plans must be published in order to be visible to customers and create subscriptions for them.
+
+Before publishing a plan, make sure to define the plan's [pricing](plans#defining-the-plans-price) and their [entitlements](plans#assigning-features-to-plans).
+</Warning>
 
 ## Defining the plan's price
 
@@ -176,10 +172,11 @@ Select this method when you'd like customers to pay for the actual usage that to
 
 Customers will be billed for pay-as-you-go charges **at the end of each billing period**.
 
-> ## 🚧
-> 
-> 1. Pay-as-you-go charges can be added to plans when only a monthly billing period is allowed.
-> 2. Pay-as-you-go charges currently only support the "Standard" pricing model, where the price of every unit is the same.
+<Warning>
+ 
+ 1. Pay-as-you-go charges can be added to plans when only a monthly billing period is allowed.
+ 2. Pay-as-you-go charges currently only support the "Standard" pricing model, where the price of every unit is the same.
+</Warning>
 
 Enter the charge amount in each of the allowed billing period in US dollars. A granularity of up to 5 decimal points is supported, i.e. $0.0027 USD. Defining prices in other currencies can be done later by leveraging Stigg's [price localization](price-localization) capabilities.
 
@@ -236,26 +233,26 @@ When the plan's price has already been defined:
 1. Click on the dotted menu icon under the "Free trial" section and select the "Remove" action.
 2. Confirm the action.
   
-> ## 📘
-> 
-> Plans with a default trial configuration will have a proper indication in the product's "[Pricing](products#modeling-your-pricing)" section and [plan list](plans#viewing-the-list-of-plans) screen.
+<Note> Plans with a default trial configuration will have a proper indication in the product's "[Pricing](products#modeling-your-pricing)" section and [plan list](plans#viewing-the-list-of-plans) screen.</Note>
 
-> ## 🚧
-> 
-> In the **self-served** flow:
-> 
-> 1. Customers can only have one free trial **per product**.
-> 2. When a customer has already paid for a plan, they're not eligible for a free trial - the reasoning behind this behavior is that free trials are intended to allow customers to try the product before they pay for it. If they already paid for it, they don't need to try it.
+<Warning>
 
-> ## 📘
-> 
-> Stigg provides maximum flexibility for administrators when manually creating subscriptions via the [Stigg Console](https://app.stigg.io), specifically:
-> 
-> 1. Subscription of paid plans can be manually created by an administrator to start **with a free trial period**, even when no default trial period is configured for the plan.
-> 2. Subscriptions of plans with a default trial period can be manually created as **paid** subscriptions by administrators, even when a default trial period is configured for the plan.
-> 3. Trial subscriptions can be created by administrators via the Stigg Console even if the customer had already trialed the product in the past or has paid for subscription.
-> 
-> More details can be found in the "[Creating subscriptions](subscriptions#creating-subscriptions)" section.
+In the **self-served** flow:
+
+1. Customers can only have one free trial **per product**.
+2. When a customer has already paid for a plan, they're not eligible for a free trial - the reasoning behind this behavior is that free trials are intended to allow customers to try the product before they pay for it. If they already paid for it, they don't need to try it.
+</Warning>
+
+<Note>
+
+Stigg provides maximum flexibility for administrators when manually creating subscriptions via the [Stigg Console](https://app.stigg.io), specifically:
+
+1. Subscription of paid plans can be manually created by an administrator to start **with a free trial period**, even when no default trial period is configured for the plan.
+2. Subscriptions of plans with a default trial period can be manually created as **paid** subscriptions by administrators, even when a default trial period is configured for the plan.
+3. Trial subscriptions can be created by administrators via the Stigg Console even if the customer had already trialed the product in the past or has paid for subscription.
+
+More details can be found in the "[Creating subscriptions](subscriptions#creating-subscriptions)" section.
+</Note>
 
 ## Assigning features to plans
 
@@ -298,9 +295,7 @@ To override an entitlement in the **child** plan:
 4. Enter the new value that you'd like to set for the overriding entitlement.
 5. Click on "Override".
 
-> ## 🚧
-> 
-> Entitlements to boolean features can't be overridden.
+<Warning>Entitlements to boolean features can't be overridden.</Warning>
 
 Overriding entitlements will have an icon appear next to their value.
 
@@ -341,7 +336,7 @@ In the opened modal, update the entitlement visibility and click "Save changes".
   
 ### Customizing the entitlement display text
 
-By default, entitlements appear in pricing tables that are rendered using Stigg (either using [Stigg's pricing table widget](react-sdk#rendering-pricing-tables) or custom widgets) in the following format: <ENTITLEMENT\_LIMIT> <FEATURE\_UNITS>, for example: 10 seats, unlimited campaigns, 100 API calls per month.
+By default, entitlements appear in pricing tables that are rendered using Stigg (either using [Stigg's pricing table widget](react-sdk#rendering-pricing-tables) or custom widgets) in the following format: \<ENTITLEMENT\_LIMIT> \<FEATURE\_UNITS>, for example: 10 seats, unlimited campaigns, 100 API calls per month.
 
 To customize the display text, click on the dotted-menu icon in the row of the relevant entitlement and select the "Customize display text and visibility" action.
 
@@ -355,9 +350,7 @@ To save the changes, click on the "Save changes" button.
 
 ![](/images/2fea0df-Screenshot_2022-12-05_at_21.46.28.png)
 
-> ## 📘
-> 
-> An indication about the default display texts that have been overridden by custom display texts will also appear in the Products > Pricing section
+<Note>An indication about the default display texts that have been overridden by custom display texts will also appear in the Products > Pricing section</Note>
 
   
 ### Removing entitlements from a plan
@@ -402,13 +395,9 @@ To edit a plan, click on the dotted menu icon of the relevant plan, and select t
 
 Apply the relevant changes to the plan.
 
-> ## 📘
-> 
-> Some properties of a plan (for example: its ID), cannot be modified after the plan is created.
+<Note>Some properties of a plan (for example: its ID), cannot be modified after the plan is created.</Note>
 
-> ## 📘
-> 
-> Plans with unpublished changes will have a proper indication in the [product offering](products#managing-the-product-offering) and [plan list](plans#viewing-the-list-of-plans) screens.
+<Note>Plans with unpublished changes will have a proper indication in the [product offering](products#managing-the-product-offering) and [plan list](plans#viewing-the-list-of-plans) screens.</Note>
 
   
 #### Reviewing changes
@@ -423,9 +412,7 @@ In the change review modal:
   
 #### Publishing changes
 
-> ## 📘
-> 
-> Changes must first be reviewed before they can be published.
+<Note>Changes must first be reviewed before they can be published.</Note>
 
 To publish changes, in the change review modal select the target audience to which the changes will be applied:
 
@@ -434,11 +421,12 @@ To publish changes, in the change review modal select the target audience to whi
 
 When applying changes to existing subscriptions, an acknowledgment of a series of disclaimers is required.
 
-> ## 🚧
-> 
-> Default grandfathering of subscription pricing when rolling out pricing changes
-> 
-> Pricing changes are automatically published only to new subscriptions. Existing subscriptions can be migrated to the latest price [manually using the Stigg UI](/docs/subscriptions#migrating-subscriptions-to-the-latest-plan-or-add-on-version) or [programmatically](graphql-api#migrating-subscriptions-to-the-latest-plan-and-add-on-version).
+<Warning>
+
+**Default grandfathering of subscription pricing when rolling out pricing changes**
+
+Pricing changes are automatically published only to new subscriptions. Existing subscriptions can be migrated to the latest price [manually using the Stigg UI](/docs/subscriptions#migrating-subscriptions-to-the-latest-plan-or-add-on-version) or [programmatically](graphql-api#migrating-subscriptions-to-the-latest-plan-and-add-on-version).
+</Warning>
 
 ![](/images/05bfe38-Screen_Shot_2022-10-19_at_23.01.33.png)
 
